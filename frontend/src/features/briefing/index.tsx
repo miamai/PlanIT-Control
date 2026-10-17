@@ -24,7 +24,6 @@ import { SITE_SEED } from '@/api/mock/sites-data'
 import { useLiveStore } from '@/stores/live-store'
 import {
   formatCountdownTo,
-  RECOMMENDATION_BG,
   RECOMMENDATION_HEX,
   RISK_BANDS,
   recommendationFromScore,
@@ -181,12 +180,7 @@ export function BriefingPage() {
                             key={entry.siteId}
                             className='flex gap-3 py-4 first:pt-0 last:pb-0'
                           >
-                            <span
-                              className={cn(
-                                'flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white',
-                                RECOMMENDATION_BG[entry.recommendation]
-                              )}
-                            >
+                            <span className='flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground tabular-nums'>
                               {index + 1}
                             </span>
                             <div className='min-w-0 flex-1 space-y-2'>

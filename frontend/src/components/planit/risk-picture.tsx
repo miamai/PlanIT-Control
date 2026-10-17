@@ -11,13 +11,6 @@ import { cn } from '@/lib/utils'
 
 const LEVELS: SeverityLevel[] = ['low', 'moderate', 'high', 'extreme']
 
-const ICON_BOX: Record<SeverityLevel, string> = {
-  low: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  moderate: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  high: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
-  extreme: 'bg-red-600/10 text-red-600 dark:text-red-400',
-}
-
 function SeverityMeter({ severity }: { severity: SeverityLevel }) {
   const level = LEVELS.indexOf(severity)
   return (
@@ -65,12 +58,7 @@ export function RiskPicture({
             key={domain.domain}
             className='flex items-center gap-3 py-2.5 first:pt-0 last:pb-0'
           >
-            <span
-              className={cn(
-                'flex size-9 shrink-0 items-center justify-center rounded-md',
-                ICON_BOX[domain.severity]
-              )}
-            >
+            <span className='flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground'>
               <Icon className='size-4' />
             </span>
             <div className='flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-3'>
@@ -78,10 +66,7 @@ export function RiskPicture({
                 {domain.label}
               </p>
               <p
-                className={cn(
-                  'text-sm font-semibold tabular-nums',
-                  SEVERITY_TEXT[domain.severity]
-                )}
+                className='text-sm font-semibold text-foreground tabular-nums'
                 title={domain.summary}
               >
                 {domain.display}

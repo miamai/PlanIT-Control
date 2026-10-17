@@ -3,12 +3,7 @@ import { confirmHazardReport } from '@/api'
 import { BadgeCheck, MapPin } from 'lucide-react'
 import { SITE_SEED } from '@/api/mock/sites-data'
 import { type HazardReport } from '@/api/types'
-import {
-  ALERT_SEVERITY_ICON_BOX,
-  REPORT_TYPE_ICON,
-  REPORT_TYPE_LABEL,
-  relativeTime,
-} from '@/lib/planit'
+import { REPORT_TYPE_ICON, REPORT_TYPE_LABEL, relativeTime } from '@/lib/planit'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -73,12 +68,7 @@ export function ReportList({
         const confirmed = confirmedIds.includes(report.id)
         return (
           <li key={report.id} className='flex gap-3 py-3 first:pt-0 last:pb-0'>
-            <span
-              className={cn(
-                'flex size-8 shrink-0 items-center justify-center rounded-md',
-                ALERT_SEVERITY_ICON_BOX[report.severity]
-              )}
-            >
+            <span className='flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground'>
               <Icon className='size-4' />
             </span>
             <div className='min-w-0 flex-1 space-y-1'>

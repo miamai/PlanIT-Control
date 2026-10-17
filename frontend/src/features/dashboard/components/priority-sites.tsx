@@ -1,7 +1,5 @@
 import { Link } from '@tanstack/react-router'
 import { Zap } from 'lucide-react'
-import { RECOMMENDATION_BG } from '@/lib/planit'
-import { cn } from '@/lib/utils'
 import type { SiteBundle } from '@/hooks/use-planit'
 import { RecommendationBadge } from '@/components/planit/risk-badge'
 import { ScoreBar } from '@/components/planit/score-bar'
@@ -17,12 +15,7 @@ export function PrioritySites({ items }: { items: SiteBundle[] }) {
             params={{ siteId: bundle.site.id }}
             className='-mx-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent'
           >
-            <span
-              className={cn(
-                'flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white',
-                RECOMMENDATION_BG[bundle.risk.recommendation]
-              )}
-            >
+            <span className='flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground tabular-nums'>
               {index + 1}
             </span>
             <span className='min-w-0 flex-1'>

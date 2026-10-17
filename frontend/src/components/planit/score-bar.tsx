@@ -2,7 +2,6 @@ import {
   CAUTION_BELOW,
   GO_BELOW,
   RECOMMENDATION_BG,
-  RECOMMENDATION_TEXT,
   recommendationFromScore,
 } from '@/lib/planit'
 import { cn } from '@/lib/utils'
@@ -18,12 +17,7 @@ export function ScoreBar({
   const call = recommendationFromScore(score)
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      <span
-        className={cn(
-          'w-7 text-sm font-semibold tabular-nums',
-          RECOMMENDATION_TEXT[call]
-        )}
-      >
+      <span className='w-7 text-sm font-semibold text-foreground tabular-nums'>
         {score.toFixed(1)}
       </span>
       <span className='relative h-1.5 w-full max-w-28 min-w-16 rounded-full bg-muted'>
