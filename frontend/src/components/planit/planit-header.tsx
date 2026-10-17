@@ -41,7 +41,7 @@ function LiveIndicator() {
   )
 }
 
-/** App bar: live-feed status on the left, search and account on the right. */
+/** Desktop accounts live in the sidebar; mobile accounts remain in the app bar. */
 export function PlanitHeader() {
   return (
     <Header className='@container/planit-header'>
@@ -53,7 +53,9 @@ export function PlanitHeader() {
         />
         <ThemeSwitch />
         <ConfigDrawer />
-        <ProfileDropdown />
+        <div className='md:hidden'>
+          <ProfileDropdown />
+        </div>
       </div>
     </Header>
   )

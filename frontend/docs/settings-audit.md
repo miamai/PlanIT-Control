@@ -15,7 +15,8 @@ The global sidebar and the settings page also contained overlapping navigation.
 | Notifications | Optional in-app alert banners with a minimum severity and a test banner. New alerts, escalations, and lightning strike resets can produce banners. | Browser-local. Existing alerts do not trigger a startup flood. Alert lists and stop-work countdowns remain available regardless of banner preferences. |
 | External delivery | SMS, email, and browser push are explicitly marked Not connected. | Shared with the Alerts channel panel, which no longer marks disconnected channels as active. No delivery service, subscription, or scheduler was added or changed. |
 | Display | Sidebar style, collapse behavior, and reset use the existing layout provider. | Changes apply immediately and persist in cookies. Desktop collapse preferences do not replace the mobile drawer. |
-| Account menus | Working links to settings and sign-out. | Template Billing, Upgrade to Pro, New Team, and unbound shortcut labels were removed from the account menus. |
+| Account menus | Working links to settings and sign-out. Desktop uses the sidebar account menu; mobile uses the header account menu. | Template Billing, Upgrade to Pro, New Team, and unbound shortcut labels were removed from the account menus. |
+| Branding | A noninteractive PlanIT Control brand replaces the team switcher. | No team switching, fake field mode, or Add team action is exposed. |
 
 The demo session now restores its user identity alongside its existing token so
 refreshing does not switch the displayed email, role, or profile unexpectedly.
