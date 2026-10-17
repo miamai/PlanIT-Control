@@ -4,16 +4,20 @@ import {
   BellRing,
   Flame,
   Gauge,
-  RadioTower,
-  Send,
+  Layers,
   Thermometer,
   Waves,
   Zap,
 } from 'lucide-react'
-import { ALERT_TYPE_LABEL } from '@/lib/planit'
-import { useActiveAlerts, useSimulateStrike } from '@/hooks/use-planit'
+import {
+  ALERT_TYPE_LABEL,
+  ALL_CLEAR_MINUTES,
+  LIGHTNING_RADIUS_MI,
+} from '@/lib/planit'
+import { useActiveAlerts } from '@/hooks/use-planit'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Main } from '@/components/layout/main'
 import { AlertsFeed } from '@/components/planit/alerts-feed'
@@ -25,28 +29,38 @@ import { PlanitHeader } from '@/components/planit/planit-header'
 const ALL = '__all__'
 const PAGE_SIZE = 12
 // Lightning stop-work alerts get their own countdown cards above the list.
-const TYPES = ['heat', 'flood', 'wildfire', 'storm', 'wildlife'] as const
+const TYPES = [
+  'heat',
+  'flood',
+  'wildfire',
+  'storm',
+  'wildlife',
+  'soil',
+] as const
 
+/** The core API's default alert rules (non-lightning values are its demo profile). */
 const THRESHOLDS = [
-  { icon: Zap, name: 'Lightning', rule: 'Strike ≤ 10 mi · 30 min all-clear' },
-  { icon: Waves, name: 'Flood', rule: 'Gauge ≥ 95% of flood stage' },
+  {
+    icon: Zap,
+    name: 'Lightning',
+    rule: `Strike ≤ ${LIGHTNING_RADIUS_MI} mi · ${ALL_CLEAR_MINUTES} min to all-clear eligibility`,
+  },
+  { icon: Waves, name: 'Flood', rule: 'Official NWS warnings' },
   {
     icon: Thermometer,
     name: 'Heat',
-    rule: 'HI ≥ 100°F warning · ≥ 110°F critical',
+    rule: 'HI ≥ 103°F high · ≥ 125°F critical (demo)',
   },
-  { icon: Flame, name: 'Smoke', rule: 'Red flag or AQI ≥ 150' },
+  { icon: Flame, name: 'Wildfire', rule: 'Satellite detection ≤ 25 mi' },
+  {
+    icon: Layers,
+    name: 'Soil',
+    rule: '72 h rain ≥ 2 in moderate · ≥ 4 in high (demo)',
+  },
 ] as const
 
-const CHANNELS = [
-  { label: 'Push', scope: 'All alerts' },
-  { label: 'SMS', scope: 'Critical + lightning' },
-  { label: 'Email', scope: '18:00 briefing' },
-]
-
 export function Alerts() {
-  const active = useActiveAlerts()
-  const simulateStrike = useSimulateStrike()
+  const { alerts: active, isLoading } = useActiveAlerts()
   const [type, setType] = useState<string>(ALL)
   const [showAll, setShowAll] = useState(false)
 
@@ -77,27 +91,25 @@ export function Alerts() {
     <>
       <PlanitHeader />
       <Main>
-        <PageHeading
-          title='Alerts'
-          actions={
-            <Button
-              size='sm'
-              variant='outline'
-              onClick={() => simulateStrike()}
-            >
-              <RadioTower /> Simulate strike
-            </Button>
-          }
-        />
+        <PageHeading title='Alerts' />
 
         {stopWork.length > 0 ? (
           <section className='mb-4'>
             <h2 className='mb-3 flex items-center gap-2 text-sm font-semibold'>
-              <span className='relative flex size-2'>
-                <span className='absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-75' />
-                <span className='relative inline-flex size-2 rounded-full bg-red-600' />
-              </span>
-              Stop-work in effect
+              {stopWork.some((alert) => alert.status === 'active') ? (
+                <>
+                  <span className='relative flex size-2'>
+                    <span className='absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-75' />
+                    <span className='relative inline-flex size-2 rounded-full bg-red-600' />
+                  </span>
+                  Stop-work in effect
+                </>
+              ) : (
+                <>
+                  <span className='inline-flex size-2 rounded-full bg-amber-500' />
+                  Lightning all-clear awaiting supervisor sign-off
+                </>
+              )}
             </h2>
             <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
               {stopWork.map((alert) => (
@@ -177,7 +189,14 @@ export function Alerts() {
                 </div>
               </Tabs>
 
-              <AlertsFeed alerts={visible} />
+              {isLoading ? (
+                <div className='space-y-3'>
+                  <Skeleton className='h-20 w-full' />
+                  <Skeleton className='h-20 w-full' />
+                </div>
+              ) : (
+                <AlertsFeed alerts={visible} />
+              )}
 
               {filtered.length > PAGE_SIZE ? (
                 <Button
@@ -208,26 +227,6 @@ export function Alerts() {
                       </span>
                       <span className='text-xs text-muted-foreground'>
                         {item.rule}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className='gap-4'>
-              <PanelHeader icon={Send} title='Channels' />
-              <CardContent>
-                <ul className='divide-y'>
-                  {CHANNELS.map((channel) => (
-                    <li
-                      key={channel.label}
-                      className='flex items-center justify-between gap-3 py-2.5 text-sm first:pt-0 last:pb-0'
-                    >
-                      <span className='font-medium'>{channel.label}</span>
-                      <span className='flex items-center gap-2 text-xs text-muted-foreground'>
-                        {channel.scope}
-                        <span className='size-2 rounded-full bg-emerald-500' />
                       </span>
                     </li>
                   ))}

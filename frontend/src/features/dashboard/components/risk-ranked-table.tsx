@@ -73,6 +73,7 @@ export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
                   <RecommendationStatus
                     withDesktopLegend
                     recommendation={bundle.risk.recommendation}
+                    status={bundle.risk.status}
                     className='mt-1'
                   />
                 </TableCell>

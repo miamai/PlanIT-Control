@@ -1,53 +1,67 @@
 import { create } from 'zustand'
-import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
+import { type components } from '@/api/schema'
 
-const ACCESS_TOKEN = 'thisisjustarandomstring'
+export type AuthUser = components['schemas']['UserRead']
+export type UserRole = AuthUser['role']
 
-interface AuthUser {
-  accountNo: string
-  email: string
-  role: string[]
-  exp: number
-}
-
+/**
+ * Session state for the core API's local JWT auth.
+ *
+ * The access token lives in memory only (the backend guide forbids storing it
+ * in JS-readable storage); a page reload restores it through the HttpOnly
+ * refresh cookie.
+ */
 interface AuthState {
   auth: {
     user: AuthUser | null
-    setUser: (user: AuthUser | null) => void
     accessToken: string
-    setAccessToken: (accessToken: string) => void
-    resetAccessToken: () => void
+    /** Epoch ms when the access token expires. */
+    expiresAt: number
+    setSession: (
+      accessToken: string,
+      expiresInSeconds: number,
+      user: AuthUser
+    ) => void
     reset: () => void
   }
 }
 
-export const useAuthStore = create<AuthState>()((set) => {
-  const cookieState = getCookie(ACCESS_TOKEN)
-  const initToken = cookieState ? JSON.parse(cookieState) : ''
-  return {
-    auth: {
-      user: null,
-      setUser: (user) =>
-        set((state) => ({ ...state, auth: { ...state.auth, user } })),
-      accessToken: initToken,
-      setAccessToken: (accessToken) =>
-        set((state) => {
-          setCookie(ACCESS_TOKEN, JSON.stringify(accessToken))
-          return { ...state, auth: { ...state.auth, accessToken } }
-        }),
-      resetAccessToken: () =>
-        set((state) => {
-          removeCookie(ACCESS_TOKEN)
-          return { ...state, auth: { ...state.auth, accessToken: '' } }
-        }),
-      reset: () =>
-        set((state) => {
-          removeCookie(ACCESS_TOKEN)
-          return {
-            ...state,
-            auth: { ...state.auth, user: null, accessToken: '' },
-          }
-        }),
-    },
-  }
-})
+export const useAuthStore = create<AuthState>()((set) => ({
+  auth: {
+    user: null,
+    accessToken: '',
+    expiresAt: 0,
+    setSession: (accessToken, expiresInSeconds, user) =>
+      set((state) => ({
+        ...state,
+        auth: {
+          ...state.auth,
+          accessToken,
+          expiresAt: Date.now() + expiresInSeconds * 1000,
+          user,
+        },
+      })),
+    reset: () =>
+      set((state) => ({
+        ...state,
+        auth: { ...state.auth, user: null, accessToken: '', expiresAt: 0 },
+      })),
+  },
+}))
+
+export const ROLE_LABEL: Record<UserRole, string> = {
+  crew: 'Crew',
+  supervisor: 'Supervisor',
+  admin: 'Admin',
+}
+
+export function displayName(user: AuthUser | null): string {
+  return user?.display_name || user?.username || 'Signed out'
+}
+
+const ROLE_RANK: Record<UserRole, number> = { crew: 0, supervisor: 1, admin: 2 }
+
+/** True when the user has at least the given role (admin > supervisor > crew). */
+export function hasRole(user: AuthUser | null, minimum: UserRole): boolean {
+  return !!user && ROLE_RANK[user.role] >= ROLE_RANK[minimum]
+}

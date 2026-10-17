@@ -8,10 +8,13 @@ import { ReportList } from '@/components/planit/report-list'
 export function RecentReports({
   reports,
   isLoading,
+  canView = true,
   limit = 4,
 }: {
   reports: HazardReport[] | undefined
   isLoading: boolean
+  /** Crew users cannot read reports; the API restricts them to supervisors. */
+  canView?: boolean
   limit?: number
 }) {
   return (
@@ -27,7 +30,9 @@ export function RecentReports({
           isLoading={isLoading}
           showSite
           compact
-          emptyMessage='No reports'
+          emptyMessage={
+            canView ? 'No reports this week' : 'Visible to supervisors'
+          }
         />
       </CardContent>
     </Card>

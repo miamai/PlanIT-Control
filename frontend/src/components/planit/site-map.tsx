@@ -10,15 +10,14 @@ import {
   Tooltip,
   useMap,
 } from 'react-leaflet'
-import { LIGHTNING_RADIUS_MI } from '@/api/mock/engine'
 import {
-  type AlertSeverity,
   type HazardReport,
+  type HazardReportStatus,
   type LightningStrike,
   type Site,
 } from '@/api/types'
 import {
-  ALERT_SEVERITY_LABEL,
+  LIGHTNING_RADIUS_MI,
   RECOMMENDATION_HEX,
   REPORT_TYPE_LABEL,
   recommendationFromScore,
@@ -29,7 +28,8 @@ import { RiskLegend } from './risk-status'
 
 export interface SiteMarker {
   site: Site
-  score: number
+  /** Null when the site has no hazard index (drawn as a neutral marker). */
+  score: number | null
   activeLightning?: boolean
   hasReports?: boolean
 }
@@ -38,10 +38,15 @@ const US_CENTER: [number, number] = [39.6, -98.4]
 const METERS_PER_MILE = 1609.34
 const STRIKE_COLOR = '#8b5cf6'
 const CONTEXT_SITE_COLOR = '#94a3b8'
-const REPORT_COLOR: Record<AlertSeverity, string> = {
-  info: '#0ea5e9',
-  warning: '#f59e0b',
-  critical: '#dc2626',
+const REPORT_COLOR: Record<HazardReportStatus, string> = {
+  new: '#f59e0b',
+  verified: '#dc2626',
+  dismissed: '#94a3b8',
+}
+const REPORT_STATUS_LABEL: Record<HazardReportStatus, string> = {
+  new: 'New',
+  verified: 'Verified',
+  dismissed: 'Dismissed',
 }
 
 // Esri canvas basemaps: neutral gray so the risk colors carry the meaning.
@@ -145,14 +150,15 @@ export function SiteMap({
 
   // Draw low-risk first so the riskiest markers sit on top.
   const ordered = useMemo(
-    () => [...markers].sort((a, b) => a.score - b.score),
+    () => [...markers].sort((a, b) => (a.score ?? -1) - (b.score ?? -1)),
     [markers]
   )
   const ranks = useMemo(() => {
     const map = new Map<string, number>()
     if (siteStyle !== 'risk' || rankLabels <= 0) return map
     ;[...markers]
-      .sort((a, b) => b.score - a.score)
+      .filter((marker) => marker.score !== null)
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
       .slice(0, rankLabels)
       .forEach((marker, index) => map.set(marker.site.id, index + 1))
     return map
@@ -225,7 +231,7 @@ export function SiteMap({
           <CircleMarker
             key={strike.id}
             center={[strike.lat, strike.lon]}
-            radius={2 + strike.intensity * 2}
+            radius={3}
             pathOptions={{
               color: STRIKE_COLOR,
               fillColor: STRIKE_COLOR,
@@ -240,9 +246,11 @@ export function SiteMap({
         ))}
 
         {ordered.map(({ site, score, activeLightning, hasReports }) => {
-          const call = recommendationFromScore(score)
+          const call = score === null ? null : recommendationFromScore(score)
           const color =
-            siteStyle === 'risk' ? RECOMMENDATION_HEX[call] : CONTEXT_SITE_COLOR
+            siteStyle === 'risk' && call
+              ? RECOMMENDATION_HEX[call]
+              : CONTEXT_SITE_COLOR
           const isSelected = site.id === selectedSiteId
           const rank = ranks.get(site.id)
           const handlers = onSelect
@@ -259,7 +267,11 @@ export function SiteMap({
               {siteStyle === 'risk' ? (
                 <>
                   <br />
-                  Hazard index {score.toFixed(1)} · {call}
+                  {score === null
+                    ? site.mlSupported
+                      ? 'No hazard index yet'
+                      : 'Not covered by the hazard model'
+                    : `Hazard index ${score.toFixed(1)} · ${call}`}
                 </>
               ) : null}
               {activeLightning ? (
@@ -296,7 +308,11 @@ export function SiteMap({
               key={site.id}
               center={[site.lat, site.lon]}
               radius={
-                isSelected ? 10 : siteStyle === 'risk' ? 4.5 + score * 0.45 : 4
+                isSelected
+                  ? 10
+                  : siteStyle === 'risk' && score !== null
+                    ? 4.5 + score * 0.45
+                    : 4
               }
               pathOptions={{
                 color: isSelected ? '#ffffff' : color,
@@ -318,7 +334,7 @@ export function SiteMap({
             radius={6}
             pathOptions={{
               color: '#ffffff',
-              fillColor: REPORT_COLOR[report.severity],
+              fillColor: REPORT_COLOR[report.status],
               fillOpacity: 1,
               weight: 2,
             }}
@@ -326,14 +342,14 @@ export function SiteMap({
             <Tooltip direction='top' offset={[0, -6]}>
               <span className='font-medium'>
                 {REPORT_TYPE_LABEL[report.type]} ·{' '}
-                {ALERT_SEVERITY_LABEL[report.severity]}
+                {REPORT_STATUS_LABEL[report.status]}
               </span>
               <br />
               {report.note.length > 70
                 ? `${report.note.slice(0, 70)}…`
                 : report.note}
               <br />
-              {report.reportedBy} · {report.confirmations} confirmations
+              {report.reportedBy}
             </Tooltip>
           </CircleMarker>
         ))}
@@ -354,10 +370,10 @@ export function SiteMap({
             <>
               <p className='mb-1 font-medium'>Crew reports</p>
               <ul className='space-y-0.5'>
-                {(['critical', 'warning', 'info'] as const).map((severity) => (
-                  <li key={severity} className='flex items-center gap-1.5'>
-                    <LegendDot color={REPORT_COLOR[severity]} />
-                    {ALERT_SEVERITY_LABEL[severity]}
+                {(['new', 'verified', 'dismissed'] as const).map((status) => (
+                  <li key={status} className='flex items-center gap-1.5'>
+                    <LegendDot color={REPORT_COLOR[status]} />
+                    {REPORT_STATUS_LABEL[status]}
                   </li>
                 ))}
                 <li className='flex items-center gap-1.5'>
@@ -387,7 +403,7 @@ export function SiteMap({
               ) : null}
               {siteStyle === 'risk' && reports.length > 0 ? (
                 <li className='flex items-center gap-1.5'>
-                  <LegendDot color={REPORT_COLOR.warning} /> Crew report
+                  <LegendDot color={REPORT_COLOR.new} /> Crew report
                 </li>
               ) : null}
             </ul>

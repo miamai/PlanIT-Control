@@ -43,12 +43,25 @@ export function RiskPicture({
   domains: DomainStatus[]
   className?: string
 }) {
+  if (domains.length === 0) {
+    return (
+      <div
+        className={cn(
+          'rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground',
+          className
+        )}
+      >
+        No hazard observations recorded in the last 72 hours
+      </div>
+    )
+  }
   return (
     <ul className={cn('divide-y', className)}>
       {domains.map((domain) => {
         const Icon = DOMAIN_ICON[domain.domain]
-        const TrendIcon =
-          domain.trend === 'rising'
+        const TrendIcon = !domain.trend
+          ? null
+          : domain.trend === 'rising'
             ? TrendingUp
             : domain.trend === 'falling'
               ? TrendingDown
@@ -80,15 +93,17 @@ export function RiskPicture({
                 >
                   {SEVERITY_LABEL[domain.severity]}
                 </span>
-                <span
-                  className='inline-flex items-center gap-0.5 text-muted-foreground'
-                  title={trendLabel(domain.trend)}
-                >
-                  <TrendIcon className='size-3' />
-                  <span className='hidden sm:inline'>
-                    {trendLabel(domain.trend)}
+                {domain.trend && TrendIcon ? (
+                  <span
+                    className='inline-flex items-center gap-0.5 text-muted-foreground'
+                    title={trendLabel(domain.trend)}
+                  >
+                    <TrendIcon className='size-3' />
+                    <span className='hidden sm:inline'>
+                      {trendLabel(domain.trend)}
+                    </span>
                   </span>
-                </span>
+                ) : null}
               </div>
             </div>
           </li>

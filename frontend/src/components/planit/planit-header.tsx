@@ -6,35 +6,43 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 
+const STATUS_STYLE = {
+  live: { dot: 'bg-emerald-500', label: 'Live', ping: true },
+  connecting: { dot: 'bg-amber-500', label: 'Connecting', ping: false },
+  offline: { dot: 'bg-muted-foreground', label: 'Offline', ping: false },
+} as const
+
 function LiveIndicator() {
   const now = useLiveStore((state) => state.now)
-  const strikes = useLiveStore((state) => state.strikes)
-  const lastAt = strikes.reduce<string | undefined>(
-    (latest, strike) =>
-      !latest || new Date(strike.at) > new Date(latest) ? strike.at : latest,
-    undefined
-  )
-  const age = lastAt
-    ? Math.max(0, Math.floor((now - new Date(lastAt).getTime()) / 1000))
-    : undefined
+  const status = useLiveStore((state) => state.streamStatus)
+  const lastEventAt = useLiveStore((state) => state.lastEventAt)
+  const style = STATUS_STYLE[status]
+  const age =
+    lastEventAt !== null
+      ? Math.max(0, Math.floor((now - lastEventAt) / 1000))
+      : undefined
 
   return (
     <span
       className='inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs whitespace-nowrap text-muted-foreground'
-      title='Realtime hazard feed'
+      title='Realtime alert and risk event stream'
     >
       <span className='relative flex size-2'>
-        <span className='absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-75' />
-        <span className='relative inline-flex size-2 rounded-full bg-emerald-500' />
+        {style.ping ? (
+          <span className='absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-75' />
+        ) : null}
+        <span
+          className={`relative inline-flex size-2 rounded-full ${style.dot}`}
+        />
       </span>
-      <span className='font-medium text-foreground'>Live</span>
+      <span className='font-medium text-foreground'>{style.label}</span>
       {age !== undefined ? (
         <span className='hidden tabular-nums md:inline'>
-          last strike {formatDuration(age)} ago
+          last event {formatDuration(age)} ago
         </span>
-      ) : (
-        <span className='hidden md:inline'>feed idle</span>
-      )}
+      ) : status === 'live' ? (
+        <span className='hidden md:inline'>waiting for events</span>
+      ) : null}
     </span>
   )
 }

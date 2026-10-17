@@ -12,11 +12,6 @@ import {
 import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
-  user: {
-    name: 'Dana Reyes',
-    email: 'dana.reyes@gridwatch.energy',
-    avatar: '/avatars/shadcn.jpg',
-  },
   teams: [
     {
       name: 'GridWatch Energy',

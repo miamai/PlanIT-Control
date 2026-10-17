@@ -1,25 +1,19 @@
 import { useMemo } from 'react'
 import { format } from 'date-fns'
-import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { getBriefing, listRecentHazardReports } from '@/api'
-import {
-  ListOrdered,
-  MapPinned,
-  RadioTower,
-  Siren,
-  TriangleAlert,
-} from 'lucide-react'
+import { ListOrdered, MapPinned, Siren, TriangleAlert } from 'lucide-react'
 import { type Recommendation } from '@/api/types'
 import { useLiveStore } from '@/stores/live-store'
 import {
   useActiveAlerts,
+  useFleetBriefing,
+  useHazardReports,
   useLiveStrikes,
   useSiteBundles,
-  useSimulateStrike,
 } from '@/hooks/use-planit'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Main } from '@/components/layout/main'
 import { AlertsFeed } from '@/components/planit/alerts-feed'
 import { CardActions } from '@/components/planit/card-actions'
@@ -34,34 +28,32 @@ import { RecentReports } from './components/recent-reports'
 import { SummaryCards, type Summary } from './components/summary-cards'
 
 const TOP_N = 10
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
 export function Dashboard() {
-  const bundles = useSiteBundles()
-  const alerts = useActiveAlerts()
-  const simulateStrike = useSimulateStrike()
+  const { bundles, isLoading } = useSiteBundles()
+  const { alerts } = useActiveAlerts()
   const strikes = useLiveStrikes()
   const now = useLiveStore((state) => state.now)
   const navigate = useNavigate()
 
-  const briefingQuery = useQuery({
-    queryKey: ['briefing', format(now, 'yyyy-MM-dd-HH')],
-    queryFn: () => getBriefing(),
-    staleTime: 60_000,
-  })
-  const reportsQuery = useQuery({
-    queryKey: ['hazard-reports', 'recent'],
-    queryFn: () => listRecentHazardReports(6),
-    staleTime: 30_000,
-  })
-
-  const ranked = useMemo(
-    () => [...bundles].sort((a, b) => b.risk.score - a.risk.score),
-    [bundles]
+  const briefingQuery = useFleetBriefing()
+  const reportsQuery = useHazardReports()
+  const { reports, fetchedAt } = reportsQuery
+  const recentReports = useMemo(
+    () =>
+      reports
+        ?.filter((r) => fetchedAt - new Date(r.createdAt).getTime() < WEEK_MS)
+        .slice(0, 6),
+    [reports, fetchedAt]
   )
 
+  // Bundles arrive riskiest first; unscored sites are last.
+  const ranked = bundles
+
   const reportSiteIds = useMemo(
-    () => new Set((reportsQuery.data ?? []).map((r) => r.siteId)),
-    [reportsQuery.data]
+    () => new Set((recentReports ?? []).map((r) => r.siteId)),
+    [recentReports]
   )
 
   const summary: Summary = useMemo(() => {
@@ -70,8 +62,15 @@ export function Dashboard() {
       CAUTION: 0,
       'NO-GO': 0,
     }
-    for (const bundle of bundles) calls[bundle.risk.recommendation] += 1
-    const lightning = alerts.filter((a) => a.type === 'lightning')
+    for (const bundle of bundles) {
+      if (bundle.risk.recommendation) calls[bundle.risk.recommendation] += 1
+    }
+    const scored = bundles.flatMap((b) =>
+      b.risk.score === null ? [] : [b.risk.score]
+    )
+    const lightning = alerts.filter(
+      (a) => a.type === 'lightning' && a.status === 'active'
+    )
     return {
       sites: bundles.length,
       calls,
@@ -80,12 +79,14 @@ export function Dashboard() {
       warning: alerts.filter((a) => a.severity === 'warning').length,
       advisory: alerts.filter((a) => a.severity === 'info').length,
       lightningSites: new Set(lightning.map((a) => a.siteId)).size,
+      scoredSites: scored.length,
       avgScore:
-        Math.round(
-          (bundles.reduce((sum, b) => sum + b.risk.score, 0) /
-            (bundles.length || 1)) *
-            10
-        ) / 10,
+        scored.length === 0
+          ? null
+          : Math.round(
+              (scored.reduce((sum, score) => sum + score, 0) / scored.length) *
+                10
+            ) / 10,
     }
   }, [bundles, alerts])
 
@@ -97,24 +98,23 @@ export function Dashboard() {
           title='Dashboard'
           description={format(now, 'EEEE, MMMM d')}
           actions={
-            <>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => simulateStrike()}
-              >
-                <RadioTower /> Simulate strike
-              </Button>
-              <Button asChild size='sm'>
-                <Link to='/hazards/new'>
-                  <TriangleAlert /> Report hazard
-                </Link>
-              </Button>
-            </>
+            <Button asChild size='sm'>
+              <Link to='/hazards/new'>
+                <TriangleAlert /> Report hazard
+              </Link>
+            </Button>
           }
         />
 
-        <SummaryCards summary={summary} />
+        {isLoading ? (
+          <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+            {Array.from({ length: 4 }, (_, i) => (
+              <Skeleton key={i} className='h-[120px] w-full' />
+            ))}
+          </div>
+        ) : (
+          <SummaryCards summary={summary} />
+        )}
 
         <div className='mt-4 grid gap-4 lg:grid-cols-5'>
           <Card className='min-w-0 gap-4 lg:col-span-3'>
@@ -167,13 +167,14 @@ export function Dashboard() {
           </Card>
 
           <BriefingPreview
-            briefing={briefingQuery.data}
+            briefing={briefingQuery.briefing}
             isLoading={briefingQuery.isLoading}
           />
 
           <RecentReports
-            reports={reportsQuery.data}
+            reports={recentReports}
             isLoading={reportsQuery.isLoading}
+            canView={reportsQuery.canView}
             limit={3}
           />
         </div>

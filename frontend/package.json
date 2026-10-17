@@ -16,7 +16,8 @@
     "test:ui": "vitest --ui --browser.headless",
     "test:browser": "vitest",
     "test:coverage": "vitest run --coverage --browser.headless",
-    "test:browser:install": "playwright install chromium --with-deps"
+    "test:browser:install": "playwright install chromium --with-deps",
+    "api:types": "openapi-typescript ../core/docs/openapi.json -o src/api/schema.d.ts"
   },
   "dependencies": {
     "@clerk/react": "^6.4.3",
@@ -43,7 +44,6 @@
     "@tanstack/react-query": "^5.99.0",
     "@tanstack/react-router": "^1.168.22",
     "@tanstack/react-table": "^8.21.3",
-    "axios": "^1.15.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.1.1",
@@ -51,6 +51,7 @@
     "input-otp": "^1.4.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.8.0",
+    "openapi-fetch": "^0.17.0",
     "react": "^19.2.5",
     "react-day-picker": "9.14.0",
     "react-dom": "^19.2.5",
@@ -86,6 +87,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
     "knip": "^6.4.1",
+    "openapi-typescript": "^7.13.0",
     "playwright": "1.59.1",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.7.2",

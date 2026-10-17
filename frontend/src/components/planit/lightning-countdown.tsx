@@ -1,13 +1,18 @@
-import { CheckCircle2, Zap } from 'lucide-react'
-import { ALL_CLEAR_MINUTES, LIGHTNING_RADIUS_MI } from '@/api/mock/engine'
-import { formatDuration } from '@/lib/planit'
+import { ShieldAlert, Zap } from 'lucide-react'
+import {
+  ALL_CLEAR_MINUTES,
+  LIGHTNING_RADIUS_MI,
+  formatDuration,
+} from '@/lib/planit'
 import { cn } from '@/lib/utils'
 import { useCountdown } from '@/hooks/use-planit'
 
 const ALL_CLEAR_SECONDS = ALL_CLEAR_MINUTES * 60
 
 /**
- * Lightning stop-work all-clear timer. `inline` fits inside an alert row,
+ * Lightning stop-work all-clear timer. Reaching zero means the site is
+ * all-clear *eligible*: the backend never authorizes work to resume on its own,
+ * so a supervisor still has to clear it. `inline` fits inside an alert row,
  * `ring` is the large dial used where the countdown is the main content.
  */
 export function LightningCountdown({
@@ -39,19 +44,19 @@ export function LightningCountdown({
         className={cn(
           'flex items-center gap-2 rounded-md border px-2 py-1.5',
           cleared
-            ? 'border-emerald-500/30 bg-emerald-500/5'
+            ? 'border-amber-500/30 bg-amber-500/5'
             : 'border-red-600/30 bg-red-600/5',
           className
         )}
       >
         {cleared ? (
-          <CheckCircle2 className='size-3.5 shrink-0 text-emerald-600' />
+          <ShieldAlert className='size-3.5 shrink-0 text-amber-600' />
         ) : (
           <Zap className='size-3.5 shrink-0 fill-red-600 text-red-600' />
         )}
         <span className='text-xs whitespace-nowrap'>
           {cleared ? (
-            'All-clear reached'
+            'All-clear eligible · supervisor sign-off required'
           ) : (
             <>
               All-clear in{' '}
@@ -65,7 +70,7 @@ export function LightningCountdown({
           <span
             className={cn(
               'block h-full rounded-full transition-[width] duration-1000 ease-linear',
-              cleared ? 'bg-emerald-500' : 'bg-red-600'
+              cleared ? 'bg-amber-500' : 'bg-red-600'
             )}
             style={{ width: `${remainingShare * 100}%` }}
           />
@@ -101,16 +106,16 @@ export function LightningCountdown({
             strokeDasharray={`${circumference * (cleared ? 1 : remainingShare)} ${circumference}`}
             className={cn(
               'transition-[stroke-dasharray] duration-1000 ease-linear',
-              cleared ? 'stroke-emerald-500' : 'stroke-red-600'
+              cleared ? 'stroke-amber-500' : 'stroke-red-600'
             )}
           />
         </svg>
         <div className='absolute inset-0 flex flex-col items-center justify-center'>
           <span className='text-xl font-bold tabular-nums'>
-            {cleared ? 'Clear' : formatDuration(remaining)}
+            {cleared ? 'Eligible' : formatDuration(remaining)}
           </span>
           <span className='text-[10px] text-muted-foreground uppercase'>
-            {cleared ? 'resume work' : 'to all-clear'}
+            {cleared ? 'needs sign-off' : 'to all-clear'}
           </span>
         </div>
       </div>
@@ -122,10 +127,12 @@ export function LightningCountdown({
           <p
             className={cn(
               'text-sm font-semibold',
-              cleared ? 'text-emerald-600' : 'text-red-600 dark:text-red-400'
+              cleared ? 'text-amber-600' : 'text-red-600 dark:text-red-400'
             )}
           >
-            {cleared ? 'All-clear reached' : 'Stop-work in effect'}
+            {cleared
+              ? 'All-clear eligible · supervisor sign-off required'
+              : 'Stop-work in effect'}
           </p>
         )}
         <p className='text-xs text-muted-foreground'>

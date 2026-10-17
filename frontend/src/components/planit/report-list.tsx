@@ -1,15 +1,12 @@
-import { useState } from 'react'
+import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
-import { confirmHazardReport } from '@/api'
 import { BadgeCheck, MapPin } from 'lucide-react'
-import { SITE_SEED } from '@/api/mock/sites-data'
 import { type HazardReport } from '@/api/types'
 import { REPORT_TYPE_ICON, REPORT_TYPE_LABEL, relativeTime } from '@/lib/planit'
 import { cn } from '@/lib/utils'
+import { useSites } from '@/hooks/use-planit'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { AlertSeverityStatus } from './risk-status'
 
 export function ReportList({
   reports,
@@ -23,13 +20,15 @@ export function ReportList({
   isLoading?: boolean
   emptyMessage?: string
   showSite?: boolean
-  /** Hide the confirm action and photo, for narrow side panels. */
+  /** Clamp the note, for narrow side panels. */
   compact?: boolean
   className?: string
 }) {
-  const [confirming, setConfirming] = useState<string | null>(null)
-  const [confirmedIds, setConfirmedIds] = useState<string[]>([])
-  const [confirmError, setConfirmError] = useState<string | null>(null)
+  const { sites } = useSites()
+  const siteById = useMemo(
+    () => new Map(sites.map((site) => [site.id, site])),
+    [sites]
+  )
 
   if (isLoading) {
     return (
@@ -53,28 +52,11 @@ export function ReportList({
     )
   }
 
-  async function handleConfirm(report: HazardReport) {
-    setConfirming(report.id)
-    setConfirmError(null)
-    try {
-      const updated = await confirmHazardReport(report.id)
-      if (!updated) throw new Error('Report not found')
-      setConfirmedIds((prev) =>
-        prev.includes(report.id) ? prev : [...prev, report.id]
-      )
-    } catch {
-      setConfirmError(report.id)
-    } finally {
-      setConfirming(null)
-    }
-  }
-
   return (
     <ul className={cn('divide-y', className)}>
       {reports.map((report) => {
-        const site = SITE_SEED.find((s) => s.id === report.siteId)
+        const site = siteById.get(report.siteId)
         const Icon = REPORT_TYPE_ICON[report.type]
-        const confirmed = confirmedIds.includes(report.id)
         return (
           <li key={report.id} className='flex gap-3 py-4 first:pt-0 last:pb-0'>
             <span
@@ -91,10 +73,6 @@ export function ReportList({
                   <span className='text-sm font-semibold'>
                     {REPORT_TYPE_LABEL[report.type]}
                   </span>
-                  <AlertSeverityStatus
-                    severity={report.severity}
-                    className='leading-4'
-                  />
                   {report.status === 'verified' ? (
                     <Badge
                       variant='outline'
@@ -120,74 +98,29 @@ export function ReportList({
                   {relativeTime(report.createdAt)}
                 </time>
               </div>
-              <div className='flex gap-3'>
-                <p
-                  className={cn(
-                    'min-w-0 flex-1 text-sm leading-relaxed break-words text-foreground',
-                    compact && 'line-clamp-2'
-                  )}
-                >
-                  {report.note}
-                </p>
-                {report.photoUrl && !compact ? (
-                  <img
-                    src={report.photoUrl}
-                    alt={`${REPORT_TYPE_LABEL[report.type]} reported by ${report.reportedBy}`}
-                    className='size-14 shrink-0 rounded-md border object-cover'
-                  />
-                ) : null}
-              </div>
-              <div className='flex flex-wrap items-center justify-between gap-x-3 gap-y-2'>
-                <div className='flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-5 text-muted-foreground'>
-                  <span className='font-medium text-foreground'>
-                    {report.reportedBy}
-                  </span>
-                  {!compact ? (
-                    <>
-                      <span aria-hidden>·</span>
-                      <span className='capitalize'>{report.reporterRole}</span>
-                    </>
-                  ) : null}
-                  {showSite && site ? (
-                    <Link
-                      to='/sites/$siteId'
-                      params={{ siteId: site.id }}
-                      className='inline-flex min-w-0 items-center gap-1 rounded-sm hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring'
-                    >
-                      <MapPin className='size-3 shrink-0' aria-hidden />
-                      {site.name} ({site.state})
-                    </Link>
-                  ) : null}
-                  {compact ? (
-                    <span>· {report.confirmations} confirmed</span>
-                  ) : null}
-                </div>
-                {!compact ? (
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='h-8 text-xs shadow-none max-sm:h-11'
-                    disabled={confirming !== null || confirmed}
-                    aria-label={`${confirmed ? 'Confirmed' : 'Confirm hazard still present'}: ${REPORT_TYPE_LABEL[report.type]} at ${site?.name ?? report.siteId}`}
-                    onClick={() => handleConfirm(report)}
+              <p
+                className={cn(
+                  'text-sm leading-relaxed break-words text-foreground',
+                  compact && 'line-clamp-2'
+                )}
+              >
+                {report.note}
+              </p>
+              <div className='flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-5 text-muted-foreground'>
+                <span className='font-medium text-foreground'>
+                  {report.reportedBy}
+                </span>
+                {showSite && site ? (
+                  <Link
+                    to='/sites/$siteId'
+                    params={{ siteId: site.id }}
+                    className='inline-flex min-w-0 items-center gap-1 rounded-sm hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring'
                   >
-                    <BadgeCheck className='size-3.5' />{' '}
-                    {confirmed
-                      ? 'Confirmed'
-                      : confirming === report.id
-                        ? 'Confirming…'
-                        : 'Still there'}
-                    <span className='ms-1 text-muted-foreground tabular-nums'>
-                      {report.confirmations + (confirmed ? 1 : 0)}
-                    </span>
-                  </Button>
+                    <MapPin className='size-3 shrink-0' aria-hidden />
+                    {site.name} ({site.state})
+                  </Link>
                 ) : null}
               </div>
-              {confirmError === report.id ? (
-                <p role='alert' className='text-xs text-destructive'>
-                  Could not confirm this report. Please try again.
-                </p>
-              ) : null}
             </div>
           </li>
         )

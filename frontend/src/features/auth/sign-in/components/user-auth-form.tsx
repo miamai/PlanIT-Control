@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate } from '@tanstack/react-router'
-import { HardHat, Loader2, LogIn, MonitorSmartphone } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import { Loader2, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
-import { IconFacebook, IconGithub } from '@/assets/brand-icons'
-import { useAuthStore } from '@/stores/auth-store'
-import { sleep, cn } from '@/lib/utils'
+import { login } from '@/api/auth'
+import { ApiError } from '@/api/client'
+import { displayName } from '@/stores/auth-store'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -21,13 +22,12 @@ import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 
 const formSchema = z.object({
-  email: z.email({
-    error: (iss) => (iss.input === '' ? 'Please enter your email.' : undefined),
-  }),
-  password: z
+  username: z
     .string()
-    .min(1, 'Please enter your password.')
-    .min(7, 'Password must be at least 7 characters long.'),
+    .trim()
+    .min(1, 'Please enter your username.')
+    .max(64, 'Username must be at most 64 characters.'),
+  password: z.string().min(1, 'Please enter your password.'),
 })
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
@@ -40,46 +40,37 @@ export function UserAuthForm({
   ...props
 }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
-  const [role, setRole] = useState<'supervisor' | 'crew'>('supervisor')
   const navigate = useNavigate()
-  const { auth } = useAuthStore()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      username: '',
       password: '',
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
-
-    toast.promise(sleep(2000), {
-      loading: 'Signing in...',
-      success: () => {
-        setIsLoading(false)
-
-        // Mock successful authentication with expiry computed at success time
-        const mockUser = {
-          accountNo: 'ACC001',
-          email: data.email,
-          role: [role, 'user'],
-          exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
-        }
-
-        // Set user and access token
-        auth.setUser(mockUser)
-        auth.setAccessToken('mock-access-token')
-
-        // Redirect to the stored location or default to dashboard
-        const targetPath = redirectTo || '/'
-        navigate({ to: targetPath, replace: true })
-
-        return `Welcome back, ${data.email}!`
-      },
-      error: 'Error',
-    })
+    try {
+      const session = await login(data.username, data.password)
+      toast.success(`Welcome back, ${displayName(session.user)}!`)
+      navigate({ to: redirectTo || '/', replace: true })
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        form.setError('password', {
+          message: 'Invalid username or password.',
+        })
+      } else {
+        toast.error(
+          error instanceof ApiError
+            ? error.message
+            : 'Could not reach the PlanIT API. Check that it is running.'
+        )
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -89,38 +80,14 @@ export function UserAuthForm({
         className={cn('grid gap-3', className)}
         {...props}
       >
-        <div className='grid gap-2'>
-          <span className='text-sm font-medium'>Sign in as</span>
-          <div className='grid grid-cols-2 gap-2'>
-            <Button
-              type='button'
-              variant={role === 'supervisor' ? 'default' : 'outline'}
-              onClick={() => setRole('supervisor')}
-            >
-              <MonitorSmartphone /> Supervisor
-            </Button>
-            <Button
-              type='button'
-              variant={role === 'crew' ? 'default' : 'outline'}
-              onClick={() => setRole('crew')}
-            >
-              <HardHat /> Crew
-            </Button>
-          </div>
-          <p className='text-xs text-muted-foreground'>
-            {role === 'supervisor'
-              ? 'Full fleet map, alert management, and briefings.'
-              : 'Field mode: report hazards, receive stop-work alerts.'}
-          </p>
-        </div>
         <FormField
           control={form.control}
-          name='email'
+          name='username'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder='name@example.com' {...field} />
+                <Input autoComplete='username' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -130,18 +97,16 @@ export function UserAuthForm({
           control={form.control}
           name='password'
           render={({ field }) => (
-            <FormItem className='relative'>
+            <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <PasswordInput placeholder='********' {...field} />
+                <PasswordInput
+                  placeholder='********'
+                  autoComplete='current-password'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
-              <Link
-                to='/forgot-password'
-                className='absolute inset-e-0 -top-0.5 text-sm font-medium text-muted-foreground hover:opacity-75'
-              >
-                Forgot password?
-              </Link>
             </FormItem>
           )}
         />
@@ -149,26 +114,6 @@ export function UserAuthForm({
           {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
           Sign in
         </Button>
-
-        <div className='relative my-2'>
-          <div className='absolute inset-0 flex items-center'>
-            <span className='w-full border-t' />
-          </div>
-          <div className='relative flex justify-center text-xs uppercase'>
-            <span className='bg-background px-2 text-muted-foreground'>
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <div className='grid grid-cols-2 gap-2'>
-          <Button variant='outline' type='button' disabled={isLoading}>
-            <IconGithub className='h-4 w-4' /> GitHub
-          </Button>
-          <Button variant='outline' type='button' disabled={isLoading}>
-            <IconFacebook className='h-4 w-4' /> Facebook
-          </Button>
-        </div>
       </form>
     </Form>
   )

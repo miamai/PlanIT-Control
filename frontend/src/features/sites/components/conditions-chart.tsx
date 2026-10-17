@@ -27,7 +27,8 @@ const METRICS: {
     label: 'Heat index',
     unit: '°F',
     color: '#f97316',
-    threshold: { value: 100, label: 'Advisory 100°F' },
+    // Core API default (demo profile) for a HIGH heat alert.
+    threshold: { value: 103, label: 'Alert 103°F' },
   },
   { key: 'windMph', label: 'Wind', unit: 'mph', color: '#14b8a6' },
   { key: 'precipIn', label: 'Rainfall', unit: 'in', color: '#0ea5e9' },
@@ -61,20 +62,23 @@ export function ConditionsChart({ points }: { points: TimelinePoint[] }) {
     () =>
       points.map((point) => ({
         time: format(parseISO(point.t), 'HH:mm'),
-        heatIndex: point.heatIndex,
-        windMph: point.windMph,
-        precipIn: point.precipIn,
+        heatIndex: point.heatIndex ?? null,
+        windMph: point.windMph ?? null,
+        precipIn: point.precipIn ?? null,
       })),
     [points]
   )
-  const latest = data[data.length - 1]
 
   return (
     <div className='grid gap-6 md:grid-cols-3 md:gap-4'>
       {METRICS.map((metric) => {
+        const values = data.flatMap((d) =>
+          d[metric.key] === null ? [] : [d[metric.key] as number]
+        )
+        const latest = values[values.length - 1]
         const total =
-          metric.key === 'precipIn'
-            ? data.reduce((sum, d) => sum + d.precipIn, 0)
+          metric.key === 'precipIn' && values.length > 0
+            ? values.reduce((sum, value) => sum + value, 0)
             : undefined
         return (
           <div key={metric.key} className='min-w-0'>
@@ -94,15 +98,17 @@ export function ConditionsChart({ points }: { points: TimelinePoint[] }) {
                     </span>{' '}
                     in / 24 h
                   </>
-                ) : latest ? (
+                ) : latest !== undefined ? (
                   <>
-                    now{' '}
+                    latest{' '}
                     <span className='font-semibold text-foreground tabular-nums'>
-                      {latest[metric.key]}
+                      {latest}
                     </span>{' '}
                     {metric.unit}
                   </>
-                ) : null}
+                ) : (
+                  'no data'
+                )}
               </p>
             </div>
             <ResponsiveContainer width='100%' height={130}>
@@ -189,7 +195,8 @@ export function ConditionsChart({ points }: { points: TimelinePoint[] }) {
                     fill={metric.color}
                     fillOpacity={0.12}
                     strokeWidth={2}
-                    dot={false}
+                    dot={values.length < 3}
+                    connectNulls
                   />
                 </AreaChart>
               )}

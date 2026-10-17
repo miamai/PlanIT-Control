@@ -1,24 +1,18 @@
-import { format } from 'date-fns'
-import { useQuery } from '@tanstack/react-query'
+import { format, parseISO } from 'date-fns'
 import { Link } from '@tanstack/react-router'
-import { getHazardIndexHistory, getTimeline, listHazardReports } from '@/api'
 import {
   Activity,
   ArrowLeft,
+  CalendarClock,
   ChartLine,
   CloudSun,
   Map as MapIcon,
   Pin,
-  RadioTower,
   Scale,
   Siren,
   TriangleAlert,
 } from 'lucide-react'
-import {
-  useLiveStrikes,
-  useSiteBundle,
-  useSimulateStrike,
-} from '@/hooks/use-planit'
+import { useHazardReports, useSiteDetail } from '@/hooks/use-planit'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -37,27 +31,25 @@ import { ConditionsChart } from './components/conditions-chart'
 import { HazardIndexChart } from './components/hazard-index-chart'
 
 export function SiteDetail({ siteId }: { siteId: string }) {
-  const bundle = useSiteBundle(siteId)
-  const strikes = useLiveStrikes()
-  const simulateStrike = useSimulateStrike()
+  const detail = useSiteDetail(siteId)
+  const reportsQuery = useHazardReports(siteId)
 
-  const reportsQuery = useQuery({
-    queryKey: ['hazard-reports', siteId],
-    queryFn: () => listHazardReports(siteId),
-    staleTime: 30_000,
-  })
-  const historyQuery = useQuery({
-    queryKey: ['hazard-index-history', siteId],
-    queryFn: () => getHazardIndexHistory(siteId),
-    staleTime: 60_000,
-  })
-  const timelineQuery = useQuery({
-    queryKey: ['timeline', siteId],
-    queryFn: () => getTimeline(siteId),
-    staleTime: 60_000,
-  })
+  if (detail.isLoading) {
+    return (
+      <>
+        <PlanitHeader />
+        <Main>
+          <Skeleton className='mb-4 h-48 w-full' />
+          <div className='grid gap-4 lg:grid-cols-3'>
+            <Skeleton className='h-96 w-full lg:col-span-2' />
+            <Skeleton className='h-96 w-full' />
+          </div>
+        </Main>
+      </>
+    )
+  }
 
-  if (!bundle) {
+  if (detail.notFound || !detail.site || !detail.risk) {
     return (
       <>
         <PlanitHeader />
@@ -80,8 +72,7 @@ export function SiteDetail({ siteId }: { siteId: string }) {
     )
   }
 
-  const { site, risk, conditions, alerts } = bundle
-  const siteStrikes = strikes.filter((strike) => strike.siteId === siteId)
+  const { site, risk, alerts, domains, strikes, timeline, history } = detail
   const lightningAlert = alerts.find(
     (alert) => alert.type === 'lightning' && alert.allClearAt
   )
@@ -115,25 +106,23 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                 <Badge variant='outline'>{site.plantType}</Badge>
               </div>
               <p className='text-sm text-muted-foreground'>
-                {site.utility} · {site.county} County, {site.state} ·{' '}
-                {site.capacityMw.toLocaleString()} MW
+                {site.utility} · {site.county} County, {site.state}
+                {site.capacityMw !== undefined
+                  ? ` · ${site.capacityMw.toLocaleString()} MW`
+                  : ''}
               </p>
               <p className='text-xs text-muted-foreground tabular-nums'>
                 {site.lat.toFixed(4)}, {site.lon.toFixed(4)} · EIA plant #
-                {site.eiaPlantId} · updated {format(risk.updatedAt, 'HH:mm:ss')}
+                {site.eiaPlantId}
+                {risk.updatedAt
+                  ? ` · scored ${format(risk.updatedAt, 'MMM d, HH:mm')}`
+                  : ''}
               </p>
               <div className='flex flex-wrap gap-2 pt-2'>
                 <Button asChild size='sm'>
                   <Link to='/hazards/new' search={{ site: site.id }}>
                     <TriangleAlert /> Report hazard
                   </Link>
-                </Button>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => simulateStrike(site.id)}
-                >
-                  <RadioTower /> Simulate strike
                 </Button>
               </div>
             </div>
@@ -142,8 +131,15 @@ export function SiteDetail({ siteId }: { siteId: string }) {
               <HazardGauge
                 score={risk.score}
                 recommendation={risk.recommendation}
+                status={risk.status}
               />
-              <TrendIndicator trend={risk.trend} />
+              {risk.trend ? <TrendIndicator trend={risk.trend} /> : null}
+              {risk.predictionDate ? (
+                <span className='text-[11px] text-muted-foreground'>
+                  for {format(parseISO(risk.predictionDate), 'EEE, MMM d')}
+                  {risk.status === 'stale' ? ' · stale' : ''}
+                </span>
+              ) : null}
             </div>
           </div>
         </Card>
@@ -153,7 +149,7 @@ export function SiteDetail({ siteId }: { siteId: string }) {
             <Card className='gap-4'>
               <PanelHeader icon={Activity} title='Hazards' />
               <CardContent>
-                <RiskPicture domains={risk.domains} />
+                <RiskPicture domains={domains} />
               </CardContent>
             </Card>
 
@@ -164,8 +160,16 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                 aside='Last 14 days'
               />
               <CardContent>
-                {historyQuery.data ? (
-                  <HazardIndexChart points={historyQuery.data} />
+                {history ? (
+                  history.length > 0 ? (
+                    <HazardIndexChart points={history} />
+                  ) : (
+                    <div className='rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground'>
+                      {site.mlSupported
+                        ? 'No hazard index has been stored in the last 14 days.'
+                        : 'This site is outside the hazard model catalog.'}
+                    </div>
+                  )
                 ) : (
                   <Skeleton className='h-[240px] w-full' />
                 )}
@@ -179,8 +183,14 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                 aside='Last 24 hours'
               />
               <CardContent>
-                {timelineQuery.data ? (
-                  <ConditionsChart points={timelineQuery.data} />
+                {timeline ? (
+                  timeline.length > 0 ? (
+                    <ConditionsChart points={timeline} />
+                  ) : (
+                    <div className='rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground'>
+                      No weather observations stored in the last 24 hours.
+                    </div>
+                  )
                 ) : (
                   <Skeleton className='h-[160px] w-full' />
                 )}
@@ -192,9 +202,16 @@ export function SiteDetail({ siteId }: { siteId: string }) {
             <Card className='gap-4'>
               <PanelHeader icon={Scale} title='Score drivers' />
               <CardContent className='space-y-3'>
+                {risk.reasons.length === 0 ? (
+                  <p className='text-sm text-muted-foreground'>
+                    {risk.score === null
+                      ? 'No hazard index for this site.'
+                      : 'The model did not report score drivers for this prediction.'}
+                  </p>
+                ) : null}
                 <ul className='space-y-3'>
                   {risk.reasons.map((reason) => (
-                    <li key={reason.domain}>
+                    <li key={reason.label}>
                       <div className='mb-1 flex items-center justify-between gap-2 text-sm'>
                         <span className='font-medium'>{reason.label}</span>
                         <span className='text-xs text-muted-foreground tabular-nums'>
@@ -213,14 +230,26 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                     </li>
                   ))}
                 </ul>
-                <p
-                  className='text-[11px] text-muted-foreground'
-                  title={risk.backtest}
-                >
-                  {risk.modelVersion}
-                </p>
+                {risk.modelVersion ? (
+                  <p className='text-[11px] text-muted-foreground'>
+                    {risk.modelVersion}
+                  </p>
+                ) : null}
               </CardContent>
             </Card>
+
+            {risk.workPlan.length > 0 ? (
+              <Card className='gap-4'>
+                <PanelHeader icon={CalendarClock} title='Work plan' />
+                <CardContent>
+                  <ul className='list-disc space-y-1.5 ps-4 text-sm leading-relaxed marker:text-muted-foreground'>
+                    {risk.workPlan.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ) : null}
 
             <Card className='gap-4'>
               <PanelHeader
@@ -256,11 +285,11 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                     {
                       site,
                       score: risk.score,
-                      activeLightning: conditions.lightningActive,
+                      activeLightning: detail.lightningActive,
                     },
                   ]}
-                  strikes={siteStrikes}
-                  reports={reportsQuery.data ?? []}
+                  strikes={strikes}
+                  reports={reportsQuery.reports ?? []}
                   selectedSiteId={site.id}
                   height='h-[280px]'
                   interactive={false}
@@ -288,9 +317,13 @@ export function SiteDetail({ siteId }: { siteId: string }) {
               />
               <CardContent>
                 <ReportList
-                  reports={reportsQuery.data}
+                  reports={reportsQuery.reports}
                   isLoading={reportsQuery.isLoading}
-                  emptyMessage='No reports'
+                  emptyMessage={
+                    reportsQuery.canView
+                      ? 'No reports'
+                      : 'Visible to supervisors and admins'
+                  }
                 />
               </CardContent>
             </Card>

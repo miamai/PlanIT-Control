@@ -11,9 +11,24 @@ export function ScoreBar({
   score,
   className,
 }: {
-  score: number
+  /** Null when the site has no hazard index; never drawn as zero. */
+  score: number | null
   className?: string
 }) {
+  if (score === null) {
+    return (
+      <div
+        className={cn('flex items-center gap-2', className)}
+        role='img'
+        aria-label='No hazard index'
+      >
+        <span className='w-7 text-sm font-semibold text-muted-foreground'>
+          —
+        </span>
+        <span className='relative h-1.5 w-full max-w-28 min-w-16 rounded-full border border-dashed' />
+      </div>
+    )
+  }
   const call = recommendationFromScore(score)
   return (
     <div

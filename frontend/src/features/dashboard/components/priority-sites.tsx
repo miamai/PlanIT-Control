@@ -40,6 +40,7 @@ export function PrioritySites({ items }: { items: SiteBundle[] }) {
             <RecommendationStatus
               withDesktopLegend
               recommendation={bundle.risk.recommendation}
+              status={bundle.risk.status}
               className='col-start-3 row-start-2 justify-end'
             />
           </Link>

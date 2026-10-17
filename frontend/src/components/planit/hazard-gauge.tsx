@@ -1,4 +1,4 @@
-import { type Recommendation } from '@/api/types'
+import { type Recommendation, type RiskStatus } from '@/api/types'
 import {
   RECOMMENDATION_HEX,
   RISK_BANDS,
@@ -30,18 +30,22 @@ function arc(from: number, to: number): string {
 export function HazardGauge({
   score,
   recommendation,
+  status,
   size = 'default',
   showLabel = true,
   className,
 }: {
-  score: number
-  recommendation?: Recommendation
+  /** Null when the site has no hazard index; the dial is then left empty. */
+  score: number | null
+  recommendation?: Recommendation | null
+  status?: RiskStatus
   size?: 'default' | 'sm'
   showLabel?: boolean
   className?: string
 }) {
-  const value = Math.min(10, Math.max(0, score))
-  const call = recommendation ?? recommendationFromScore(score)
+  const value = score === null ? 0 : Math.min(10, Math.max(0, score))
+  const call =
+    score === null ? null : (recommendation ?? recommendationFromScore(score))
   const [markerX, markerY] = pointAt(value / 10)
 
   return (
@@ -56,7 +60,11 @@ export function HazardGauge({
         viewBox='0 0 200 112'
         className='w-full overflow-visible'
         role='img'
-        aria-label={`Hazard index ${score.toFixed(1)} of 10, ${call}`}
+        aria-label={
+          score === null
+            ? 'No hazard index'
+            : `Hazard index ${score.toFixed(1)} of 10, ${call}`
+        }
       >
         {RISK_BANDS.map((band) => {
           const from = band.from / 10 + (band.from > 0 ? GAP / 2 : 0)
@@ -71,7 +79,7 @@ export function HazardGauge({
                 stroke={RECOMMENDATION_HEX[band.recommendation]}
                 strokeOpacity={0.16}
               />
-              {filledTo > from ? (
+              {score !== null && filledTo > from ? (
                 <path
                   d={arc(from, filledTo)}
                   fill='none'
@@ -82,14 +90,16 @@ export function HazardGauge({
             </g>
           )
         })}
-        <circle
-          cx={markerX}
-          cy={markerY}
-          r={STROKE / 2 + 2}
-          fill={RECOMMENDATION_HEX[call]}
-          className='stroke-background'
-          strokeWidth={3}
-        />
+        {call ? (
+          <circle
+            cx={markerX}
+            cy={markerY}
+            r={STROKE / 2 + 2}
+            fill={RECOMMENDATION_HEX[call]}
+            className='stroke-background'
+            strokeWidth={3}
+          />
+        ) : null}
         <text
           x='100'
           y='90'
@@ -99,7 +109,7 @@ export function HazardGauge({
             size === 'sm' ? 'text-[38px]' : 'text-[42px]'
           )}
         >
-          {score.toFixed(1)}
+          {score === null ? '—' : score.toFixed(1)}
         </text>
         <text
           x='100'
@@ -111,7 +121,11 @@ export function HazardGauge({
         </text>
       </svg>
       {showLabel ? (
-        <RecommendationStatus recommendation={call} className='mt-2' />
+        <RecommendationStatus
+          recommendation={call}
+          status={status}
+          className='mt-2'
+        />
       ) : null}
     </div>
   )

@@ -11,7 +11,9 @@ export interface Summary {
   warning: number
   advisory: number
   lightningSites: number
-  avgScore: number
+  scoredSites: number
+  /** Mean over scored sites only; null when no site has a hazard index. */
+  avgScore: number | null
 }
 
 export function SummaryCards({ summary }: { summary: Summary }) {
@@ -63,15 +65,18 @@ export function SummaryCards({ summary }: { summary: Summary }) {
       />
       <StatCard
         label='Avg. hazard index'
-        value={summary.avgScore.toFixed(1)}
+        value={summary.avgScore === null ? '—' : summary.avgScore.toFixed(1)}
         icon={Gauge}
         to='/sites'
         max={10}
         segments={[
           {
-            value: summary.avgScore,
-            label: 'of 10',
-            color: RECOMMENDATION_BG[recommendationFromScore(summary.avgScore)],
+            value: summary.avgScore ?? 0,
+            label: `of 10 · ${summary.scoredSites} of ${summary.sites} sites scored`,
+            color:
+              summary.avgScore === null
+                ? 'bg-muted'
+                : RECOMMENDATION_BG[recommendationFromScore(summary.avgScore)],
           },
         ]}
       />

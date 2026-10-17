@@ -2,6 +2,7 @@ import { Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import {
   type AlertSeverity,
   type Recommendation,
+  type RiskStatus,
   type Trend,
 } from '@/api/types'
 import {
@@ -15,16 +16,43 @@ import {
 } from '@/lib/planit'
 import { cn } from '@/lib/utils'
 
+const NO_SCORE_LABEL: Record<RiskStatus, string> = {
+  available: 'No score',
+  missing: 'No score',
+  stale: 'Stale',
+  unsupported: 'Not modeled',
+}
+
 export function RecommendationStatus({
   recommendation,
+  status = 'missing',
   className,
   withDesktopLegend = false,
 }: {
-  recommendation: Recommendation
+  /** Null when there is no hazard index; `status` then explains why. */
+  recommendation: Recommendation | null
+  status?: RiskStatus
   className?: string
   /** Keep the decision accessible when the desktop legend replaces its visible label. */
   withDesktopLegend?: boolean
 }) {
+  if (!recommendation) {
+    return (
+      <span
+        className={cn(
+          'inline-flex shrink-0 items-center text-xs font-medium whitespace-nowrap text-muted-foreground',
+          className
+        )}
+        title={
+          status === 'unsupported'
+            ? 'This site is outside the current ML model catalog'
+            : 'No hazard index has been generated for this site yet'
+        }
+      >
+        {NO_SCORE_LABEL[status]}
+      </span>
+    )
+  }
   return (
     <span
       className={cn(

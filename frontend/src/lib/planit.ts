@@ -36,6 +36,7 @@ export const ALERT_TYPE_ICON: Record<AlertType, typeof Zap> = {
   wildfire: Flame,
   storm: Wind,
   wildlife: PawPrint,
+  soil: Layers,
 }
 
 export const ALERT_TYPE_LABEL: Record<AlertType, string> = {
@@ -43,19 +44,23 @@ export const ALERT_TYPE_LABEL: Record<AlertType, string> = {
   flood: 'Flood',
   heat: 'Heat',
   wildfire: 'Wildfire',
-  storm: 'Wind',
+  storm: 'Weather',
   wildlife: 'Wildlife',
+  soil: 'Ground / soil',
 }
 
 export const REPORT_TYPE_ICON: Record<HazardReportType, typeof Zap> = {
   ...ALERT_TYPE_ICON,
-  soil: Layers,
 }
 
 export const REPORT_TYPE_LABEL: Record<HazardReportType, string> = {
   ...ALERT_TYPE_LABEL,
-  soil: 'Ground / soil',
 }
+
+/** Lightning stop-work rule enforced by the core API (LIGHTNING_RADIUS_MILES). */
+export const LIGHTNING_RADIUS_MI = 10
+/** Minutes after the latest qualifying strike before all-clear eligibility. */
+export const ALL_CLEAR_MINUTES = 30
 
 export const SEVERITY_LABEL: Record<SeverityLevel, string> = {
   low: 'Low',
@@ -161,22 +166,6 @@ export function formatDuration(totalSeconds: number): string {
   const minutes = Math.floor(safe / 60)
   const seconds = safe % 60
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-}
-
-export function formatCountdownTo(
-  target: string | number | Date,
-  now: number
-): string {
-  const diff = Math.max(
-    0,
-    Math.floor((new Date(target).getTime() - now) / 1000)
-  )
-  const hours = Math.floor(diff / 3600)
-  const minutes = Math.floor((diff % 3600) / 60)
-  const seconds = diff % 60
-  return [hours, minutes, seconds]
-    .map((n) => String(n).padStart(2, '0'))
-    .join(':')
 }
 
 export function siteLabel(name: string, state: string): string {

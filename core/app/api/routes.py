@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
@@ -385,12 +385,50 @@ async def site_risk(
     )
 
 
+@router.get(
+    "/api/sites/{site_id}/risk/history", response_model=Envelope[list[RiskRead]], tags=["risk"]
+)
+async def site_risk_history(
+    site_id: uuid.UUID,
+    _: CrewPrincipal,
+    session: DbSession,
+    days: int = Query(14, ge=1, le=90),
+) -> Envelope[list[RiskRead]]:
+    if not await session.get(Site, site_id):
+        raise HTTPException(status_code=404, detail="Site not found")
+    cutoff = datetime.now(UTC).date() - timedelta(days=days)
+    rows = (
+        await session.scalars(
+            select(RiskScore)
+            .where(RiskScore.site_id == site_id, RiskScore.prediction_date >= cutoff)
+            .order_by(RiskScore.prediction_date, RiskScore.generated_at.desc())
+        )
+    ).all()
+    latest_per_day: dict = {}
+    for row in rows:
+        latest_per_day.setdefault(row.prediction_date, row)
+    return Envelope(data=[RiskRead.model_validate(row) for row in latest_per_day.values()])
+
+
 @router.get("/api/risk/rankings", response_model=Envelope[list[RiskRanking]], tags=["risk"])
 async def risk_rankings(_: CrewPrincipal, session: DbSession) -> Envelope[list[RiskRanking]]:
     sites = (await session.scalars(select(Site))).all()
+    # One query for every site's latest score instead of one query per site.
+    newest_first = (
+        func.row_number()
+        .over(partition_by=RiskScore.site_id, order_by=RiskScore.generated_at.desc())
+        .label("rank")
+    )
+    ranked = select(RiskScore.id, newest_first).subquery()
+    latest_scores = (
+        await session.scalars(
+            select(RiskScore).join(ranked, RiskScore.id == ranked.c.id).where(ranked.c.rank == 1)
+        )
+    ).all()
+    latest = {score.site_id: score for score in latest_scores}
     rankings = []
     for site in sites:
-        score = await _latest_risk(session, site.id)
+        score = latest.get(site.id)
         rankings.append(
             RiskRanking(
                 site=SiteRead.model_validate(site),
@@ -451,7 +489,10 @@ async def store_risk_prediction(
 
 def _risk_status(site: Site, score: RiskScore | None) -> str:
     if score:
-        expires = score.generated_at + timedelta(seconds=score.valid_for_seconds)
+        generated = score.generated_at
+        if generated.tzinfo is None:  # SQLite drops the zone; every stored time is UTC
+            generated = generated.replace(tzinfo=UTC)
+        expires = generated + timedelta(seconds=score.valid_for_seconds)
         return "available" if expires > datetime.now(UTC) else "stale"
     return "unsupported" if not site.ml_supported else "missing"
 
@@ -472,6 +513,38 @@ async def briefings(
         )
     ).all()
     return Envelope(data=[BriefingRead.model_validate(row) for row in rows])
+
+
+@router.get("/api/briefings", response_model=Envelope[list[BriefingRead]], tags=["briefings"])
+async def fleet_briefings(
+    _: CrewPrincipal,
+    session: DbSession,
+    briefing_date: date | None = None,
+    since: date | None = None,
+    limit: int = Query(500, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+) -> Envelope[list[BriefingRead]]:
+    filters = []
+    if briefing_date:
+        filters.append(SafetyBriefing.briefing_date == briefing_date)
+    if since:
+        filters.append(SafetyBriefing.briefing_date >= since)
+    total = await session.scalar(
+        select(func.count()).select_from(SafetyBriefing).where(*filters)
+    )
+    rows = (
+        await session.scalars(
+            select(SafetyBriefing)
+            .where(*filters)
+            .order_by(SafetyBriefing.briefing_date.desc(), SafetyBriefing.generated_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+    ).all()
+    return Envelope(
+        data=[BriefingRead.model_validate(row) for row in rows],
+        meta=PageMeta(limit=limit, offset=offset, total=total or 0),
+    )
 
 
 @router.post("/api/admin/ingestion/{provider}", tags=["admin"])

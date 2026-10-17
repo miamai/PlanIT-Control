@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { listHazardReports } from '@/api'
 import {
   BadgeCheck,
   Clock,
@@ -10,9 +8,8 @@ import {
   MapPinned,
   Plus,
 } from 'lucide-react'
-import { SITE_SEED } from '@/api/mock/sites-data'
 import { REPORT_TYPE_LABEL } from '@/lib/planit'
-import { useLiveNow } from '@/hooks/use-planit'
+import { useHazardReports, useLiveNow, useSites } from '@/hooks/use-planit'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -36,15 +33,15 @@ const TYPES = [
 ] as const
 
 export function Hazards() {
-  const reportsQuery = useQuery({
-    queryKey: ['hazard-reports'],
-    queryFn: () => listHazardReports(),
-    staleTime: 15_000,
-  })
+  const reportsQuery = useHazardReports()
+  const { sites } = useSites()
   const [type, setType] = useState<string>(ALL)
 
   const now = useLiveNow()
-  const reports = useMemo(() => reportsQuery.data ?? [], [reportsQuery.data])
+  const reports = useMemo(
+    () => reportsQuery.reports ?? [],
+    [reportsQuery.reports]
+  )
 
   const filtered = useMemo(
     () => (type === ALL ? reports : reports.filter((r) => r.type === type)),
@@ -61,8 +58,8 @@ export function Hazards() {
   const recent = reports.filter(
     (r) => now - new Date(r.createdAt).getTime() < 24 * 60 * 60 * 1000
   ).length
-  const bySeverity = { critical: 0, warning: 0, info: 0 }
-  for (const report of reports) bySeverity[report.severity] += 1
+  const byStatus = { new: 0, verified: 0, dismissed: 0 }
+  for (const report of reports) byStatus[report.status] += 1
 
   return (
     <>
@@ -85,20 +82,16 @@ export function Hazards() {
             value={reports.length}
             icon={Database}
             segments={[
+              { value: byStatus.new, label: 'new', color: 'bg-amber-500' },
               {
-                value: bySeverity.critical,
-                label: 'critical',
+                value: byStatus.verified,
+                label: 'verified',
                 color: 'bg-red-600',
               },
               {
-                value: bySeverity.warning,
-                label: 'warning',
-                color: 'bg-amber-500',
-              },
-              {
-                value: bySeverity.info,
-                label: 'advisory',
-                color: 'bg-sky-500',
+                value: byStatus.dismissed,
+                label: 'dismissed',
+                color: 'bg-slate-400',
               },
             ]}
           />
@@ -167,7 +160,11 @@ export function Hazards() {
                 reports={filtered}
                 isLoading={reportsQuery.isLoading}
                 showSite
-                emptyMessage='No reports'
+                emptyMessage={
+                  reportsQuery.canView
+                    ? 'No reports'
+                    : 'Crew reports are visible to supervisors and admins.'
+                }
               />
             </CardContent>
           </Card>
@@ -177,7 +174,7 @@ export function Hazards() {
               <PanelHeader icon={MapPinned} title='Map' />
               <CardContent>
                 <SiteMap
-                  markers={SITE_SEED.map((site) => ({ site, score: 0 }))}
+                  markers={sites.map((site) => ({ site, score: null }))}
                   reports={filtered}
                   siteStyle='context'
                   height='h-[420px]'
