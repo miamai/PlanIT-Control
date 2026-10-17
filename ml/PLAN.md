@@ -16,7 +16,7 @@ Owner: Person B (ML and AI). This covers getting historical data from public sou
 
 ```
 ml/
-  data/raw/        # untouched downloads (gitignored)
+  data/raw/        # untouched downloads (HTTP caches, logs and weather_budget.json stay local)
   data/processed/  # sites.parquet, weather_daily.parquet, labels.parquet, train.parquet
   pipeline/        # 01_sites.py … 08_train.py
   features.py      # shared by training AND the live endpoint

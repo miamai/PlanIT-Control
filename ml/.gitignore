@@ -1,5 +1,5 @@
-data/raw/
-data/processed/
+data/raw/*.log
+data/raw/weather_budget.json
 .venv/
 __pycache__/
 *.sqlite
