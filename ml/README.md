@@ -99,10 +99,10 @@ models decide; the language model only explains:
    live alerts, recommended actions), built from the risk JSON.
 2. **Writer**: a local open model on Apple Silicon (MLX, weights from Hugging Face), or Gemini over
    REST when `GEMINI_API_KEY` is set (`GEMINI_MODEL` picks the model; not tested here without a key).
-3. **Checker**: rejects a draft if it uses any number not in the fact sheet, states a different
-   decision, leaves out the main concern, or brings up a hazard the facts don't mention (tornado,
-   snake, ...). A rejected draft gets one retry with the checker's feedback, then falls back to a
-   template that always passes.
+3. **Checker**: rejects a draft if it uses any number not in the fact sheet (digits or words), states
+   a different decision, leaves out the main concern or a live alert, invents an alert, or brings up a
+   hazard the facts don't mention (tornado, snake, ...). A rejected draft gets one retry with the
+   checker's feedback; if neither draft is faithful, a template that always passes is sent instead.
 
 The response says which writer produced the text (`source`) and what the checker found (`tried`).
 The local model needs Apple Silicon; on Linux (e.g. Vultr) `mlx-lm` isn't installed and `/briefing`
@@ -132,15 +132,19 @@ and invented reasons for the no-go. The fixes, each re-measured: the checker now
 when they apply (a blanket "mention the alert" rule made a model invent alerts on quiet days), and
 drafts that copy fact labels are sent back.
 
-Final configuration, Qwen3.5-4B on the same 62 days (`models/briefing_bakeoff_final.md`): 84% pass the
-checker on the first try (13 drafts copied a fact label and were sent back), **100% after one retry, 0
-template fallbacks, 0 drafts with style problems**, every alert mentioned and none invented, 6.6 s and
-3.3 GB per briefing.
+Two more gaps came from reading drafts, both now closed. The model sometimes spelled numbers out
+("fifteen percent"), which a digits-only check can't see, so the checker now reads number words too.
+Once it inverted "the hazard index alone would give go" into "would not have triggered a go", so on
+alert days the fact sheet states it plainly ("Without the alert, the decision would be go") and the
+checker rejects "would not ... go". Retry feedback about style once made the model write every number
+in words, so style problems (a copied fact label, length, a correct number in words) now get a retry but
+never force the template; only faithfulness problems do, and the better of the two drafts is sent.
 
-Known gaps (seen by reading drafts, not yet fixed): the model sometimes spells numbers out ("fifteen
-percent"), which the number check doesn't see; and once it inverted "the hazard index alone would give
-go" into "would not have triggered a go". The checker can't judge meaning, so the fact sheet should be
-worded to leave less room for that.
+Final configuration, Qwen3.5-4B on the same 62 days (`models/briefing_bakeoff_final.md`): **96.8% pass
+the checker on the first try, 100% after one retry, 100% of sent briefings faithful, 0 template
+fallbacks**; no spelled-out numbers, copied labels or inversions in what is sent; every live alert
+mentioned and none invented; 6.6 s and 3.3 GB per briefing. The checker can't judge meaning beyond
+these rules, so the briefing should still be read as an explanation of the scores, never a source of them.
 
 ## Sites and labels (v2)
 

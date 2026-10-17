@@ -57,10 +57,10 @@ ACTIONS = {
 SYSTEM_PROMPT = """You write next-day safety briefings for utility field crews.
 Rules:
 - Use only the facts given. Do not add any hazard, number, time, place, or advice that is not in the facts.
-- Copy every number exactly as written in the facts.
+- Copy every number exactly as written in the facts, as digits (write "15%", not "fifteen percent").
 - Start with the decision in capital letters exactly as given, e.g. "Decision: CAUTION".
 - Write 3 to 5 short sentences of plain text. No markdown, no bullet points, no headings.
-- Explain the decision using the "Why this decision" fact.
+- Say why the decision was made; the facts give the reason.
 - Then give the main concern and its key reasons, the best work window and the recommended actions.
 - Describe things with the same words as the facts (for example "sightings", not "incidents")."""
 
@@ -79,6 +79,7 @@ class Facts:
     date_text: str = ""
     windows: list[str] = field(default_factory=list)
     avoid: list[str] = field(default_factory=list)
+    without_alert: str = ""
     scores: dict[str, float] = field(default_factory=dict)
 
 
@@ -122,8 +123,14 @@ def build_facts(risk: dict, site: dict, crew_reports: list[dict] | None = None) 
     from score import recommendation  # the index-only decision, before alerts
 
     by_index = DECISION_LABEL[recommendation(round(float(risk["hazard_index"]), 1))]
-    if alerts and by_index != decision:
-        why = "a live alert sets it (the hazard index alone would give " + by_index.lower() + ")"
+    alert_override = bool(alerts) and by_index != decision
+    without_alert = ""
+    if alert_override:
+        # Two plain statements instead of a conditional: a model once turned "the hazard index alone
+        # would give go" into "would not have triggered a go".
+        kinds = " and ".join(dict.fromkeys(str(a.get("type", "")).lower() for a in risk.get("overrides", [])))
+        why = f"the live {kinds} alert".replace("  ", " ")
+        without_alert = f"Without the alert, the decision would be {by_index.lower()}"
     elif concerns:
         why = "the hazard index, driven mainly by " + HAZARD_NAMES[concerns[0]]
     else:
@@ -134,12 +141,14 @@ def build_facts(risk: dict, site: dict, crew_reports: list[dict] | None = None) 
         f"Date: {date_text}",
         f"Decision: {decision}",
         f"Why this decision: {why}",
+        *([without_alert] if without_alert else []),
         f"Hazard index: {_fmt(risk['hazard_index'])} out of 10",
         "Scores out of 10: " + ", ".join(f"{HAZARD_NAMES[h]} {_fmt(v)}" for h, v in scores.items()),
         "Main concerns: " + (", ".join(HAZARD_NAMES[h] for h in concerns) if concerns else "none, all scores are low"),
     ]
     if reasons:
-        lines.append("Reasons:")
+        # On a quiet day the top drivers are background, not concerns; say so.
+        lines.append("Reasons:" if concerns else "Minor factors (all scores are low):")
         lines += [f"- {r}" for r in reasons]
     plan = risk.get("work_plan") or {}
     if plan.get("work_windows") or plan.get("avoid"):
@@ -157,7 +166,7 @@ def build_facts(risk: dict, site: dict, crew_reports: list[dict] | None = None) 
                  concerns=concerns, reasons=reasons, actions=actions, alerts=alerts, animals=animals,
                  text="\n".join(lines), date_text=date_text, scores=scores,
                  windows=[w["text"] for w in plan.get("work_windows", [])],
-                 avoid=[a["text"] for a in plan.get("avoid", [])])
+                 avoid=[a["text"] for a in plan.get("avoid", [])], without_alert=without_alert)
 
 
 # ---------------------------------------------------------------------------
@@ -205,12 +214,53 @@ def _numbers(text: str) -> set[float]:
     return {float(x) for x in _NUM.findall(text)}
 
 
+_UNITS = {w: i for i, w in enumerate(
+    "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen "
+    "sixteen seventeen eighteen nineteen".split())}
+_TENS = {w: 10 * i for i, w in enumerate("twenty thirty forty fifty sixty seventy eighty ninety".split(), start=2)}
+
+
+def _word_numbers(text: str) -> list[tuple[str, float]]:
+    """Numbers written as words ("fifteen", "twenty-four", "one hundred"), with their values.
+
+    A standalone "one" is skipped: "no one" / "one of" are too common to treat as a number.
+    """
+    words = re.findall(r"[a-z]+", text.lower().replace("-", " "))
+    out, i = [], 0
+    while i < len(words):
+        start = i
+        if words[i] in _TENS:
+            val = _TENS[words[i]]
+            i += 1
+            if i < len(words) and words[i] in _UNITS and 0 < _UNITS[words[i]] < 10:
+                val += _UNITS[words[i]]
+                i += 1
+        elif words[i] in _UNITS:
+            val = _UNITS[words[i]]
+            i += 1
+        else:
+            i += 1
+            continue
+        if i < len(words) and words[i] == "hundred":
+            val *= 100
+            i += 1
+        phrase = " ".join(words[start:i])
+        if phrase != "one":
+            out.append((phrase, float(val)))
+    return out
+
+
 def check_briefing(draft: str, f: Facts) -> list[str]:
     """Problems with a draft; an empty list means it may be sent."""
     problems = []
     allowed = _numbers(f.text)
     for n in sorted(_numbers(draft) - allowed):
         problems.append(f"number {n:g} is not in the facts")
+    for phrase, n in _word_numbers(draft):
+        if n in allowed:
+            problems.append(f"writes '{phrase}' in words; use the digits from the facts")
+        else:
+            problems.append(f"number '{phrase}' ({n:g}) is not in the facts")
 
     labels = {"NO-GO": r"\bNO-GO\b", "CAUTION": r"\bCAUTION\b", "GO": r"(?<!NO-)\bGO\b"}
     present = {k for k, rx in labels.items() if re.search(rx, draft)}
@@ -229,8 +279,10 @@ def check_briefing(draft: str, f: Facts) -> list[str]:
         problems.append("leaves out the live alert that sets the decision")
     if not f.alerts and re.search(r"\balerts?\b", low_draft):
         problems.append("mentions an alert, but there is none")
+    if f.without_alert and re.search(r"would (not|never)\b[^.]{0,40}\b(go|caution)\b", low_draft):
+        problems.append(f"contradicts the fact '{f.without_alert}'")
     for label in ("Why this decision:", "Main concerns:", "Scores out of 10:", "Recommended actions:",
-                  "Work plan (local time):", "Live alerts:", "Reasons:"):
+                  "Work plan (local time):", "Live alerts:", "Reasons:", "Minor factors (all scores are low)"):
         if label.lower() in low_draft:
             problems.append(f"copies the fact label '{label}' instead of writing sentences")
 
@@ -311,6 +363,8 @@ def _user_prompt(f: Facts, feedback: list[str] | None = None) -> str:
     extra = []
     if f.alerts:
         extra.append("Say that the live alert sets the decision, right after the decision.")
+        if f.without_alert:
+            extra.append(f"Then say: {f.without_alert}.")
         if not f.concerns:
             extra.append("Apart from the alert, no hazard stands out.")
     elif not f.concerns:
@@ -319,20 +373,32 @@ def _user_prompt(f: Facts, feedback: list[str] | None = None) -> str:
     if feedback:
         msg += ("\n\nYour previous draft was rejected for these reasons:\n"
                 + "\n".join(f"- {p}" for p in feedback)
-                + "\nRewrite it using only the facts above.")
+                + "\nRewrite it using only the facts above. Keep every number as digits, exactly as in the facts.")
     return msg
 
 
+# Style problems get a retry but never force the template; anything else is a faithfulness problem.
+_SOFT = ("copies the fact label", "length ", "writes '")
+
+
+def hard_problems(problems: list[str]) -> list[str]:
+    """The problems that make a draft unsendable (wrong or unsupported content, not style)."""
+    return [p for p in problems if not p.startswith(_SOFT)]
+
+
 def _draft_with_checks(gen: Callable[[str, str], str], f: Facts, retries: int) -> tuple[str, list[str], int]:
-    draft, problems, attempts = "", ["not attempted"], 0
+    """Best draft over the attempts: fewest faithfulness problems first, then fewest style problems."""
+    drafts: list[tuple[str, list[str]]] = []
     feedback = None
-    for attempts in range(1, retries + 2):
+    for _ in range(retries + 1):
         draft = gen(SYSTEM_PROMPT, _user_prompt(f, feedback))
         problems = check_briefing(draft, f)
+        drafts.append((draft, problems))
         if not problems:
             break
         feedback = problems
-    return draft, problems, attempts
+    draft, problems = min(drafts, key=lambda d: (len(hard_problems(d[1])), len(d[1])))
+    return draft, problems, len(drafts)
 
 
 def write_briefing(risk: dict, site: dict, backend: str = "auto", retries: int = 1,
@@ -356,7 +422,7 @@ def write_briefing(risk: dict, site: dict, backend: str = "auto", retries: int =
             tried.append({"backend": b, "error": f"{type(e).__name__}: {e}"[:200]})
             continue
         tried.append({"backend": b, "attempts": attempts, "problems": problems, "seconds": round(time.time() - t0, 2)})
-        if not problems:
+        if not hard_problems(problems):
             return {"briefing": draft, "source": source, "facts": f.text, "tried": tried}
     text = template_briefing(f)
     assert not check_briefing(text, f), check_briefing(text, f)

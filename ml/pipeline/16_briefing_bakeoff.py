@@ -96,9 +96,12 @@ def run_model(repo: str, cases: list[dict]) -> dict:
         final, final_problems, retry_s = first, first_problems, 0.0
         if first_problems:
             t2 = time.time()
-            final = llm(B.SYSTEM_PROMPT, B._user_prompt(f, first_problems))
+            retry = llm(B.SYSTEM_PROMPT, B._user_prompt(f, first_problems))
             retry_s = time.time() - t2
-            final_problems = B.check_briefing(final, f)
+            retry_problems = B.check_briefing(retry, f)
+            # Same rule as briefing.write_briefing: send the better of the two drafts.
+            final, final_problems = min([(first, first_problems), (retry, retry_problems)],
+                                        key=lambda d: (len(B.hard_problems(d[1])), len(d[1])))
         rows.append({
             "site_id": c["risk"]["site_id"], "date": c["risk"]["date"], "decision": f.decision,
             "has_alert": bool(c["risk"].get("overrides")), "has_crew_report": bool(c["crew"]),
@@ -107,7 +110,8 @@ def run_model(repo: str, cases: list[dict]) -> dict:
             "seconds_first": round(first_s, 2), "seconds_retry": round(retry_s, 2),
             "tokens_first": len(llm.tokenizer.encode(first)), "words_final": len(final.split()),
         })
-        status = "ok" if not first_problems else ("fixed" if not final_problems else "FAIL")
+        status = ("ok" if not first_problems else "fixed" if not final_problems
+                  else "style" if not B.hard_problems(final_problems) else "FAIL")
         print(f"  {repo.split('/')[-1]:30s} {c['risk']['site_id']:10s} {c['risk']['date']} {f.decision:8s} "
               f"{status:5s} {first_s:4.1f}s {first_problems[:2] if first_problems else ''}", flush=True)
     df = pd.DataFrame(rows)
@@ -119,12 +123,13 @@ def run_model(repo: str, cases: list[dict]) -> dict:
         "n": len(df),
         "pass_first_try": round(float((df["first_problems"].str.len() == 0).mean()), 3),
         "pass_after_retry": round(float((df["final_problems"].str.len() == 0).mean()), 3),
-        "template_fallback_rate": round(float((df["final_problems"].str.len() > 0).mean()), 3),
+        "sent_faithful": round(float((df["final_problems"].map(B.hard_problems).str.len() == 0).mean()), 3),
+        "template_fallback_rate": round(float((df["final_problems"].map(B.hard_problems).str.len() > 0).mean()), 3),
         "seconds_per_briefing_median": round(float(df["seconds_first"].median()), 2),
         "tokens_per_second": round(float(df["tokens_first"].sum() / df["seconds_first"].sum()), 1),
         "words_median": int(df["words_final"].median()),
-        "pass_by_decision": df.assign(ok=df["final_problems"].str.len() == 0).groupby("decision")["ok"].mean().round(3).to_dict(),
-        "pass_with_alert": round(float((df[df["has_alert"]]["final_problems"].str.len() == 0).mean()), 3),
+        "pass_by_decision": df.assign(ok=df["final_problems"].map(B.hard_problems).str.len() == 0).groupby("decision")["ok"].mean().round(3).to_dict(),
+        "pass_with_alert": round(float((df[df["has_alert"]]["final_problems"].map(B.hard_problems).str.len() == 0).mean()), 3),
         "first_try_problem_types": problems.value_counts().to_dict(),
         "rows": rows,
     }
@@ -150,7 +155,7 @@ def main() -> None:
             results.append({"model": repo, "error": f"{type(e).__name__}: {e}"[:300]})
 
     (MODELS / f"briefing_bakeoff{args.tag}.json").write_text(json.dumps(results, indent=1, default=str))
-    keys = ["pass_first_try", "pass_after_retry", "template_fallback_rate", "seconds_per_briefing_median",
+    keys = ["pass_first_try", "pass_after_retry", "sent_faithful", "template_fallback_rate", "seconds_per_briefing_median",
             "tokens_per_second", "peak_gpu_memory_gb", "load_seconds", "words_median", "pass_with_alert"]
     lines = ["# Briefing model bake-off", "",
              f"{len(cases)} real 2025 site-days (go / caution / no-go mix, two backtest storm days, some with a "

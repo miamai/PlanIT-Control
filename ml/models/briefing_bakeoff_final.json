@@ -1,14 +1,15 @@
 [
  {
   "model": "mlx-community/Qwen3.5-4B-MLX-4bit",
-  "load_seconds": 5.7,
+  "load_seconds": 5.2,
   "peak_gpu_memory_gb": 3.26,
   "n": 62,
-  "pass_first_try": 0.839,
+  "pass_first_try": 0.968,
   "pass_after_retry": 1.0,
+  "sent_faithful": 1.0,
   "template_fallback_rate": 0.0,
-  "seconds_per_briefing_median": 6.62,
-  "tokens_per_second": 20.1,
+  "seconds_per_briefing_median": 6.61,
+  "tokens_per_second": 19.6,
   "words_median": 100,
   "pass_by_decision": {
    "CAUTION": 1.0,
@@ -17,9 +18,8 @@
   },
   "pass_with_alert": 1.0,
   "first_try_problem_types": {
-   "copies the": 13,
-   "number 7.7": 1,
-   "number 9.1": 1
+   "length 173": 1,
+   "length 183": 1
   },
   "rows": [
    {
@@ -28,14 +28,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.5 out of 10. Conditions look good as all individual scores remain low, including heat at 0.0 and flooding at 0.1. The only notable factors are air dryness reaching 1.3 kPa and venomous snake sightings recorded nearby in November, with only one since 2015. The best work windows are from 5 AM to 8 PM.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 0.5 out of 10 and no hazard stands out. Conditions look good as all scores remain low with no main concerns identified. Minor factors include air dryness reaching 1.3 kPa and venomous snake sightings recorded nearby in November, with only one sighting since 2015. The best work windows are from 5 AM to 8 PM.",
     "first_problems": [],
-    "final_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.5 out of 10. Conditions look good as all individual scores remain low, including heat at 0.0 and flooding at 0.1. The only notable factors are air dryness reaching 1.3 kPa and venomous snake sightings recorded nearby in November, with only one since 2015. The best work windows are from 5 AM to 8 PM.",
+    "final_draft": "Decision: GO This decision was made because the hazard index is 0.5 out of 10 and no hazard stands out. Conditions look good as all scores remain low with no main concerns identified. Minor factors include air dryness reaching 1.3 kPa and venomous snake sightings recorded nearby in November, with only one sighting since 2015. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 6.11,
+    "seconds_first": 5.66,
     "seconds_retry": 0.0,
-    "tokens_first": 104,
-    "words_final": 74
+    "tokens_first": 89,
+    "words_final": 66
    },
    {
     "site_id": "EIA-50118",
@@ -43,11 +43,11 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": true,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index being driven mainly by wildlife. The main concern is wildlife, supported by crew reports of snakes within the last day and venomous snake sightings recorded nearby in June. The best work windows are from 5 AM to 8 PM. Recommended actions include checking around water, brush, and parked equipment for venomous snakes before starting and keeping clear of any you see.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by wildlife. The main concern is wildlife, supported by crew reports of snakes within the last day and venomous snake sightings recorded nearby in June. The best work windows are from 5 AM to 8 PM. Recommended actions include checking around water, brush, and parked equipment for venomous snakes before starting and keeping clear of any you see.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index being driven mainly by wildlife. The main concern is wildlife, supported by crew reports of snakes within the last day and venomous snake sightings recorded nearby in June. The best work windows are from 5 AM to 8 PM. Recommended actions include checking around water, brush, and parked equipment for venomous snakes before starting and keeping clear of any you see.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by wildlife. The main concern is wildlife, supported by crew reports of snakes within the last day and venomous snake sightings recorded nearby in June. The best work windows are from 5 AM to 8 PM. Recommended actions include checking around water, brush, and parked equipment for venomous snakes before starting and keeping clear of any you see.",
     "final_problems": [],
-    "seconds_first": 4.68,
+    "seconds_first": 4.27,
     "seconds_retry": 0.0,
     "tokens_first": 84,
     "words_final": 71
@@ -58,14 +58,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.4 out of 10. Conditions look good at French Island, La Crosse County, WI, as all scores remain low with no meaningful rain in 24 days and air dryness reaching 0.9 kPa. Sustained winds up to 11 mph and a rainfall deficit of -1.54 in versus normal over 30 days contribute to the low risk profile. The best work windows are from 5 AM to 8 PM local time.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 0.4 out of 10 and no hazard stands out. Conditions look good as all scores are low with no main concerns. Minor factors include 24 days since meaningful rain, air dryness reaching 0.9 kPa, sustained winds up to 11 mph, and -1.54 in of rain versus normal over 30 days. The best work windows are from 5 AM to 8 PM.",
     "first_problems": [],
-    "final_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.4 out of 10. Conditions look good at French Island, La Crosse County, WI, as all scores remain low with no meaningful rain in 24 days and air dryness reaching 0.9 kPa. Sustained winds up to 11 mph and a rainfall deficit of -1.54 in versus normal over 30 days contribute to the low risk profile. The best work windows are from 5 AM to 8 PM local time.",
+    "final_draft": "Decision: GO This decision was made because the hazard index is 0.4 out of 10 and no hazard stands out. Conditions look good as all scores are low with no main concerns. Minor factors include 24 days since meaningful rain, air dryness reaching 0.9 kPa, sustained winds up to 11 mph, and -1.54 in of rain versus normal over 30 days. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 6.04,
+    "seconds_first": 5.13,
     "seconds_retry": 0.0,
-    "tokens_first": 120,
-    "words_final": 88
+    "tokens_first": 102,
+    "words_final": 72
    },
    {
     "site_id": "EIA-66111",
@@ -73,19 +73,14 @@
     "decision": "NO-GO",
     "has_alert": true,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO Why this decision: a live alert sets it (the hazard index alone would give go) The primary reason for this no-go is that a live alert is currently active, which overrides the otherwise low hazard index of 1.6 out of 10. Apart from this alert, no other hazard stands out as the main concern. The site is in Elizabeth Solar Plant, Allen County, LA, with scores for heat, thunderstorms, flooding, and wildlife all at 0.0 while wildfire is 1.5. Main concerns: none, all scores are low Reasons: Fires are detected near this site on 15% of days this month (2019-2023) Air dryness (VPD) reaches 1.6 kPa Sustained winds up to 8 mph 10 days since meaningful rain Best work windows: 5 AM to 8 PM Live alerts: Lightning alert: Strike within 10 mi (sets the decision to at least no-go)",
-    "first_problems": [
-     "copies the fact label 'Why this decision:' instead of writing sentences",
-     "copies the fact label 'Main concerns:' instead of writing sentences",
-     "copies the fact label 'Live alerts:' instead of writing sentences",
-     "copies the fact label 'Reasons:' instead of writing sentences"
-    ],
-    "final_draft": "Decision: NO-GO The decision is NO-GO because a live alert sets it, and the hazard index alone would not have triggered a go. Apart from this alert, no other hazard stands out as the primary concern. The main concern is wildfire risk, which is detected near the site on fifteen percent of days this month. This risk is supported by dry air conditions with a vapor pressure deficit of 1.6 kPa and sustained winds up to 8 mph. Additionally, there have been ten days since meaningful rain, and lightning strikes within ten miles are sufficient to set the decision to no-go. The best work windows are from 5 AM to 8 PM.",
+    "first_draft": "Decision: NO-GO The decision is NO-GO because the live lightning alert sets this outcome. Without the alert, the decision would be go. Apart from the alert, no hazard stands out. The main concerns are none, as all scores remain low. Minor factors include fires detected near the site on 15% of days this month, air dryness reaching 1.6 kPa, sustained winds up to 8 mph, and 10 days since meaningful rain. The best work windows are from 5 AM to 8 PM. The lightning alert indicates a strike within 10 mi, which triggers the no-go status.",
+    "first_problems": [],
+    "final_draft": "Decision: NO-GO The decision is NO-GO because the live lightning alert sets this outcome. Without the alert, the decision would be go. Apart from the alert, no hazard stands out. The main concerns are none, as all scores remain low. Minor factors include fires detected near the site on 15% of days this month, air dryness reaching 1.6 kPa, sustained winds up to 8 mph, and 10 days since meaningful rain. The best work windows are from 5 AM to 8 PM. The lightning alert indicates a strike within 10 mi, which triggers the no-go status.",
     "final_problems": [],
-    "seconds_first": 10.5,
-    "seconds_retry": 6.79,
-    "tokens_first": 210,
-    "words_final": 112
+    "seconds_first": 6.98,
+    "seconds_retry": 0.0,
+    "tokens_first": 131,
+    "words_final": 96
    },
    {
     "site_id": "EIA-1439",
@@ -93,14 +88,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 2.0 out of 10. Conditions look good as all scores remain low with no main concerns identified. The primary factors supporting this are that fires are detected near the site on 21% of days this month, air dryness reaches 1.2 kPa, and sustained winds up to 10 mph are expected. Although there have been 3 days since meaningful rain and venomous snake sightings recorded nearby in December, these factors do not elevate the overall risk. The best work windows are from 5 AM to 8 PM local time.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 2.0 out of 10 and no hazard stands out. Conditions look good as all scores are low with no main concerns. Minor factors include fires detected near the site on 21% of days this month, air dryness reaching 1.2 kPa, and sustained winds up to 10 mph. Venomous snake sightings have been recorded nearby in December and it has been 3 days since meaningful rain. The best work windows are from 5 AM to 8 PM.",
     "first_problems": [],
-    "final_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 2.0 out of 10. Conditions look good as all scores remain low with no main concerns identified. The primary factors supporting this are that fires are detected near the site on 21% of days this month, air dryness reaches 1.2 kPa, and sustained winds up to 10 mph are expected. Although there have been 3 days since meaningful rain and venomous snake sightings recorded nearby in December, these factors do not elevate the overall risk. The best work windows are from 5 AM to 8 PM local time.",
+    "final_draft": "Decision: GO This decision was made because the hazard index is 2.0 out of 10 and no hazard stands out. Conditions look good as all scores are low with no main concerns. Minor factors include fires detected near the site on 21% of days this month, air dryness reaching 1.2 kPa, and sustained winds up to 10 mph. Venomous snake sightings have been recorded nearby in December and it has been 3 days since meaningful rain. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 6.43,
+    "seconds_first": 5.97,
     "seconds_retry": 0.0,
-    "tokens_first": 135,
-    "words_final": 107
+    "tokens_first": 114,
+    "words_final": 87
    },
    {
     "site_id": "EIA-6008",
@@ -108,16 +103,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO Why this decision: the hazard index shows no hazard stands out with a score of 0.1 out of 10. All individual scores for heat, thunderstorms and lightning, flooding, wildfire, and wildlife are low or zero. Conditions look good at the site in Palo Verde, Maricopa County, AZ on Wednesday, December 17. The best work windows are from 5 AM to 8 PM.",
-    "first_problems": [
-     "copies the fact label 'Why this decision:' instead of writing sentences"
-    ],
-    "final_draft": "Decision: GO Conditions look good because the hazard index is zero point one out of ten with no hazard standing out. Heat, thunderstorms and lightning, wildfire, and wildlife scores are all zero point zero while flooding is zero point one. The best work windows are five AM to eight PM.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 0.1 out of 10 and no hazard stands out. Conditions look good with all scores remaining low across heat, thunderstorms and lightning, flooding, wildfire, and wildlife. The best work windows are from 5 AM to 8 PM.",
+    "first_problems": [],
+    "final_draft": "Decision: GO This decision was made because the hazard index is 0.1 out of 10 and no hazard stands out. Conditions look good with all scores remaining low across heat, thunderstorms and lightning, flooding, wildfire, and wildlife. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 4.54,
-    "seconds_retry": 3.24,
-    "tokens_first": 89,
-    "words_final": 50
+    "seconds_first": 3.85,
+    "seconds_retry": 0.0,
+    "tokens_first": 64,
+    "words_final": 48
    },
    {
     "site_id": "EIA-64995",
@@ -125,14 +118,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.6 out of 10. Conditions look good as all individual scores remain low with no main concerns identified. The site is near Cassville Solar in Grant County, WI, where the ground is still wet from recent rain and a river rose 1.3 ft in 3 days. Venomous snake sightings have been recorded nearby in July, with only 1 since 2015, but flooding and wildfire risks are minimal. The best work windows are from 5 AM to 8 PM local time.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 0.6 out of 10 and no hazard stands out. Conditions look good as all scores remain low with no main concerns identified. Minor factors include a river rise of +1.3 ft in 3 days, venomous snake sightings recorded nearby in July, ground still wet from recent rain with an index of 1.18, and proximity to a river or stream. The best work windows are from 5 AM to 8 PM.",
     "first_problems": [],
-    "final_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.6 out of 10. Conditions look good as all individual scores remain low with no main concerns identified. The site is near Cassville Solar in Grant County, WI, where the ground is still wet from recent rain and a river rose 1.3 ft in 3 days. Venomous snake sightings have been recorded nearby in July, with only 1 since 2015, but flooding and wildfire risks are minimal. The best work windows are from 5 AM to 8 PM local time.",
+    "final_draft": "Decision: GO This decision was made because the hazard index is 0.6 out of 10 and no hazard stands out. Conditions look good as all scores remain low with no main concerns identified. Minor factors include a river rise of +1.3 ft in 3 days, venomous snake sightings recorded nearby in July, ground still wet from recent rain with an index of 1.18, and proximity to a river or stream. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 6.12,
+    "seconds_first": 6.16,
     "seconds_retry": 0.0,
-    "tokens_first": 127,
-    "words_final": 99
+    "tokens_first": 105,
+    "words_final": 81
    },
    {
     "site_id": "EIA-6145",
@@ -140,14 +133,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": true,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index being driven mainly by wildlife. The main concern is wildlife, supported by crew reports of a snake within the last day and venomous snake sightings recorded nearby in August. There have been 10 such sightings since 2015 and the dew point is up to 72\u00b0F. The best work windows are from 5 AM to 8 PM. Crews must check around water, brush, and parked equipment for venomous snakes before starting and keep clear of any they see.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by wildlife. The main concern is wildlife, supported by crew reports of a snake within the last day and nearby venomous snake sightings recorded in August. The best work windows are from 5 AM to 8 PM. Recommended actions include checking around water, brush, and parked equipment for venomous snakes before starting and keeping clear of any you see.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index being driven mainly by wildlife. The main concern is wildlife, supported by crew reports of a snake within the last day and venomous snake sightings recorded nearby in August. There have been 10 such sightings since 2015 and the dew point is up to 72\u00b0F. The best work windows are from 5 AM to 8 PM. Crews must check around water, brush, and parked equipment for venomous snakes before starting and keep clear of any they see.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by wildlife. The main concern is wildlife, supported by crew reports of a snake within the last day and nearby venomous snake sightings recorded in August. The best work windows are from 5 AM to 8 PM. Recommended actions include checking around water, brush, and parked equipment for venomous snakes before starting and keeping clear of any you see.",
     "final_problems": [],
-    "seconds_first": 5.59,
+    "seconds_first": 4.97,
     "seconds_retry": 0.0,
-    "tokens_first": 111,
-    "words_final": 87
+    "tokens_first": 85,
+    "words_final": 72
    },
    {
     "site_id": "EIA-56905",
@@ -155,14 +148,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.4 out of 10. Conditions look good as all individual scores remain low, including heat at 0.0, thunderstorms and lightning at 0.2, flooding at 0.0, wildfire at 0.1, and wildlife at 0.0. The heat index peaks at 74\u00b0F with a high of 76\u00b0F, and the best work windows are from 5 AM to 8 PM.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 0.4 out of 10 and no hazard stands out. Conditions look good with all scores remaining low across heat, thunderstorms, flooding, wildfire, and wildlife. Minor factors include a heat index peak of 74\u00b0F and a high of 76\u00b0F. The best work windows are from 5 AM to 8 PM.",
     "first_problems": [],
-    "final_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.4 out of 10. Conditions look good as all individual scores remain low, including heat at 0.0, thunderstorms and lightning at 0.2, flooding at 0.0, wildfire at 0.1, and wildlife at 0.0. The heat index peaks at 74\u00b0F with a high of 76\u00b0F, and the best work windows are from 5 AM to 8 PM.",
+    "final_draft": "Decision: GO This decision was made because the hazard index is 0.4 out of 10 and no hazard stands out. Conditions look good with all scores remaining low across heat, thunderstorms, flooding, wildfire, and wildlife. Minor factors include a heat index peak of 74\u00b0F and a high of 76\u00b0F. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 5.52,
+    "seconds_first": 4.45,
     "seconds_retry": 0.0,
-    "tokens_first": 113,
-    "words_final": 74
+    "tokens_first": 83,
+    "words_final": 60
    },
    {
     "site_id": "EIA-2047",
@@ -170,14 +163,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO This decision is made because the hazard index is 0.9 out of 10 and no hazard stands out. Conditions look good as all scores remain low with heat at 0.0, thunderstorms and lightning at 0.1, flooding at 0.1, wildfire at 0.1, and wildlife at 0.6. The only factors to note are alligator sightings recorded nearby in December (3 since 2015) and venomous snake sightings recorded nearby in December (3 since 2015). Best work windows are from 5 AM to 8 PM.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 0.9 out of 10 and no hazard stands out. Conditions look good with all scores remaining low across heat, thunderstorms and lightning, flooding, wildfire, and wildlife categories. Minor factors include alligator sightings recorded nearby in December (3 since 2015) and venomous snake sightings recorded nearby in December (3 since 2015). The best work windows are from 5 AM to 8 PM.",
     "first_problems": [],
-    "final_draft": "Decision: GO This decision is made because the hazard index is 0.9 out of 10 and no hazard stands out. Conditions look good as all scores remain low with heat at 0.0, thunderstorms and lightning at 0.1, flooding at 0.1, wildfire at 0.1, and wildlife at 0.6. The only factors to note are alligator sightings recorded nearby in December (3 since 2015) and venomous snake sightings recorded nearby in December (3 since 2015). Best work windows are from 5 AM to 8 PM.",
+    "final_draft": "Decision: GO This decision was made because the hazard index is 0.9 out of 10 and no hazard stands out. Conditions look good with all scores remaining low across heat, thunderstorms and lightning, flooding, wildfire, and wildlife categories. Minor factors include alligator sightings recorded nearby in December (3 since 2015) and venomous snake sightings recorded nearby in December (3 since 2015). The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 6.0,
+    "seconds_first": 5.41,
     "seconds_retry": 0.0,
-    "tokens_first": 128,
-    "words_final": 83
+    "tokens_first": 102,
+    "words_final": 72
    },
    {
     "site_id": "EIA-62113",
@@ -185,16 +178,14 @@
     "decision": "NO-GO",
     "has_alert": true,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO Why this decision: a live alert sets it (the hazard index alone would give go) The main concern is none, as all scores remain low with heat at 0.1, flooding at 0.1, and other categories at 0.0 The best work windows are 5 AM to 8 PM A lightning alert for strikes within 10 mi sets the decision to no-go, overriding the low hazard index",
-    "first_problems": [
-     "copies the fact label 'Why this decision:' instead of writing sentences"
-    ],
-    "final_draft": "Decision: NO-GO The decision to not go is set by the live alert, which overrides the hazard index alone. Apart from this alert, no other hazard stands out as the primary concern. The best work windows are from 5 AM to 8 PM. Lightning strikes within 10 miles set the decision to at least no-go.",
+    "first_draft": "Decision: NO-GO The decision is NO-GO because the live lightning alert sets this outcome. Without the alert, the decision would be go. Apart from the alert, no hazard stands out as the main concern. The hazard index is 0.2 out of 10 with heat at 0.1, thunderstorms and lightning at 0.0, flooding at 0.1, wildfire at 0.0, and wildlife at 0.0. The best work windows are from 5 AM to 8 PM local time. A lightning alert for strikes within 10 miles is the only factor preventing a go decision.",
+    "first_problems": [],
+    "final_draft": "Decision: NO-GO The decision is NO-GO because the live lightning alert sets this outcome. Without the alert, the decision would be go. Apart from the alert, no hazard stands out as the main concern. The hazard index is 0.2 out of 10 with heat at 0.1, thunderstorms and lightning at 0.0, flooding at 0.1, wildfire at 0.0, and wildlife at 0.0. The best work windows are from 5 AM to 8 PM local time. A lightning alert for strikes within 10 miles is the only factor preventing a go decision.",
     "final_problems": [],
-    "seconds_first": 4.84,
-    "seconds_retry": 3.73,
-    "tokens_first": 91,
-    "words_final": 55
+    "seconds_first": 6.6,
+    "seconds_retry": 0.0,
+    "tokens_first": 132,
+    "words_final": 90
    },
    {
     "site_id": "EIA-62630",
@@ -202,14 +193,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO This decision is made because the hazard index is 0.8 out of 10 and no hazard stands out. Conditions look good as all scores remain low with no main concerns. Venomous snake sightings recorded nearby in June (2 since 2015) and dew point up to 62\u00b0F are noted alongside a high of 81\u00b0F. The best work windows are from 5 AM to 8 PM.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 0.8 out of 10 and no hazard stands out. Conditions look good as all scores are low with no main concerns. Minor factors include venomous snake sightings recorded nearby in June (2 since 2015), a dew point up to 62\u00b0F, and a high of 81\u00b0F. The best work windows are from 5 AM to 8 PM.",
     "first_problems": [],
-    "final_draft": "Decision: GO This decision is made because the hazard index is 0.8 out of 10 and no hazard stands out. Conditions look good as all scores remain low with no main concerns. Venomous snake sightings recorded nearby in June (2 since 2015) and dew point up to 62\u00b0F are noted alongside a high of 81\u00b0F. The best work windows are from 5 AM to 8 PM.",
+    "final_draft": "Decision: GO This decision was made because the hazard index is 0.8 out of 10 and no hazard stands out. Conditions look good as all scores are low with no main concerns. Minor factors include venomous snake sightings recorded nearby in June (2 since 2015), a dew point up to 62\u00b0F, and a high of 81\u00b0F. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 4.51,
+    "seconds_first": 5.06,
     "seconds_retry": 0.0,
-    "tokens_first": 91,
-    "words_final": 66
+    "tokens_first": 93,
+    "words_final": 67
    },
    {
     "site_id": "EIA-59145",
@@ -217,16 +208,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO Why this decision: the hazard index shows no hazard stands out with a score of 2.9 out of 10. All component scores remain low, including heat at 0.0, thunderstorms and lightning at 0.0, flooding at 0.1, wildfire at 1.8, and wildlife at 1.3. Conditions look good with no main concerns identified for the crew. The afternoon humidity drops to 24% and air dryness (VPD) reaches 1.7 kPa while the fire weather index is 52. Alligator sightings recorded nearby in October include 67 since 2015, and fires are detected near this site on 4% of days this month based on data from 2019 to 2023. The best work windows are from 5 AM to 8 PM local time.",
-    "first_problems": [
-     "copies the fact label 'Why this decision:' instead of writing sentences"
-    ],
-    "final_draft": "Decision: GO Conditions look good because no hazard stands out and the hazard index is 2.9 out of 10. The afternoon humidity drops to 24% and the fire weather index is 52 while all scores remain low. Alligator sightings recorded nearby in October include 67 since 2015 and fires are detected near this site on 4% of days this month. The best work windows are from 5 AM to 8 PM.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 2.9 out of 10 and no hazard stands out. Conditions look good as all scores remain low with no main concerns identified. Minor factors include afternoon humidity dropping to 24%, a fire weather index of 52, and alligator sightings recorded nearby in October. The best work windows are from 5 AM to 8 PM.",
+    "first_problems": [],
+    "final_draft": "Decision: GO This decision was made because the hazard index is 2.9 out of 10 and no hazard stands out. Conditions look good as all scores remain low with no main concerns identified. Minor factors include afternoon humidity dropping to 24%, a fire weather index of 52, and alligator sightings recorded nearby in October. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 8.52,
-    "seconds_retry": 5.25,
-    "tokens_first": 186,
-    "words_final": 71
+    "seconds_first": 4.68,
+    "seconds_retry": 0.0,
+    "tokens_first": 84,
+    "words_final": 65
    },
    {
     "site_id": "EIA-62431",
@@ -234,14 +223,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": true,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by wildlife. The main concern is wildlife, supported by crew reports of snakes within the last day. Topsoil moisture is 0.43 m\u00b3/m\u00b3 and subsoil moisture is 0.44 m\u00b3/m\u00b3 with 1.14 in of rain over 3 days and 1.74 in of rain over the past week. The best work windows are 5 AM to 8 PM. Check around water, brush and parked equipment for snakes before starting, and keep clear of any you see.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by wildlife. The main concern is wildlife, supported by crew reports of snakes within the last day and recent rainfall totaling 1.74 inches over the past week. The best work windows are from 5 AM to 8 PM. Recommended actions include checking around water, brush, and parked equipment for snakes before starting and keeping clear of any you see.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by wildlife. The main concern is wildlife, supported by crew reports of snakes within the last day. Topsoil moisture is 0.43 m\u00b3/m\u00b3 and subsoil moisture is 0.44 m\u00b3/m\u00b3 with 1.14 in of rain over 3 days and 1.74 in of rain over the past week. The best work windows are 5 AM to 8 PM. Check around water, brush and parked equipment for snakes before starting, and keep clear of any you see.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by wildlife. The main concern is wildlife, supported by crew reports of snakes within the last day and recent rainfall totaling 1.74 inches over the past week. The best work windows are from 5 AM to 8 PM. Recommended actions include checking around water, brush, and parked equipment for snakes before starting and keeping clear of any you see.",
     "final_problems": [],
-    "seconds_first": 6.22,
+    "seconds_first": 4.57,
     "seconds_retry": 0.0,
-    "tokens_first": 124,
-    "words_final": 85
+    "tokens_first": 87,
+    "words_final": 72
    },
    {
     "site_id": "EIA-56238",
@@ -249,14 +238,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.2 out of 10. All individual scores for heat, thunderstorms and lightning, flooding, wildfire, and wildlife are low, so conditions look good. The best work windows are from 5 AM to 8 PM.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 0.2 out of 10 and no hazard stands out at Groton Generation Station in Brown County, SD. Conditions look good with all scores remaining low across heat, thunderstorms and lightning, flooding, wildfire, and wildlife. The best work windows are from 5 AM to 8 PM.",
     "first_problems": [],
-    "final_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.2 out of 10. All individual scores for heat, thunderstorms and lightning, flooding, wildfire, and wildlife are low, so conditions look good. The best work windows are from 5 AM to 8 PM.",
+    "final_draft": "Decision: GO This decision was made because the hazard index is 0.2 out of 10 and no hazard stands out at Groton Generation Station in Brown County, SD. Conditions look good with all scores remaining low across heat, thunderstorms and lightning, flooding, wildfire, and wildlife. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 3.69,
+    "seconds_first": 3.97,
     "seconds_retry": 0.0,
-    "tokens_first": 69,
-    "words_final": 52
+    "tokens_first": 74,
+    "words_final": 56
    },
    {
     "site_id": "EIA-279",
@@ -264,16 +253,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO Why this decision: the hazard index shows no hazard stands out with a score of 2.0 out of 10. Conditions look good at Salt Springs in Amador County, CA for Wednesday, June 11, as all hazard scores remain low. Venomous snake sightings recorded nearby in June (6 since 2015) and bear sightings recorded nearby in June (8 since 2015) are the only noted factors. Afternoon humidity drops to 13% and the heat index is +5\u00b0F versus normal for this time of year. Heat events are logged near this site on 6% of days this month (2019-2023) and the best work windows are from 5 AM to 8 PM.",
-    "first_problems": [
-     "copies the fact label 'Why this decision:' instead of writing sentences"
-    ],
-    "final_draft": "Decision: GO Conditions look good because the hazard index is 2.0 out of 10 with no hazard standing out. The scores for heat, thunderstorms and lightning, flooding, wildfire, and wildlife are all low. Venomous snake sightings recorded nearby in June include 6 since 2015 and bear sightings recorded nearby in June include 8 since 2015. Afternoon humidity drops to 13% and the heat index is +5\u00b0F versus normal for this time of year. Heat events are logged near this site on 6% of days this month with 2019-2023 data. The best work windows are from 5 AM to 8 PM.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 2.0 out of 10 and no hazard stands out. Conditions look good with all scores remaining low. Minor factors include venomous snake sightings recorded nearby in June (6 since 2015) and bear sightings recorded nearby in June (8 since 2015). Afternoon humidity drops to 13% and the heat index is +5\u00b0F versus normal for this time of year. Heat events are logged near this site on 6% of days this month (2019-2023). The best work windows are 5 AM to 8 PM.",
+    "first_problems": [],
+    "final_draft": "Decision: GO This decision was made because the hazard index is 2.0 out of 10 and no hazard stands out. Conditions look good with all scores remaining low. Minor factors include venomous snake sightings recorded nearby in June (6 since 2015) and bear sightings recorded nearby in June (8 since 2015). Afternoon humidity drops to 13% and the heat index is +5\u00b0F versus normal for this time of year. Heat events are logged near this site on 6% of days this month (2019-2023). The best work windows are 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 7.91,
-    "seconds_retry": 6.99,
-    "tokens_first": 161,
-    "words_final": 100
+    "seconds_first": 6.98,
+    "seconds_retry": 0.0,
+    "tokens_first": 136,
+    "words_final": 93
    },
    {
     "site_id": "EIA-54343",
@@ -281,14 +268,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 1.7 out of 10. Conditions look good at the Terminus Hydroelectric Project in Tulare County, CA as all scores remain low. Venomous snake sightings recorded nearby in May (15 since 2015) and bear sightings recorded nearby in May (4 since 2015) are noted alongside an air dryness (VPD) of 1.6 kPa and 0.74 in of rain versus normal over 30 days. The high of 68\u00b0F supports a work window from 5 AM to 8 PM.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 1.7 out of 10 and no hazard stands out. Conditions look good with all scores remaining low across heat, thunderstorms, flooding, wildfire, and wildlife categories. Minor factors include venomous snake sightings recorded nearby in May (15 since 2015), bear sightings recorded nearby in May (4 since 2015), air dryness (VPD) reaching 1.6 kPa, -0.74 in of rain versus normal over 30 days, and a high of 68\u00b0F. The best work windows are from 5 AM to 8 PM.",
     "first_problems": [],
-    "final_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 1.7 out of 10. Conditions look good at the Terminus Hydroelectric Project in Tulare County, CA as all scores remain low. Venomous snake sightings recorded nearby in May (15 since 2015) and bear sightings recorded nearby in May (4 since 2015) are noted alongside an air dryness (VPD) of 1.6 kPa and 0.74 in of rain versus normal over 30 days. The high of 68\u00b0F supports a work window from 5 AM to 8 PM.",
+    "final_draft": "Decision: GO This decision was made because the hazard index is 1.7 out of 10 and no hazard stands out. Conditions look good with all scores remaining low across heat, thunderstorms, flooding, wildfire, and wildlife categories. Minor factors include venomous snake sightings recorded nearby in May (15 since 2015), bear sightings recorded nearby in May (4 since 2015), air dryness (VPD) reaching 1.6 kPa, -0.74 in of rain versus normal over 30 days, and a high of 68\u00b0F. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 6.72,
+    "seconds_first": 8.23,
     "seconds_retry": 0.0,
-    "tokens_first": 141,
-    "words_final": 94
+    "tokens_first": 139,
+    "words_final": 89
    },
    {
     "site_id": "EIA-69164",
@@ -296,18 +283,14 @@
     "decision": "NO-GO",
     "has_alert": true,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO Why this decision: a live alert sets it (the hazard index alone would give go) The primary reason for this decision is the lightning alert, which mandates a no-go status despite low scores across all other hazards. Main concerns: none, all scores are low The only active threat is the lightning alert indicating a strike within 10 mi, which overrides the otherwise safe conditions. Best work windows: 5 AM to 8 PM Crews should remain off site until the live alert is cleared, as the lightning risk alone prevents work. Recommended actions: monitor the live alert closely and do not enter the Tilden Solar site in Randolph County, IL.",
-    "first_problems": [
-     "copies the fact label 'Why this decision:' instead of writing sentences",
-     "copies the fact label 'Main concerns:' instead of writing sentences",
-     "copies the fact label 'Recommended actions:' instead of writing sentences"
-    ],
-    "final_draft": "Decision: NO-GO The decision to not go is set by a live alert, even though the hazard index alone would suggest a go. Apart from this alert, no other hazard stands out as the primary concern. The best work windows are from 5 AM to 8 PM. Lightning strikes within 10 miles are the reason for the no-go status.",
+    "first_draft": "Decision: NO-GO The decision is NO-GO because the live lightning alert sets this outcome. Without the alert, the decision would be go. Apart from the alert, no hazard stands out as the scores for heat, thunderstorms and lightning, flooding, wildfire, and wildlife are all low. The main concern is the lightning alert which indicates a strike within 10 mi. The best work windows are 5 AM to 8 PM.",
+    "first_problems": [],
+    "final_draft": "Decision: NO-GO The decision is NO-GO because the live lightning alert sets this outcome. Without the alert, the decision would be go. Apart from the alert, no hazard stands out as the scores for heat, thunderstorms and lightning, flooding, wildfire, and wildlife are all low. The main concern is the lightning alert which indicates a strike within 10 mi. The best work windows are 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 6.64,
-    "seconds_retry": 3.88,
-    "tokens_first": 136,
-    "words_final": 59
+    "seconds_first": 4.95,
+    "seconds_retry": 0.0,
+    "tokens_first": 90,
+    "words_final": 69
    },
    {
     "site_id": "EIA-8223",
@@ -315,14 +298,14 @@
     "decision": "GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.3 out of 10. Conditions look good as all scores remain low with no main concerns identified. The best work windows are from 5 AM to 8 PM.",
+    "first_draft": "Decision: GO This decision was made because the hazard index is 0.3 out of 10 and no hazard stands out. Conditions look good as all scores are low with no main concerns. Minor factors include 0.08 in of rain expected, subsoil moisture at 0.13 m\u00b3/m\u00b3, and rain rates up to 0.02 in/hr. The best work windows are from 5 AM to 8 PM.",
     "first_problems": [],
-    "final_draft": "Decision: GO This decision is made because the hazard index shows no hazard stands out with a score of 0.3 out of 10. Conditions look good as all scores remain low with no main concerns identified. The best work windows are from 5 AM to 8 PM.",
+    "final_draft": "Decision: GO This decision was made because the hazard index is 0.3 out of 10 and no hazard stands out. Conditions look good as all scores are low with no main concerns. Minor factors include 0.08 in of rain expected, subsoil moisture at 0.13 m\u00b3/m\u00b3, and rain rates up to 0.02 in/hr. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 3.13,
+    "seconds_first": 5.7,
     "seconds_retry": 0.0,
-    "tokens_first": 58,
-    "words_final": 47
+    "tokens_first": 95,
+    "words_final": 63
    },
    {
     "site_id": "EIA-61100",
@@ -330,14 +313,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": true,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index being driven mainly by wildlife. The overall hazard index score is 4.0 out of 10, with wildlife contributing 4.0 points while heat, thunderstorms, lightning, and flooding are all at 0.0. The main concern is wildlife, specifically after crew reported an alligator within the last day. The best work windows are from 5 AM to 8 PM. Crews must check around water, brush, and parked equipment for alligators before starting work and keep clear of any they see.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by wildlife. The overall hazard index score is 4.0 out of 10, with wildlife being the only category scoring 4.0 while heat, thunderstorms, lightning, and flooding are all 0.0. The main concern is wildlife, specifically after crew reported an alligator within the last day. The best work windows are from 5 AM to 8 PM. Crews must check around water, brush, and parked equipment for alligators before starting and keep clear of any they see.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index being driven mainly by wildlife. The overall hazard index score is 4.0 out of 10, with wildlife contributing 4.0 points while heat, thunderstorms, lightning, and flooding are all at 0.0. The main concern is wildlife, specifically after crew reported an alligator within the last day. The best work windows are from 5 AM to 8 PM. Crews must check around water, brush, and parked equipment for alligators before starting work and keep clear of any they see.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by wildlife. The overall hazard index score is 4.0 out of 10, with wildlife being the only category scoring 4.0 while heat, thunderstorms, lightning, and flooding are all 0.0. The main concern is wildlife, specifically after crew reported an alligator within the last day. The best work windows are from 5 AM to 8 PM. Crews must check around water, brush, and parked equipment for alligators before starting and keep clear of any they see.",
     "final_problems": [],
-    "seconds_first": 5.63,
+    "seconds_first": 6.28,
     "seconds_retry": 0.0,
-    "tokens_first": 118,
-    "words_final": 87
+    "tokens_first": 119,
+    "words_final": 88
    },
    {
     "site_id": "EIA-61268",
@@ -345,14 +328,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning with a score of 3.5 out of 10. Work should occur during the best work windows of 5 AM to 2 PM or 3 PM to 8 PM. Crews must avoid the period from 2 PM to 3 PM when thunder is likely with a peak 17% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning, which contribute to a hazard index of 4.2 out of 10. Work should be scheduled during the best windows of 5 AM to 2 PM or 3 PM to 8 PM while avoiding thunder likely from 2 PM to 3 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning with a score of 3.5 out of 10. Work should occur during the best work windows of 5 AM to 2 PM or 3 PM to 8 PM. Crews must avoid the period from 2 PM to 3 PM when thunder is likely with a peak 17% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning, which contribute to a hazard index of 4.2 out of 10. Work should be scheduled during the best windows of 5 AM to 2 PM or 3 PM to 8 PM while avoiding thunder likely from 2 PM to 3 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 6.03,
+    "seconds_first": 6.1,
     "seconds_retry": 0.0,
-    "tokens_first": 125,
-    "words_final": 99
+    "tokens_first": 116,
+    "words_final": 91
    },
    {
     "site_id": "EIA-2047",
@@ -360,16 +343,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION Why this decision: the hazard index; no hazard stands out Conditions look good with a hazard index of 4.7 out of 10 where no single score stands out. The main concerns are none as all scores remain low. Reasons include alligator sightings recorded nearby in July (12 since 2015), dew point up to 78\u00b0F, overnight low only falling to 80\u00b0F, heat events logged near this site on 17% of days this month (2019-2023), and venomous snake sightings recorded nearby in July (5 since 2015). Best work windows are 5 AM to 8 PM.",
-    "first_problems": [
-     "copies the fact label 'Why this decision:' instead of writing sentences"
-    ],
-    "final_draft": "Decision: CAUTION Conditions look good because no hazard stands out and the hazard index is 4.7 out of 10. Sightings of alligators and venomous snakes have been recorded nearby in July, while dew points reach 78\u00b0F and heat events occur on 17% of days this month. The best work windows are from 5 AM to 8 PM.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is 4.7 out of 10 and no single hazard stands out. Conditions look good as all scores remain low with no main concerns identified. Minor factors include alligator and venomous snake sightings recorded nearby in July, a dew point up to 78\u00b0F, and overnight lows that only fall to 80\u00b0F. Heat events are logged near this site on 17% of days this month. The best work windows are from 5 AM to 8 PM.",
+    "first_problems": [],
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is 4.7 out of 10 and no single hazard stands out. Conditions look good as all scores remain low with no main concerns identified. Minor factors include alligator and venomous snake sightings recorded nearby in July, a dew point up to 78\u00b0F, and overnight lows that only fall to 80\u00b0F. Heat events are logged near this site on 17% of days this month. The best work windows are from 5 AM to 8 PM.",
     "final_problems": [],
-    "seconds_first": 7.11,
-    "seconds_retry": 4.34,
-    "tokens_first": 145,
-    "words_final": 57
+    "seconds_first": 5.76,
+    "seconds_retry": 0.0,
+    "tokens_first": 111,
+    "words_final": 84
    },
    {
     "site_id": "EIA-6008",
@@ -377,14 +358,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by heat. The primary concern is heat with a score of 4.4 out of 10, contributing to a total index of 6.1 out of 10. The main reasons include a high of 103\u00b0F and heat index peaks at 97\u00b0F, alongside an average humidity of 22%. Heat events are logged near this site on 57% of days this month, and venomous snake sightings recorded nearby in August include 13 since 2015. The best work windows are from 5 AM to 8 PM. Schedule heavy work early in the day and give crews water, rest and shade at least once an hour.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by heat. The primary concern is heat, with a high of 103\u00b0F and heat index peaks at 97\u00b0F, while venomous snake sightings have been recorded nearby in August. The best work windows are from 5 AM to 8 PM. Crews should schedule heavy work early in the day and receive water, rest, and shade at least once an hour.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by heat. The primary concern is heat with a score of 4.4 out of 10, contributing to a total index of 6.1 out of 10. The main reasons include a high of 103\u00b0F and heat index peaks at 97\u00b0F, alongside an average humidity of 22%. Heat events are logged near this site on 57% of days this month, and venomous snake sightings recorded nearby in August include 13 since 2015. The best work windows are from 5 AM to 8 PM. Schedule heavy work early in the day and give crews water, rest and shade at least once an hour.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by heat. The primary concern is heat, with a high of 103\u00b0F and heat index peaks at 97\u00b0F, while venomous snake sightings have been recorded nearby in August. The best work windows are from 5 AM to 8 PM. Crews should schedule heavy work early in the day and receive water, rest, and shade at least once an hour.",
     "final_problems": [],
-    "seconds_first": 7.49,
+    "seconds_first": 5.07,
     "seconds_retry": 0.0,
-    "tokens_first": 155,
-    "words_final": 112
+    "tokens_first": 93,
+    "words_final": 72
    },
    {
     "site_id": "EIA-6145",
@@ -392,14 +373,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision to exercise caution is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with rain rates up to 0.14 in/hr and 0.37 in of rain expected. Venomous snake sightings recorded nearby in July (12 since 2015) add another layer of risk during field operations. The best work windows are 5 AM to 7 AM and 11 AM to 4 PM while avoiding thunder likely from 7 AM to 8 AM, 9 AM to 11 AM, and 4 PM to 7 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning, with rain rates up to 0.14 in/hr and 0.37 in of rain expected. Venomous snake sightings recorded nearby in July (12 since 2015) add to the risk. The best work windows are 5 AM to 7 AM and 11 AM to 4 PM. Avoid work during 7 AM to 8 AM, 9 AM to 11 AM, and 4 PM to 7 PM when thunder is likely. Have a lightning plan: stop work and shelter when thunder is heard, and wait 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision to exercise caution is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with rain rates up to 0.14 in/hr and 0.37 in of rain expected. Venomous snake sightings recorded nearby in July (12 since 2015) add another layer of risk during field operations. The best work windows are 5 AM to 7 AM and 11 AM to 4 PM while avoiding thunder likely from 7 AM to 8 AM, 9 AM to 11 AM, and 4 PM to 7 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning, with rain rates up to 0.14 in/hr and 0.37 in of rain expected. Venomous snake sightings recorded nearby in July (12 since 2015) add to the risk. The best work windows are 5 AM to 7 AM and 11 AM to 4 PM. Avoid work during 7 AM to 8 AM, 9 AM to 11 AM, and 4 PM to 7 PM when thunder is likely. Have a lightning plan: stop work and shelter when thunder is heard, and wait 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 9.23,
+    "seconds_first": 10.27,
     "seconds_retry": 0.0,
-    "tokens_first": 164,
-    "words_final": 120
+    "tokens_first": 158,
+    "words_final": 112
    },
    {
     "site_id": "EIA-62113",
@@ -407,16 +388,14 @@
     "decision": "NO-GO",
     "has_alert": true,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO Why this decision: a live alert sets it (the hazard index alone would give caution) The main concern is flooding due to 4.33 in of rain over 3 days and ground still wet from recent rain (index 4.29) The best work windows are 5 AM to 8 PM Check access roads and low crossings before moving equipment in, and never drive through standing water",
-    "first_problems": [
-     "copies the fact label 'Why this decision:' instead of writing sentences"
-    ],
-    "final_draft": "Decision: NO-GO The decision is NO-GO because a live alert sets it, even though the hazard index alone would only suggest caution. The main concern is flooding due to 4.33 in of rain over 3 days, ground still wet from recent rain with an index of 4.29, and 0.80 in of rain expected. The best work windows are 5 AM to 8 PM. Crews must check access roads and low crossings before moving equipment and never drive through standing water.",
+    "first_draft": "Decision: NO-GO The live lightning alert sets the decision to no-go. Without the alert, the decision would be caution. The main concern is flooding driven by a hazard index of 5.6 out of 10, which includes 4.33 in of rain over 3 days and ground still wet from recent rain with an index of 4.29. Although 0.80 in of rain is expected and the best work windows are from 5 AM to 8 PM, the lightning alert prevents any work at the Strauss Wind Farm in Santa Barbara County, CA on Friday, December 26. Recommended actions include checking access roads and low crossings before moving equipment in and never driving through standing water.",
+    "first_problems": [],
+    "final_draft": "Decision: NO-GO The live lightning alert sets the decision to no-go. Without the alert, the decision would be caution. The main concern is flooding driven by a hazard index of 5.6 out of 10, which includes 4.33 in of rain over 3 days and ground still wet from recent rain with an index of 4.29. Although 0.80 in of rain is expected and the best work windows are from 5 AM to 8 PM, the lightning alert prevents any work at the Strauss Wind Farm in Santa Barbara County, CA on Friday, December 26. Recommended actions include checking access roads and low crossings before moving equipment in and never driving through standing water.",
     "final_problems": [],
-    "seconds_first": 5.24,
-    "seconds_retry": 5.78,
-    "tokens_first": 86,
-    "words_final": 80
+    "seconds_first": 7.77,
+    "seconds_retry": 0.0,
+    "tokens_first": 149,
+    "words_final": 113
    },
    {
     "site_id": "EIA-64995",
@@ -424,14 +403,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": true,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with wildlife sightings. Rain rates up to 0.14 in/hr and dew point up to 76\u00b0F contribute to the high risk. Crew reported alligator within the last day and 0.18 in of afternoon and evening rain is expected. Best work windows are 5 AM to 5 PM while avoiding thunder likely from 5 PM to 8 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard. Check around water, brush and parked equipment for alligators before starting and keep clear of any you see. Wait 30 minutes after the last thunder before restarting work.",
+    "first_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning, along with wildlife sightings. The best work window is from 5 AM to 5 PM, but crews must avoid thunder which is likely from 5 PM to 8 PM with a peak 24% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard, and waiting 30 minutes after the last thunder before restarting. Crews should also check around water, brush, and parked equipment for alligators before starting and keep clear of any they see.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with wildlife sightings. Rain rates up to 0.14 in/hr and dew point up to 76\u00b0F contribute to the high risk. Crew reported alligator within the last day and 0.18 in of afternoon and evening rain is expected. Best work windows are 5 AM to 5 PM while avoiding thunder likely from 5 PM to 8 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard. Check around water, brush and parked equipment for alligators before starting and keep clear of any you see. Wait 30 minutes after the last thunder before restarting work.",
+    "final_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning, along with wildlife sightings. The best work window is from 5 AM to 5 PM, but crews must avoid thunder which is likely from 5 PM to 8 PM with a peak 24% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard, and waiting 30 minutes after the last thunder before restarting. Crews should also check around water, brush, and parked equipment for alligators before starting and keep clear of any they see.",
     "final_problems": [],
-    "seconds_first": 7.7,
+    "seconds_first": 7.28,
     "seconds_retry": 0.0,
-    "tokens_first": 161,
-    "words_final": 127
+    "tokens_first": 133,
+    "words_final": 107
    },
    {
     "site_id": "EIA-62630",
@@ -439,14 +418,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision to exercise caution is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with a score of 3.8 out of 10, while other factors like heat, flooding, wildfire, and wildlife contribute smaller scores. Work is best scheduled between 5 AM and 6 PM to avoid the period when thunder is likely from 6 PM to 8 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting. Venomous snake sightings have been recorded nearby in April, with two incidents since 2015.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning, which are supported by a temperature drop of 19\u00b0F in an hour, rain rates up to 0.03 in/hr, and venomous snake sightings recorded nearby in April. The best work windows are from 5 AM to 6 PM, while work should be avoided from 6 PM to 8 PM when thunder is likely with a peak 33% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard, and waiting 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision to exercise caution is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with a score of 3.8 out of 10, while other factors like heat, flooding, wildfire, and wildlife contribute smaller scores. Work is best scheduled between 5 AM and 6 PM to avoid the period when thunder is likely from 6 PM to 8 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting. Venomous snake sightings have been recorded nearby in April, with two incidents since 2015.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning, which are supported by a temperature drop of 19\u00b0F in an hour, rain rates up to 0.03 in/hr, and venomous snake sightings recorded nearby in April. The best work windows are from 5 AM to 6 PM, while work should be avoided from 6 PM to 8 PM when thunder is likely with a peak 33% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard, and waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 6.84,
+    "seconds_first": 7.15,
     "seconds_retry": 0.0,
-    "tokens_first": 143,
-    "words_final": 110
+    "tokens_first": 140,
+    "words_final": 109
    },
    {
     "site_id": "EIA-66111",
@@ -454,14 +433,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning with rain rates up to 0.24 in/hr and dew point up to 76\u00b0F. Venomous snake sightings recorded nearby in July (5 since 2015) add to the risk. The best work windows are 5 AM to 12 PM while avoiding thunder likely from 12 PM to 3 PM and 4 PM to 7 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning, which are expected with rain rates up to 0.24 in/hr and a dew point up to 76\u00b0F. Venomous snake sightings recorded nearby in July (5 since 2015) add to the risk during work hours. The best work windows are 5 AM to 12 PM, while thunder is likely from 12 PM to 3 PM and 4 PM to 7 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning with rain rates up to 0.24 in/hr and dew point up to 76\u00b0F. Venomous snake sightings recorded nearby in July (5 since 2015) add to the risk. The best work windows are 5 AM to 12 PM while avoiding thunder likely from 12 PM to 3 PM and 4 PM to 7 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning, which are expected with rain rates up to 0.24 in/hr and a dew point up to 76\u00b0F. Venomous snake sightings recorded nearby in July (5 since 2015) add to the risk during work hours. The best work windows are 5 AM to 12 PM, while thunder is likely from 12 PM to 3 PM and 4 PM to 7 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 6.59,
+    "seconds_first": 7.24,
     "seconds_retry": 0.0,
-    "tokens_first": 136,
-    "words_final": 102
+    "tokens_first": 146,
+    "words_final": 110
    },
    {
     "site_id": "EIA-2981",
@@ -469,14 +448,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with rain rates up to 0.41 in/hr and venomous snake sightings recorded nearby in July. Heat events are logged near this site on 30% of days this month with a dew point up to 76\u00b0F and heat index peaks at 100\u00b0F. The best work windows are from 5 AM to 8 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning, with rain rates reaching up to 0.41 in/hr and heat index peaks at 100\u00b0F. Venomous snake sightings have been recorded nearby in July, and heat events are logged near this site on 30% of days this month. The best work windows are from 5 AM to 8 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with rain rates up to 0.41 in/hr and venomous snake sightings recorded nearby in July. Heat events are logged near this site on 30% of days this month with a dew point up to 76\u00b0F and heat index peaks at 100\u00b0F. The best work windows are from 5 AM to 8 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning, with rain rates reaching up to 0.41 in/hr and heat index peaks at 100\u00b0F. Venomous snake sightings have been recorded nearby in July, and heat events are logged near this site on 30% of days this month. The best work windows are from 5 AM to 8 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 6.36,
+    "seconds_first": 6.41,
     "seconds_retry": 0.0,
-    "tokens_first": 133,
-    "words_final": 101
+    "tokens_first": 129,
+    "words_final": 98
    },
    {
     "site_id": "EIA-50118",
@@ -484,14 +463,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning with rain rates up to 0.31 in/hr and 0.91 in of rain expected. Venomous snake sightings recorded nearby in September (124 since 2015) add to the risk. Best work windows are 5 AM to 7 AM; 9 AM to 3 PM; and 5 PM to 8 PM. Avoid thunder likely from 7 AM to 9 AM and from 3 PM to 5 PM. Have a lightning plan: stop work and shelter when thunder is heard, and wait 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning, with rain rates up to 0.31 in/hr and 0.91 in of rain expected. Venomous snake sightings recorded nearby in September (124 since 2015) add to the risk. The best work windows are 5 AM to 7 AM; 9 AM to 3 PM; and 5 PM to 8 PM. Work should be avoided from 7 AM to 9 AM when thunder is likely with a peak 21% chance per hour, and from 3 PM to 5 PM when thunder is likely with a peak 16% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard. Crews must wait 30 minutes after the last thunder before restarting work.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning with rain rates up to 0.31 in/hr and 0.91 in of rain expected. Venomous snake sightings recorded nearby in September (124 since 2015) add to the risk. Best work windows are 5 AM to 7 AM; 9 AM to 3 PM; and 5 PM to 8 PM. Avoid thunder likely from 7 AM to 9 AM and from 3 PM to 5 PM. Have a lightning plan: stop work and shelter when thunder is heard, and wait 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning, with rain rates up to 0.31 in/hr and 0.91 in of rain expected. Venomous snake sightings recorded nearby in September (124 since 2015) add to the risk. The best work windows are 5 AM to 7 AM; 9 AM to 3 PM; and 5 PM to 8 PM. Work should be avoided from 7 AM to 9 AM when thunder is likely with a peak 21% chance per hour, and from 3 PM to 5 PM when thunder is likely with a peak 16% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard. Crews must wait 30 minutes after the last thunder before restarting work.",
     "final_problems": [],
-    "seconds_first": 7.35,
+    "seconds_first": 8.97,
     "seconds_retry": 0.0,
-    "tokens_first": 152,
-    "words_final": 108
+    "tokens_first": 191,
+    "words_final": 139
    },
    {
     "site_id": "EIA-50971",
@@ -499,14 +478,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning with a score of 2.6 out of 10. The best work windows are from 5 AM to 12 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning, which are supported by a heat index peaking at 101\u00b0F and dew points up to 77\u00b0F. Alligator sightings recorded nearby in August and heat events logged near this site on 9% of days this month further contribute to the risk profile. The best work windows are from 5 AM to 12 PM, while work should be avoided from 12 PM to 1 PM and from 2 PM to 8 PM due to thunder likelihood. Rain rates may reach up to 0.07 in/hr during these periods, and the hazard index scores out of 10 include heat at 1.6, thunderstorms and lightning at 2.6, flooding at 0.1, wildfire at 0.1, and wildlife at 1.7. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning with a score of 2.6 out of 10. The best work windows are from 5 AM to 12 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning, which are supported by a heat index peaking at 101\u00b0F and dew points up to 77\u00b0F. Alligator sightings recorded nearby in August and heat events logged near this site on 9% of days this month further contribute to the risk profile. The best work windows are from 5 AM to 12 PM, while work should be avoided from 12 PM to 1 PM and from 2 PM to 8 PM due to thunder likelihood. Rain rates may reach up to 0.07 in/hr during these periods, and the hazard index scores out of 10 include heat at 1.6, thunderstorms and lightning at 2.6, flooding at 0.1, wildfire at 0.1, and wildlife at 1.7. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 4.5,
+    "seconds_first": 10.72,
     "seconds_retry": 0.0,
-    "tokens_first": 86,
-    "words_final": 68
+    "tokens_first": 226,
+    "words_final": 162
    },
    {
     "site_id": "EIA-61807",
@@ -514,14 +493,14 @@
     "decision": "NO-GO",
     "has_alert": true,
     "has_crew_report": true,
-    "first_draft": "Decision: NO-GO The live alert for lightning strikes within 10 miles sets the decision to at least no-go. The hazard index of 6.6 out of 10 is driven mainly by wildfire with a score of 4.2. Main concerns include wildfire and wildlife sightings, supported by detected fires on 14% of days this month and a reported alligator within the last day. The best work windows are from 5 AM to 8 PM. Recommended actions are to avoid hot work without a fire watch, keep a fire extinguisher on every vehicle, and check around water, brush, and parked equipment for alligators before starting.",
+    "first_draft": "Decision: NO-GO The decision is set by the live alert for lightning strikes within 10 mi. The hazard index of 6.6 out of 10 is driven mainly by wildfire with scores of 4.2 for wildfire and 4.1 for wildlife. Main concerns are wildfire and wildlife sightings, including a reported alligator within the last day and fires detected near the site on 14% of days this month. The best work windows are from 5 AM to 8 PM while avoiding hot work without a fire watch and keeping a fire extinguisher on every vehicle. Crews must check around water, brush, and parked equipment for alligators before starting and keep clear of any they see.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The live alert for lightning strikes within 10 miles sets the decision to at least no-go. The hazard index of 6.6 out of 10 is driven mainly by wildfire with a score of 4.2. Main concerns include wildfire and wildlife sightings, supported by detected fires on 14% of days this month and a reported alligator within the last day. The best work windows are from 5 AM to 8 PM. Recommended actions are to avoid hot work without a fire watch, keep a fire extinguisher on every vehicle, and check around water, brush, and parked equipment for alligators before starting.",
+    "final_draft": "Decision: NO-GO The decision is set by the live alert for lightning strikes within 10 mi. The hazard index of 6.6 out of 10 is driven mainly by wildfire with scores of 4.2 for wildfire and 4.1 for wildlife. Main concerns are wildfire and wildlife sightings, including a reported alligator within the last day and fires detected near the site on 14% of days this month. The best work windows are from 5 AM to 8 PM while avoiding hot work without a fire watch and keeping a fire extinguisher on every vehicle. Crews must check around water, brush, and parked equipment for alligators before starting and keep clear of any they see.",
     "final_problems": [],
-    "seconds_first": 6.73,
+    "seconds_first": 7.29,
     "seconds_retry": 0.0,
-    "tokens_first": 134,
-    "words_final": 102
+    "tokens_first": 146,
+    "words_final": 113
    },
    {
     "site_id": "EIA-62431",
@@ -529,14 +508,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision to exercise caution is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with rain rates up to 0.26 in/hr and 2 hours of heavy rain expected. The best work windows are from 5 AM to 10 AM and from 1 PM to 8 PM. Crews must avoid the period from 10 AM to 1 PM when thunder is likely with a peak 33% chance per hour. A lightning plan requires stopping work and sheltering when thunder is heard, followed by waiting 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning, with rain rates up to 0.26 in/hr and 2 hours of heavy rain expected. The best work windows are 5 AM to 10 AM and 1 PM to 8 PM, while thunder is likely from 10 AM to 1 PM with a peak 33% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard, and waiting 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision to exercise caution is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with rain rates up to 0.26 in/hr and 2 hours of heavy rain expected. The best work windows are from 5 AM to 10 AM and from 1 PM to 8 PM. Crews must avoid the period from 10 AM to 1 PM when thunder is likely with a peak 33% chance per hour. A lightning plan requires stopping work and sheltering when thunder is heard, followed by waiting 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning, with rain rates up to 0.26 in/hr and 2 hours of heavy rain expected. The best work windows are 5 AM to 10 AM and 1 PM to 8 PM, while thunder is likely from 10 AM to 1 PM with a peak 33% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard, and waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 6.45,
+    "seconds_first": 6.4,
     "seconds_retry": 0.0,
-    "tokens_first": 134,
-    "words_final": 103
+    "tokens_first": 127,
+    "words_final": 97
    },
    {
     "site_id": "EIA-6072",
@@ -544,14 +523,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by heat. The primary concern is heat with scores of 6.0 out of 10 and a peak heat index of 103\u00b0F. Work should be scheduled between 5 AM and 8 PM while crews receive water, rest, and shade at least once an hour. Venomous snake sightings recorded nearby in July add to the overall caution level.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by heat. The primary concern is heat, with the heat index peaking at 103\u00b0F and events logged near this site on 27% of days this month. Venomous snake sightings recorded nearby in July add to the risk, while the overnight low only falls to 78\u00b0F. The best work windows are from 5 AM to 8 PM. Schedule heavy work early in the day and ensure crews receive water, rest, and shade at least once an hour.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by heat. The primary concern is heat with scores of 6.0 out of 10 and a peak heat index of 103\u00b0F. Work should be scheduled between 5 AM and 8 PM while crews receive water, rest, and shade at least once an hour. Venomous snake sightings recorded nearby in July add to the overall caution level.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by heat. The primary concern is heat, with the heat index peaking at 103\u00b0F and events logged near this site on 27% of days this month. Venomous snake sightings recorded nearby in July add to the risk, while the overnight low only falls to 78\u00b0F. The best work windows are from 5 AM to 8 PM. Schedule heavy work early in the day and ensure crews receive water, rest, and shade at least once an hour.",
     "final_problems": [],
-    "seconds_first": 4.47,
+    "seconds_first": 5.52,
     "seconds_retry": 0.0,
-    "tokens_first": 88,
-    "words_final": 68
+    "tokens_first": 114,
+    "words_final": 89
    },
    {
     "site_id": "EIA-880",
@@ -559,14 +538,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning with rain rates up to 0.20 in/hr and a temperature drop of 6\u00b0F in an hour. The best work windows are 5 AM to 8 AM and 11 AM to 8 PM while avoiding thunder likely from 8 AM to 11 AM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning, with rain rates up to 0.20 in/hr and a temperature drop of 6\u00b0F in an hour. The best work windows are 5 AM to 8 AM and 11 AM to 8 PM. Avoid work between 8 AM and 11 AM when the thunder is likely with a peak 17% chance per hour. Have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning with rain rates up to 0.20 in/hr and a temperature drop of 6\u00b0F in an hour. The best work windows are 5 AM to 8 AM and 11 AM to 8 PM while avoiding thunder likely from 8 AM to 11 AM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning, with rain rates up to 0.20 in/hr and a temperature drop of 6\u00b0F in an hour. The best work windows are 5 AM to 8 AM and 11 AM to 8 PM. Avoid work between 8 AM and 11 AM when the thunder is likely with a peak 17% chance per hour. Have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 5.81,
+    "seconds_first": 6.31,
     "seconds_retry": 0.0,
-    "tokens_first": 116,
-    "words_final": 91
+    "tokens_first": 132,
+    "words_final": 100
    },
    {
     "site_id": "EIA-1439",
@@ -574,14 +553,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision to exercise caution is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with rain rates up to 0.16 in/hr and heat index peaks at 101\u00b0F. Work should be scheduled between 5 AM and 2 PM while avoiding thunder likely from 2 PM to 7 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting. Alligator sightings recorded nearby in July should also be noted during operations.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning, which are supported by rain rates up to 0.16 in/hr and a heat index peak of 101\u00b0F. Work should be scheduled between 5 AM and 2 PM to avoid thunder likely from 2 PM to 7 PM with a peak 28% chance per hour. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting. Alligator sightings recorded nearby in July (4 since 2015) are another factor to consider during operations.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision to exercise caution is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with rain rates up to 0.16 in/hr and heat index peaks at 101\u00b0F. Work should be scheduled between 5 AM and 2 PM while avoiding thunder likely from 2 PM to 7 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting. Alligator sightings recorded nearby in July should also be noted during operations.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning, which are supported by rain rates up to 0.16 in/hr and a heat index peak of 101\u00b0F. Work should be scheduled between 5 AM and 2 PM to avoid thunder likely from 2 PM to 7 PM with a peak 28% chance per hour. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting. Alligator sightings recorded nearby in July (4 since 2015) are another factor to consider during operations.",
     "final_problems": [],
-    "seconds_first": 6.2,
+    "seconds_first": 6.95,
     "seconds_retry": 0.0,
-    "tokens_first": 125,
-    "words_final": 97
+    "tokens_first": 148,
+    "words_final": 110
    },
    {
     "site_id": "EIA-8054",
@@ -589,14 +568,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by heat. The primary concern is heat, with the heat index peaking at 101\u00b0F and events logged near this site on 11% of days this month. Heat events are expected to be higher than normal by 5\u00b0F versus the average for this time of year, and overnight lows only fall to 77\u00b0F. Venomous snake sightings have been recorded nearby in June, with two incidents since 2015. The best work windows are from 5 AM to 8 PM. Schedule heavy work early in the day and ensure crews receive water, rest, and shade at least once an hour.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by heat. The primary concern is heat, with the heat index peaking at 101\u00b0F and events logged near this site on 11% of days this month. Venomous snake sightings recorded nearby in June add to the risk, while the heat index is 5\u00b0F versus normal for this time of year. The best work windows are from 5 AM to 8 PM. Schedule heavy work early in the day and ensure crews receive water, rest, and shade at least once an hour.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by heat. The primary concern is heat, with the heat index peaking at 101\u00b0F and events logged near this site on 11% of days this month. Heat events are expected to be higher than normal by 5\u00b0F versus the average for this time of year, and overnight lows only fall to 77\u00b0F. Venomous snake sightings have been recorded nearby in June, with two incidents since 2015. The best work windows are from 5 AM to 8 PM. Schedule heavy work early in the day and ensure crews receive water, rest, and shade at least once an hour.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by heat. The primary concern is heat, with the heat index peaking at 101\u00b0F and events logged near this site on 11% of days this month. Venomous snake sightings recorded nearby in June add to the risk, while the heat index is 5\u00b0F versus normal for this time of year. The best work windows are from 5 AM to 8 PM. Schedule heavy work early in the day and ensure crews receive water, rest, and shade at least once an hour.",
     "final_problems": [],
-    "seconds_first": 6.77,
+    "seconds_first": 5.89,
     "seconds_retry": 0.0,
-    "tokens_first": 142,
-    "words_final": 109
+    "tokens_first": 118,
+    "words_final": 94
    },
    {
     "site_id": "EIA-56407",
@@ -604,16 +583,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": true,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by wildlife. The main concerns are wildlife and thunderstorms and lightning with a combined score of 7.7 out of 10. The best work windows are 5 AM to 12 PM and 6 PM to 8 PM while avoiding thunder likely from 12 PM to 6 PM. Recommended actions include checking around water, brush and parked equipment for alligators before starting and having a lightning plan to stop work and shelter when thunder is heard.",
-    "first_problems": [
-     "number 7.7 is not in the facts"
-    ],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by wildlife. The main concerns are wildlife and thunderstorms and lightning. Crews reported an alligator within the last day, and rain rates are up to 0.08 in/hr with 0.16 in of afternoon and evening rain expected. The best work windows are 5 AM to 12 PM and 6 PM to 8 PM, while thunder is likely from 12 PM to 6 PM with a peak 19% chance per hour. Recommended actions include checking around water, brush, and parked equipment for alligators before starting and keeping clear of any you see. You must also have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: NO-GO The decision to not go is made because the hazard index, which is driven mainly by wildlife, reached a score of 6.5 out of 10. The main concerns are wildlife and thunderstorms and lightning, with specific reasons including a crew report of an alligator within the last day, rain rates up to 0.08 in/hr, and 0.16 in of afternoon and evening rain expected. The best work windows are 5 AM to 12 PM and 6 PM to 8 PM, while work should be avoided between 12 PM and 6 PM when thunder is likely with a peak 19% chance per hour. Recommended actions include checking around water, brush, and parked equipment for alligators before starting and keeping clear of any seen, as well as having a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
+    "first_problems": [],
+    "final_draft": "Decision: NO-GO The decision to not go is made because the hazard index, which is driven mainly by wildlife, reached a score of 6.5 out of 10. The main concerns are wildlife and thunderstorms and lightning, with specific reasons including a crew report of an alligator within the last day, rain rates up to 0.08 in/hr, and 0.16 in of afternoon and evening rain expected. The best work windows are 5 AM to 12 PM and 6 PM to 8 PM, while work should be avoided between 12 PM and 6 PM when thunder is likely with a peak 19% chance per hour. Recommended actions include checking around water, brush, and parked equipment for alligators before starting and keeping clear of any seen, as well as having a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 5.66,
-    "seconds_retry": 8.01,
-    "tokens_first": 112,
-    "words_final": 131
+    "seconds_first": 9.17,
+    "seconds_retry": 0.0,
+    "tokens_first": 195,
+    "words_final": 149
    },
    {
     "site_id": "EIA-56106",
@@ -621,14 +598,14 @@
     "decision": "NO-GO",
     "has_alert": true,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision is NO-GO because a live alert sets it, meaning the hazard index alone would only suggest caution. The primary concern is wildfire due to high fire weather index values and frequent fire detections near the site. The best work window is from 5 AM to 8 PM local time. Crews must avoid hot work without a fire watch and keep a fire extinguisher on every vehicle.",
+    "first_draft": "Decision: NO-GO The live lightning alert sets the decision to no-go. Without the alert, the decision would be caution. The main concern is wildfire driven by a high fire weather index of 51 and afternoon humidity dropping to 9%. Fires are detected near this site on 10% of days this month and air dryness reaches 3.4 kPa. The best work windows are from 5 AM to 8 PM. Avoid hot work without a fire watch and keep a fire extinguisher on every vehicle.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision is NO-GO because a live alert sets it, meaning the hazard index alone would only suggest caution. The primary concern is wildfire due to high fire weather index values and frequent fire detections near the site. The best work window is from 5 AM to 8 PM local time. Crews must avoid hot work without a fire watch and keep a fire extinguisher on every vehicle.",
+    "final_draft": "Decision: NO-GO The live lightning alert sets the decision to no-go. Without the alert, the decision would be caution. The main concern is wildfire driven by a high fire weather index of 51 and afternoon humidity dropping to 9%. Fires are detected near this site on 10% of days this month and air dryness reaches 3.4 kPa. The best work windows are from 5 AM to 8 PM. Avoid hot work without a fire watch and keep a fire extinguisher on every vehicle.",
     "final_problems": [],
-    "seconds_first": 4.41,
+    "seconds_first": 5.46,
     "seconds_retry": 0.0,
-    "tokens_first": 84,
-    "words_final": 70
+    "tokens_first": 108,
+    "words_final": 83
    },
    {
     "site_id": "EIA-61100",
@@ -636,14 +613,14 @@
     "decision": "CAUTION",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with rain rates up to 0.05 in/hr and gusts up to 18 mph above the sustained wind. Work should occur between 5 AM and 7 PM while avoiding thunder likely from 7 PM to 8 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning, which are supported by rain rates up to 0.05 in/hr, dew points up to 66\u00b0F, heat index peaks at 79\u00b0F, and gusts up to 18 mph above the sustained wind. The best work windows are from 5 AM to 7 PM. Avoid thunder likely from 7 PM to 8 PM, which has a peak 14% chance per hour. Have a lightning plan that includes stopping work and sheltering when thunder is heard, and waiting 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: CAUTION The decision is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with rain rates up to 0.05 in/hr and gusts up to 18 mph above the sustained wind. Work should occur between 5 AM and 7 PM while avoiding thunder likely from 7 PM to 8 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: CAUTION This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning, which are supported by rain rates up to 0.05 in/hr, dew points up to 66\u00b0F, heat index peaks at 79\u00b0F, and gusts up to 18 mph above the sustained wind. The best work windows are from 5 AM to 7 PM. Avoid thunder likely from 7 PM to 8 PM, which has a peak 14% chance per hour. Have a lightning plan that includes stopping work and sheltering when thunder is heard, and waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 5.44,
+    "seconds_first": 6.74,
     "seconds_retry": 0.0,
-    "tokens_first": 110,
-    "words_final": 85
+    "tokens_first": 145,
+    "words_final": 106
    },
    {
     "site_id": "EIA-62630",
@@ -651,14 +628,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by wildfire. The main concern is wildfire with scores out of 10 showing heat at 0.0, thunderstorms and lightning at 0.0, flooding at 0.0, wildfire at 9.8, and wildlife at 0.0. Afternoon humidity drops to 2%, the fire weather index is 78, fires are detected near this site on 11% of days this month (2019-2023), and air dryness (VPD) reaches 3.3 kPa. The best work windows are 5 AM to 8 PM. Avoid hot work without a fire watch and keep a fire extinguisher on every vehicle.",
+    "first_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by wildfire conditions. The primary concern is wildfire, which is supported by a fire weather index of 78 and afternoon humidity dropping to 2%. Fires are detected near this site on 11% of days this month based on historical sightings from 2019 to 2023. The air dryness (VPD) reaches 3.3 kPa, contributing to the high risk. Best work windows are 5 AM to 8 PM local time. Recommended actions include avoiding hot work without a fire watch and keeping a fire extinguisher on every vehicle.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by wildfire. The main concern is wildfire with scores out of 10 showing heat at 0.0, thunderstorms and lightning at 0.0, flooding at 0.0, wildfire at 9.8, and wildlife at 0.0. Afternoon humidity drops to 2%, the fire weather index is 78, fires are detected near this site on 11% of days this month (2019-2023), and air dryness (VPD) reaches 3.3 kPa. The best work windows are 5 AM to 8 PM. Avoid hot work without a fire watch and keep a fire extinguisher on every vehicle.",
+    "final_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by wildfire conditions. The primary concern is wildfire, which is supported by a fire weather index of 78 and afternoon humidity dropping to 2%. Fires are detected near this site on 11% of days this month based on historical sightings from 2019 to 2023. The air dryness (VPD) reaches 3.3 kPa, contributing to the high risk. Best work windows are 5 AM to 8 PM local time. Recommended actions include avoiding hot work without a fire watch and keeping a fire extinguisher on every vehicle.",
     "final_problems": [],
-    "seconds_first": 7.57,
+    "seconds_first": 6.45,
     "seconds_retry": 0.0,
-    "tokens_first": 162,
-    "words_final": 102
+    "tokens_first": 134,
+    "words_final": 98
    },
    {
     "site_id": "EIA-6768",
@@ -666,14 +643,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to halt operations is based on the hazard index driven mainly by heat. The primary concern is extreme heat with an index score of 6.9 out of 10, where heat accounts for 6.3 of the total score. Although work windows exist from 5 AM to 3 PM and 4 PM to 8 PM, crews must avoid the period from 3 PM to 4 PM when the heat index peaks at 103\u00b0F. This elevated heat index is 12\u00b0F higher than normal for this time of year, and overnight lows only drop to 75\u00b0F. Heavy work should be scheduled early in the day while ensuring crews receive water, rest, and shade at least once an hour.",
+    "first_draft": "Decision: NO-GO The decision to halt operations is made because the hazard index, driven mainly by heat, reaches a level of 6.9 out of 10. The primary concern is heat, which peaks at 103\u00b0F and is logged near this site on 6% of days this month. Although the overnight low only falls to 75\u00b0F, the heat index is 12\u00b0F higher than normal for this time of year. Work windows are scheduled for 5 AM to 3 PM and 4 PM to 8 PM, while the period from 3 PM to 4 PM must be avoided due to the peak heat index of 103\u00b0F. Crews should schedule heavy work early in the day and receive water, rest, and shade at least once an hour.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to halt operations is based on the hazard index driven mainly by heat. The primary concern is extreme heat with an index score of 6.9 out of 10, where heat accounts for 6.3 of the total score. Although work windows exist from 5 AM to 3 PM and 4 PM to 8 PM, crews must avoid the period from 3 PM to 4 PM when the heat index peaks at 103\u00b0F. This elevated heat index is 12\u00b0F higher than normal for this time of year, and overnight lows only drop to 75\u00b0F. Heavy work should be scheduled early in the day while ensuring crews receive water, rest, and shade at least once an hour.",
+    "final_draft": "Decision: NO-GO The decision to halt operations is made because the hazard index, driven mainly by heat, reaches a level of 6.9 out of 10. The primary concern is heat, which peaks at 103\u00b0F and is logged near this site on 6% of days this month. Although the overnight low only falls to 75\u00b0F, the heat index is 12\u00b0F higher than normal for this time of year. Work windows are scheduled for 5 AM to 3 PM and 4 PM to 8 PM, while the period from 3 PM to 4 PM must be avoided due to the peak heat index of 103\u00b0F. Crews should schedule heavy work early in the day and receive water, rest, and shade at least once an hour.",
     "final_problems": [],
-    "seconds_first": 7.34,
+    "seconds_first": 7.71,
     "seconds_retry": 0.0,
-    "tokens_first": 155,
-    "words_final": 118
+    "tokens_first": 166,
+    "words_final": 123
    },
    {
     "site_id": "EIA-61807",
@@ -681,14 +658,16 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to halt operations is driven by the hazard index, which is primarily elevated due to heat. The main concerns are heat and thunderstorms and lightning, with the heat index peaking at 104\u00b0F and thunder likely occurring between 1 PM and 8 PM. Although the best work windows are from 5 AM to 1 PM, crews must avoid the heat index of 103\u00b0F or higher from 3 PM to 4 PM and any thunder activity. Recommended actions include scheduling heavy work early in the day while ensuring crews receive water, rest, and shade at least once an hour. A lightning plan must be followed by stopping work and sheltering when thunder is heard, with work resuming only 30 minutes after the last thunder.",
-    "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to halt operations is driven by the hazard index, which is primarily elevated due to heat. The main concerns are heat and thunderstorms and lightning, with the heat index peaking at 104\u00b0F and thunder likely occurring between 1 PM and 8 PM. Although the best work windows are from 5 AM to 1 PM, crews must avoid the heat index of 103\u00b0F or higher from 3 PM to 4 PM and any thunder activity. Recommended actions include scheduling heavy work early in the day while ensuring crews receive water, rest, and shade at least once an hour. A lightning plan must be followed by stopping work and sheltering when thunder is heard, with work resuming only 30 minutes after the last thunder.",
+    "first_draft": "Decision: NO-GO The decision to halt operations is driven by a hazard index of 7.1 out of 10, which is primarily caused by extreme heat conditions. The main concerns are heat and thunderstorms and lightning, with the heat index peaking at 104\u00b0F and heat events logged on 7% of days this month. Although the overnight low only falls to 73\u00b0F, the heat index is 7\u00b0F higher than normal for this time of year. The best work windows are from 5 AM to 1 PM, but crews must avoid the heat index of 103\u00b0F or higher from 3 PM to 4 PM. Additionally, thunder is likely from 1 PM to 8 PM with a peak 33% chance per hour, requiring immediate shelter when thunder is heard. Recommended actions include scheduling heavy work early in the day and ensuring crews receive water, rest, and shade at least once an hour. A lightning plan must be followed by stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
+    "first_problems": [
+     "length 173 words (want 12-170)"
+    ],
+    "final_draft": "Decision: NO-GO This decision was made because the hazard index, driven mainly by heat, reached 7.1 out of 10. The primary concerns are heat and thunderstorms and lightning, with heat index peaks at 104\u00b0F and thunder likely from 1 PM to 8 PM. The best work windows are 5 AM to 1 PM, while crews must avoid heat index 103\u00b0F or higher from 3 PM to 4 PM and thunder from 1 PM to 8 PM. Recommended actions include scheduling heavy work early in the day and providing water, rest, and shade at least once an hour. A lightning plan requires stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 8.07,
-    "seconds_retry": 0.0,
-    "tokens_first": 160,
-    "words_final": 126
+    "seconds_first": 10.26,
+    "seconds_retry": 7.49,
+    "tokens_first": 226,
+    "words_final": 119
    },
    {
     "site_id": "EIA-2047",
@@ -696,14 +675,16 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": true,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by heat. The primary concern is the high heat index which peaks at 107\u00b0F along with wildlife sightings and thunderstorms and lightning. The best work windows are from 5 AM to 10 AM and from 1 PM to 8 PM while avoiding the heat index of 103\u00b0F or higher between 10 AM and 1 PM. Crews must schedule heavy work early in the day and receive water, rest, and shade at least once an hour. Workers should check around water, brush, and parked equipment for alligators before starting and keep clear of any seen. A lightning plan requires stopping work and sheltering when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
-    "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by heat. The primary concern is the high heat index which peaks at 107\u00b0F along with wildlife sightings and thunderstorms and lightning. The best work windows are from 5 AM to 10 AM and from 1 PM to 8 PM while avoiding the heat index of 103\u00b0F or higher between 10 AM and 1 PM. Crews must schedule heavy work early in the day and receive water, rest, and shade at least once an hour. Workers should check around water, brush, and parked equipment for alligators before starting and keep clear of any seen. A lightning plan requires stopping work and sheltering when thunder is heard and waiting 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: NO-GO The decision to not go to the site was made because the hazard index is driven mainly by heat. The main concerns are heat, wildlife, and thunderstorms and lightning. The best work windows are from 5 AM to 10 AM and from 1 PM to 8 PM. Crews must avoid working when the heat index is 103\u00b0F or higher between 10 AM and 1 PM. The primary reason for the no-go decision is the high hazard index score of 8.8 out of 10. Heat is the largest contributor with a score of 6.6 out of 10, while wildlife adds 5.2, thunderstorms and lightning add 2.3, and flooding and wildfire add minimal scores. Heat events are logged near this site on 17% of days this month, and the heat index peaks at 107\u00b0F. Alligator sightings recorded nearby in July include 12 since 2015, with one reported within the last day. Rain rates can reach up to 0.05 in/hr, and thunderstorms and lightning present a secondary risk. Recommended actions include scheduling heavy work early in the day and providing crews water, rest, and",
+    "first_problems": [
+     "length 183 words (want 12-170)"
+    ],
+    "final_draft": "Decision: NO-GO The decision to not go is made because the hazard index is driven mainly by heat. The main concerns are heat, wildlife, and thunderstorms and lightning. The best work windows are from 5 AM to 10 AM and from 1 PM to 8 PM. Crews must avoid the heat index of 103\u00b0F or higher from 10 AM to 1 PM. Heavy work should be scheduled early in the day with water, rest, and shade provided at least once an hour. Alligators have been reported within the last day and sightings are recorded nearby in July. A lightning plan requires stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 8.03,
-    "seconds_retry": 0.0,
-    "tokens_first": 166,
-    "words_final": 131
+    "seconds_first": 14.14,
+    "seconds_retry": 9.36,
+    "tokens_first": 257,
+    "words_final": 119
    },
    {
     "site_id": "EIA-50971",
@@ -711,14 +692,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with heat, with a combined hazard index of 6.6 out of 10. The heat index peaks at 101\u00b0F and overnight lows only fall to 78\u00b0F, while rain rates can reach up to 0.09 in/hr. Alligator sightings have been recorded nearby in August, with nine since 2015. The best work windows are from 5 AM to 2 PM, but crews must avoid thunder which is likely from 2 PM to 8 PM with a peak 33% chance per hour. A lightning plan is required to stop work and shelter when thunder is heard, followed by waiting 30 minutes after the last thunder before restarting. Heavy work should be scheduled early in the day, and crews must receive water, rest, and shade at least once an hour.",
+    "first_draft": "Decision: NO-GO The decision to not go to the site was made because the hazard index is driven mainly by thunderstorms and lightning. The main concerns are thunderstorms and lightning along with heat, which are the highest scoring factors in the index. The best work windows are from 5 AM to 2 PM while avoiding thunder likely from 2 PM to 8 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting. Crews should schedule heavy work early in the day and receive water, rest, and shade at least once an hour.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with heat, with a combined hazard index of 6.6 out of 10. The heat index peaks at 101\u00b0F and overnight lows only fall to 78\u00b0F, while rain rates can reach up to 0.09 in/hr. Alligator sightings have been recorded nearby in August, with nine since 2015. The best work windows are from 5 AM to 2 PM, but crews must avoid thunder which is likely from 2 PM to 8 PM with a peak 33% chance per hour. A lightning plan is required to stop work and shelter when thunder is heard, followed by waiting 30 minutes after the last thunder before restarting. Heavy work should be scheduled early in the day, and crews must receive water, rest, and shade at least once an hour.",
+    "final_draft": "Decision: NO-GO The decision to not go to the site was made because the hazard index is driven mainly by thunderstorms and lightning. The main concerns are thunderstorms and lightning along with heat, which are the highest scoring factors in the index. The best work windows are from 5 AM to 2 PM while avoiding thunder likely from 2 PM to 8 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting. Crews should schedule heavy work early in the day and receive water, rest, and shade at least once an hour.",
     "final_problems": [],
-    "seconds_first": 10.15,
+    "seconds_first": 6.62,
     "seconds_retry": 0.0,
-    "tokens_first": 203,
-    "words_final": 152
+    "tokens_first": 129,
+    "words_final": 109
    },
    {
     "site_id": "EIA-6072",
@@ -726,14 +707,14 @@
     "decision": "NO-GO",
     "has_alert": true,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The live alert for lightning strikes within 10 miles sets the decision to at least no-go. This decision is made because the hazard index, driven mainly by heat, reaches 8.1 out of 10. The main concerns are heat and thunderstorms and lightning, with heat index peaks at 103\u00b0F and rain rates up to 0.22 in/hr. Venomous snake sightings recorded nearby in June add to the risk, while heat events are logged near this site on 12% of days this month. The best work windows are 5 AM to 2 PM, but crews must avoid the heat index 103\u00b0F or higher from 2 PM to 4 PM and thunder likely from 4 PM to 7 PM. Recommended actions include scheduling heavy work early in the day and giving crews water, rest and shade at least once an hour. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: NO-GO The decision to not go is set by the live alert for lightning strikes within 10 miles. The primary reason for this decision is the hazard index driven mainly by heat, which scores 8.1 out of 10. The main concerns are heat and thunderstorms and lightning, with heat index peaks at 103\u00b0F and rain rates up to 0.22 in/hr. Venomous snake sightings recorded nearby in June add to the risk, while heat events are logged near this site on 12% of days this month. The best work windows are from 5 AM to 2 PM, but crews must avoid the heat index of 103\u00b0F or higher from 2 PM to 4 PM. Work should stop and shelter be used when thunder is heard, with a wait of 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The live alert for lightning strikes within 10 miles sets the decision to at least no-go. This decision is made because the hazard index, driven mainly by heat, reaches 8.1 out of 10. The main concerns are heat and thunderstorms and lightning, with heat index peaks at 103\u00b0F and rain rates up to 0.22 in/hr. Venomous snake sightings recorded nearby in June add to the risk, while heat events are logged near this site on 12% of days this month. The best work windows are 5 AM to 2 PM, but crews must avoid the heat index 103\u00b0F or higher from 2 PM to 4 PM and thunder likely from 4 PM to 7 PM. Recommended actions include scheduling heavy work early in the day and giving crews water, rest and shade at least once an hour. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: NO-GO The decision to not go is set by the live alert for lightning strikes within 10 miles. The primary reason for this decision is the hazard index driven mainly by heat, which scores 8.1 out of 10. The main concerns are heat and thunderstorms and lightning, with heat index peaks at 103\u00b0F and rain rates up to 0.22 in/hr. Venomous snake sightings recorded nearby in June add to the risk, while heat events are logged near this site on 12% of days this month. The best work windows are from 5 AM to 2 PM, but crews must avoid the heat index of 103\u00b0F or higher from 2 PM to 4 PM. Work should stop and shelter be used when thunder is heard, with a wait of 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 10.37,
+    "seconds_first": 9.43,
     "seconds_retry": 0.0,
-    "tokens_first": 215,
-    "words_final": 164
+    "tokens_first": 182,
+    "words_final": 137
    },
    {
     "site_id": "EIA-62113",
@@ -741,14 +722,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The main concerns are thunderstorms and lightning along with heat, with scores out of 10 totaling 6.5. Heat events are logged near this site on 8% of days this month and the heat index is 10\u00b0F versus normal for this time of year. Rain rates can reach 0.57 in/hr and overnight lows only fall to 56\u00b0F. The best work windows are 5 AM to 5 PM and 6 PM to 8 PM, but thunder is likely from 5 PM to 6 PM with a peak 17% chance per hour. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting. Heavy work should be scheduled early in the day with crews given water, rest, and shade at least once an hour.",
+    "first_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with elevated heat levels. The best work windows are from 5 AM to 5 PM and from 6 PM to 8 PM. Crews must avoid the period from 5 PM to 6 PM when thunder is likely with a peak 17% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard, then waiting 30 minutes after the last thunder before restarting. Heavy work should be scheduled early in the day with crews provided water, rest, and shade at least once an hour.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The main concerns are thunderstorms and lightning along with heat, with scores out of 10 totaling 6.5. Heat events are logged near this site on 8% of days this month and the heat index is 10\u00b0F versus normal for this time of year. Rain rates can reach 0.57 in/hr and overnight lows only fall to 56\u00b0F. The best work windows are 5 AM to 5 PM and 6 PM to 8 PM, but thunder is likely from 5 PM to 6 PM with a peak 17% chance per hour. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting. Heavy work should be scheduled early in the day with crews given water, rest, and shade at least once an hour.",
+    "final_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with elevated heat levels. The best work windows are from 5 AM to 5 PM and from 6 PM to 8 PM. Crews must avoid the period from 5 PM to 6 PM when thunder is likely with a peak 17% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard, then waiting 30 minutes after the last thunder before restarting. Heavy work should be scheduled early in the day with crews provided water, rest, and shade at least once an hour.",
     "final_problems": [],
-    "seconds_first": 9.17,
+    "seconds_first": 7.19,
     "seconds_retry": 0.0,
-    "tokens_first": 200,
-    "words_final": 154
+    "tokens_first": 142,
+    "words_final": 116
    },
    {
     "site_id": "EIA-52158",
@@ -756,14 +737,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index which is driven mainly by flooding. The primary concern is flooding with scores of 7.3 for flooding, 0.4 for thunderstorms and lightning, 0.3 for wildlife, 0.0 for heat, and 0.0 for wildfire. This decision is because the hazard index is driven mainly by flooding. The main concern is flooding due to 4.76 in of rain over 3 days, 2.85 in of rain expected, ground still wet from recent rain with an index of 4.78, and 5.10 in of rain over the past week. Bear sightings recorded nearby in December include 2 since 2015. The best work windows are 5 AM to 8 PM. Recommended actions include checking access roads and low crossings before moving equipment in and never driving through standing water.",
+    "first_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by flooding. The primary concern is flooding, which has resulted from 4.76 in of rain over 3 days and is expected to receive another 2.85 in of rain. Ground remains wet from recent rain with an index of 4.78, and 5.10 in of rain has fallen over the past week. Bear sightings have been recorded nearby in December, with 2 since 2015. The best work windows are 5 AM to 8 PM. Crews must check access roads and low crossings before moving equipment in and never drive through standing water.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index which is driven mainly by flooding. The primary concern is flooding with scores of 7.3 for flooding, 0.4 for thunderstorms and lightning, 0.3 for wildlife, 0.0 for heat, and 0.0 for wildfire. This decision is because the hazard index is driven mainly by flooding. The main concern is flooding due to 4.76 in of rain over 3 days, 2.85 in of rain expected, ground still wet from recent rain with an index of 4.78, and 5.10 in of rain over the past week. Bear sightings recorded nearby in December include 2 since 2015. The best work windows are 5 AM to 8 PM. Recommended actions include checking access roads and low crossings before moving equipment in and never driving through standing water.",
+    "final_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by flooding. The primary concern is flooding, which has resulted from 4.76 in of rain over 3 days and is expected to receive another 2.85 in of rain. Ground remains wet from recent rain with an index of 4.78, and 5.10 in of rain has fallen over the past week. Bear sightings have been recorded nearby in December, with 2 since 2015. The best work windows are 5 AM to 8 PM. Crews must check access roads and low crossings before moving equipment in and never drive through standing water.",
     "final_problems": [],
-    "seconds_first": 9.66,
+    "seconds_first": 6.82,
     "seconds_retry": 0.0,
-    "tokens_first": 192,
-    "words_final": 135
+    "tokens_first": 140,
+    "words_final": 103
    },
    {
     "site_id": "EIA-67786",
@@ -771,16 +752,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by heat. The primary concerns are heat and thunderstorms and lightning with a combined score of 9.1 out of 10. The best work windows are from 5 AM to 2 PM and from 6 PM to 8 PM. Crews must avoid the period from 2 PM to 6 PM when thunder is likely with a 24% chance per hour. Recommended actions include scheduling heavy work early in the day and providing water, rest, and shade at least once an hour. A lightning plan must be followed by stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting. Venomous snake sightings have been recorded nearby in July, so extra caution is needed during any outdoor work.",
-    "first_problems": [
-     "number 9.1 is not in the facts"
-    ],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by heat. The main concerns are heat and thunderstorms and lightning. The best work windows are from 5 AM to 2 PM and from 6 PM to 8 PM. Schedule heavy work early in the day and provide crews water, rest, and shade at least once an hour. Have a lightning plan that stops work and shelters when thunder is heard, then waits 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: NO-GO The decision to not go to the site was made because the hazard index is driven mainly by heat. The primary concerns are heat and thunderstorms and lightning, with the heat index peaking at 102\u00b0F and being 13\u00b0F above normal for this time of year. Heat events are logged near this site on 14% of days this month, and venomous snake sightings have been recorded nearby in July. Rain rates can reach 0.17 in/hr, and thunder is likely from 2 PM to 6 PM with a peak 24% chance per hour. The best work windows are 5 AM to 2 PM and 6 PM to 8 PM. Crews should schedule heavy work early in the day and receive water, rest, and shade at least once an hour. A lightning plan must be followed by stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
+    "first_problems": [],
+    "final_draft": "Decision: NO-GO The decision to not go to the site was made because the hazard index is driven mainly by heat. The primary concerns are heat and thunderstorms and lightning, with the heat index peaking at 102\u00b0F and being 13\u00b0F above normal for this time of year. Heat events are logged near this site on 14% of days this month, and venomous snake sightings have been recorded nearby in July. Rain rates can reach 0.17 in/hr, and thunder is likely from 2 PM to 6 PM with a peak 24% chance per hour. The best work windows are 5 AM to 2 PM and 6 PM to 8 PM. Crews should schedule heavy work early in the day and receive water, rest, and shade at least once an hour. A lightning plan must be followed by stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
     "seconds_first": 9.53,
-    "seconds_retry": 5.71,
-    "tokens_first": 172,
-    "words_final": 86
+    "seconds_retry": 0.0,
+    "tokens_first": 201,
+    "words_final": 154
    },
    {
     "site_id": "EIA-643",
@@ -788,14 +767,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": true,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with wildlife sightings. The best work windows are 10 AM to 4 PM while avoiding thunder likely from 6 AM to 10 AM and 4 PM to 8 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting. Crews must check around water, brush and parked equipment for alligators before starting and keep clear of any they see.",
+    "first_draft": "Decision: NO-GO The decision to not go is made because the hazard index is driven mainly by thunderstorms and lightning. The main concerns are thunderstorms and lightning along with wildlife sightings. Rain rates up to 0.84 in/hr are expected with a total of 1.80 in of rain, including 5 hours of heavy rain and 1.35 in of afternoon and evening rain. Crews reported an alligator within the last day, and thunder is likely from 6 AM to 10 AM with a peak 21% chance per hour. Thunder is also likely from 4 PM to 8 PM with a peak 33% chance per hour. Best work windows are 10 AM to 4 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting. Crews must check around water, brush, and parked equipment for alligators before starting and keep clear of any they see.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with wildlife sightings. The best work windows are 10 AM to 4 PM while avoiding thunder likely from 6 AM to 10 AM and 4 PM to 8 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting. Crews must check around water, brush and parked equipment for alligators before starting and keep clear of any they see.",
+    "final_draft": "Decision: NO-GO The decision to not go is made because the hazard index is driven mainly by thunderstorms and lightning. The main concerns are thunderstorms and lightning along with wildlife sightings. Rain rates up to 0.84 in/hr are expected with a total of 1.80 in of rain, including 5 hours of heavy rain and 1.35 in of afternoon and evening rain. Crews reported an alligator within the last day, and thunder is likely from 6 AM to 10 AM with a peak 21% chance per hour. Thunder is also likely from 4 PM to 8 PM with a peak 33% chance per hour. Best work windows are 10 AM to 4 PM. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting. Crews must check around water, brush, and parked equipment for alligators before starting and keep clear of any they see.",
     "final_problems": [],
-    "seconds_first": 6.21,
+    "seconds_first": 9.91,
     "seconds_retry": 0.0,
-    "tokens_first": 125,
-    "words_final": 102
+    "tokens_first": 209,
+    "words_final": 158
    },
    {
     "site_id": "EIA-62431",
@@ -803,14 +782,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning with rain rates up to 0.26 in/hr and gusts up to 25 mph above the sustained wind. Work windows are limited to 6 AM to 4 PM while avoiding thunder likely from 5 AM to 6 AM and 4 PM to 7 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning with rain rates up to 0.26 in/hr and gusts up to 25 mph above the sustained wind. The best work windows are 6 AM to 4 PM while avoiding thunder likely from 5 AM to 6 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning with rain rates up to 0.26 in/hr and gusts up to 25 mph above the sustained wind. Work windows are limited to 6 AM to 4 PM while avoiding thunder likely from 5 AM to 6 AM and 4 PM to 7 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concern is thunderstorms and lightning with rain rates up to 0.26 in/hr and gusts up to 25 mph above the sustained wind. The best work windows are 6 AM to 4 PM while avoiding thunder likely from 5 AM to 6 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 5.89,
+    "seconds_first": 5.59,
     "seconds_retry": 0.0,
-    "tokens_first": 120,
-    "words_final": 94
+    "tokens_first": 110,
+    "words_final": 86
    },
    {
     "site_id": "EIA-57075",
@@ -818,14 +797,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by heat. The main concern is heat with scores of 6.0 out of 10 and a high of 101\u00b0F. Heat events are logged near this site on 16% of days this month and the heat index is +9\u00b0F versus normal for this time of year. Venomous snake sightings recorded nearby in June add to the concern. The best work windows are 5 AM to 8 PM. Schedule heavy work early in the day and give crews water, rest and shade at least once an hour.",
+    "first_draft": "Decision: NO-GO The decision to not go to the site is made because the hazard index, which is driven mainly by heat, reaches a level that prevents safe work. The main concern is heat, supported by a high of 101\u00b0F and a heat index that is 9\u00b0F above normal for this time of year. Although the work window is scheduled from 5 AM to 8 PM, the site has recorded heat events on 16% of days this month and has seen venomous snake sightings nearby. Crews must be provided with water, rest, and shade at least once an hour if work were to proceed under these conditions.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by heat. The main concern is heat with scores of 6.0 out of 10 and a high of 101\u00b0F. Heat events are logged near this site on 16% of days this month and the heat index is +9\u00b0F versus normal for this time of year. Venomous snake sightings recorded nearby in June add to the concern. The best work windows are 5 AM to 8 PM. Schedule heavy work early in the day and give crews water, rest and shade at least once an hour.",
+    "final_draft": "Decision: NO-GO The decision to not go to the site is made because the hazard index, which is driven mainly by heat, reaches a level that prevents safe work. The main concern is heat, supported by a high of 101\u00b0F and a heat index that is 9\u00b0F above normal for this time of year. Although the work window is scheduled from 5 AM to 8 PM, the site has recorded heat events on 16% of days this month and has seen venomous snake sightings nearby. Crews must be provided with water, rest, and shade at least once an hour if work were to proceed under these conditions.",
     "final_problems": [],
-    "seconds_first": 6.11,
+    "seconds_first": 6.52,
     "seconds_retry": 0.0,
-    "tokens_first": 127,
-    "words_final": 100
+    "tokens_first": 133,
+    "words_final": 107
    },
    {
     "site_id": "EIA-8054",
@@ -833,14 +812,14 @@
     "decision": "NO-GO",
     "has_alert": true,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The live alert for lightning strikes within 10 miles sets the decision to at least no-go. The hazard index of 7.1 out of 10 is driven mainly by heat with scores of 5.3 for heat and 3.8 for thunderstorms and lightning. The main concerns are heat and thunderstorms and lightning because the heat index peaks at 103\u00b0F and rain rates can reach 0.07 in/hr. The best work windows are from 5 AM to 3 PM while avoiding the heat index of 103\u00b0F or higher from 3 PM to 4 PM. Crews should schedule heavy work early in the day and have a lightning plan to stop work and shelter when thunder is heard.",
+    "first_draft": "Decision: NO-GO The decision to not go is set by the live alert for lightning strikes within 10 miles. The primary reason for this decision is the hazard index driven mainly by heat, which scores 7.1 out of 10. The main concerns are heat and thunderstorms and lightning, with heat index peaks at 103\u00b0F and rain rates up to 0.07 in/hr. The best work window is from 5 AM to 3 PM, but crews must avoid the heat index of 103\u00b0F or higher from 3 PM to 4 PM. Crews should schedule heavy work early in the day and have a lightning plan to stop work and shelter when thunder is heard.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The live alert for lightning strikes within 10 miles sets the decision to at least no-go. The hazard index of 7.1 out of 10 is driven mainly by heat with scores of 5.3 for heat and 3.8 for thunderstorms and lightning. The main concerns are heat and thunderstorms and lightning because the heat index peaks at 103\u00b0F and rain rates can reach 0.07 in/hr. The best work windows are from 5 AM to 3 PM while avoiding the heat index of 103\u00b0F or higher from 3 PM to 4 PM. Crews should schedule heavy work early in the day and have a lightning plan to stop work and shelter when thunder is heard.",
+    "final_draft": "Decision: NO-GO The decision to not go is set by the live alert for lightning strikes within 10 miles. The primary reason for this decision is the hazard index driven mainly by heat, which scores 7.1 out of 10. The main concerns are heat and thunderstorms and lightning, with heat index peaks at 103\u00b0F and rain rates up to 0.07 in/hr. The best work window is from 5 AM to 3 PM, but crews must avoid the heat index of 103\u00b0F or higher from 3 PM to 4 PM. Crews should schedule heavy work early in the day and have a lightning plan to stop work and shelter when thunder is heard.",
     "final_problems": [],
-    "seconds_first": 8.37,
+    "seconds_first": 7.51,
     "seconds_retry": 0.0,
-    "tokens_first": 157,
-    "words_final": 115
+    "tokens_first": 149,
+    "words_final": 112
    },
    {
     "site_id": "EIA-1439",
@@ -848,14 +827,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by heat. The primary concerns are heat and thunderstorms and lightning with a combined score of 8.9 out of 10. The best work windows are from 7 AM to 1 PM. Crews must avoid work when the heat index is 103\u00b0F or higher from 1 PM to 5 PM and avoid areas where thunder is likely from 6 AM to 7 AM or 3 PM to 7 PM. Recommended actions include scheduling heavy work early in the day and ensuring crews have water, rest, and shade at least once an hour. A lightning plan must be followed by stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: NO-GO The decision to not go is made because the hazard index, driven mainly by heat, reaches 8.9 out of 10. The main concerns are heat and thunderstorms and lightning, with heat index peaks at 107\u00b0F and rain rates up to 0.19 in/hr. Alligator sightings recorded nearby in July add another layer of risk to the site in Houma, Terrebonne County, LA. The best work windows are 7 AM to 1 PM, but crews must avoid heat index 103\u00b0F or higher from 1 PM to 5 PM and thunder likely from 6 AM to 7 AM or 3 PM to 7 PM. Recommended actions include scheduling heavy work early in the day and giving crews water, rest, and shade at least once an hour. A lightning plan must be followed by stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by heat. The primary concerns are heat and thunderstorms and lightning with a combined score of 8.9 out of 10. The best work windows are from 7 AM to 1 PM. Crews must avoid work when the heat index is 103\u00b0F or higher from 1 PM to 5 PM and avoid areas where thunder is likely from 6 AM to 7 AM or 3 PM to 7 PM. Recommended actions include scheduling heavy work early in the day and ensuring crews have water, rest, and shade at least once an hour. A lightning plan must be followed by stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: NO-GO The decision to not go is made because the hazard index, driven mainly by heat, reaches 8.9 out of 10. The main concerns are heat and thunderstorms and lightning, with heat index peaks at 107\u00b0F and rain rates up to 0.19 in/hr. Alligator sightings recorded nearby in July add another layer of risk to the site in Houma, Terrebonne County, LA. The best work windows are 7 AM to 1 PM, but crews must avoid heat index 103\u00b0F or higher from 1 PM to 5 PM and thunder likely from 6 AM to 7 AM or 3 PM to 7 PM. Recommended actions include scheduling heavy work early in the day and giving crews water, rest, and shade at least once an hour. A lightning plan must be followed by stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 8.08,
+    "seconds_first": 9.97,
     "seconds_retry": 0.0,
-    "tokens_first": 165,
-    "words_final": 131
+    "tokens_first": 201,
+    "words_final": 150
    },
    {
     "site_id": "EIA-880",
@@ -863,14 +842,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to halt operations is driven by a hazard index of 6.5 out of 10, which is primarily caused by thunderstorms and lightning. The main concerns are thunderstorms and lightning alongside elevated heat conditions. The best work windows are from 5 AM to 1 PM and from 4 PM to 8 PM. Crews must avoid the period from 1 PM to 2 PM when thunder is likely with a peak 19% chance per hour, and also avoid the 3 PM to 4 PM window where thunder is likely with a peak 16% chance per hour. A lightning plan requires stopping work and sheltering when thunder is heard, followed by waiting 30 minutes after the last thunder before restarting. Heavy work should be scheduled early in the day, and crews must receive water, rest, and shade at least once an hour.",
+    "first_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with elevated heat conditions. The best work windows are from 5 AM to 1 PM and from 4 PM to 8 PM. Crews must avoid work during the 1 PM to 2 PM and 3 PM to 4 PM periods when thunder is likely. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting. Heavy work should be scheduled early in the day with crews given water, rest, and shade at least once an hour.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to halt operations is driven by a hazard index of 6.5 out of 10, which is primarily caused by thunderstorms and lightning. The main concerns are thunderstorms and lightning alongside elevated heat conditions. The best work windows are from 5 AM to 1 PM and from 4 PM to 8 PM. Crews must avoid the period from 1 PM to 2 PM when thunder is likely with a peak 19% chance per hour, and also avoid the 3 PM to 4 PM window where thunder is likely with a peak 16% chance per hour. A lightning plan requires stopping work and sheltering when thunder is heard, followed by waiting 30 minutes after the last thunder before restarting. Heavy work should be scheduled early in the day, and crews must receive water, rest, and shade at least once an hour.",
+    "final_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with elevated heat conditions. The best work windows are from 5 AM to 1 PM and from 4 PM to 8 PM. Crews must avoid work during the 1 PM to 2 PM and 3 PM to 4 PM periods when thunder is likely. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard and waiting 30 minutes after the last thunder before restarting. Heavy work should be scheduled early in the day with crews given water, rest, and shade at least once an hour.",
     "final_problems": [],
-    "seconds_first": 9.18,
+    "seconds_first": 7.15,
     "seconds_retry": 0.0,
-    "tokens_first": 183,
-    "words_final": 143
+    "tokens_first": 140,
+    "words_final": 116
    },
    {
     "site_id": "EIA-56456",
@@ -878,14 +857,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": true,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by flooding. The main concerns are flooding, thunderstorms and lightning, and wildlife. The best work window is to avoid all work due to thunder likely from 5 AM to 8 PM. Recommended actions include checking access roads and low crossings before moving equipment and never driving through standing water. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting. Workers should check around water, brush and parked equipment for snakes before starting and keep clear of any they see.",
+    "first_draft": "Decision: NO-GO The decision to not go is made because the hazard index is driven mainly by flooding. The main concerns are flooding, thunderstorms and lightning, and wildlife. The best work window is to avoid work entirely due to the high risk. Recommended actions include checking access roads and low crossings before moving equipment and never driving through standing water. Crews must have a lightning plan by stopping work and sheltering when thunder is heard and waiting 30 minutes after the last thunder before restarting. Workers should check around water, brush, and parked equipment for snakes before starting and keep clear of any they see.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by flooding. The main concerns are flooding, thunderstorms and lightning, and wildlife. The best work window is to avoid all work due to thunder likely from 5 AM to 8 PM. Recommended actions include checking access roads and low crossings before moving equipment and never driving through standing water. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting. Workers should check around water, brush and parked equipment for snakes before starting and keep clear of any they see.",
+    "final_draft": "Decision: NO-GO The decision to not go is made because the hazard index is driven mainly by flooding. The main concerns are flooding, thunderstorms and lightning, and wildlife. The best work window is to avoid work entirely due to the high risk. Recommended actions include checking access roads and low crossings before moving equipment and never driving through standing water. Crews must have a lightning plan by stopping work and sheltering when thunder is heard and waiting 30 minutes after the last thunder before restarting. Workers should check around water, brush, and parked equipment for snakes before starting and keep clear of any they see.",
     "final_problems": [],
-    "seconds_first": 6.91,
+    "seconds_first": 6.19,
     "seconds_retry": 0.0,
-    "tokens_first": 127,
-    "words_final": 109
+    "tokens_first": 123,
+    "words_final": 105
    },
    {
     "site_id": "EIA-56162",
@@ -893,14 +872,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning with rain rates up to 0.28 in/hr and a temperature drop of 15\u00b0F in an hour. Work should be avoided from 6 PM to 8 PM when thunder is likely with a peak 33% chance per hour. The best work windows are from 5 AM to 6 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
+    "first_draft": "Decision: NO-GO The decision to not go is made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning with rain rates up to 0.28 in/hr and a temperature drop of 15\u00b0F in an hour. Work should be avoided from 6 PM to 8 PM when thunder is likely with a peak 33% chance per hour. The best work windows are from 5 AM to 6 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning with rain rates up to 0.28 in/hr and a temperature drop of 15\u00b0F in an hour. Work should be avoided from 6 PM to 8 PM when thunder is likely with a peak 33% chance per hour. The best work windows are from 5 AM to 6 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
+    "final_draft": "Decision: NO-GO The decision to not go is made because the hazard index is driven mainly by thunderstorms and lightning. The main concern is thunderstorms and lightning with rain rates up to 0.28 in/hr and a temperature drop of 15\u00b0F in an hour. Work should be avoided from 6 PM to 8 PM when thunder is likely with a peak 33% chance per hour. The best work windows are from 5 AM to 6 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 6.33,
+    "seconds_first": 6.4,
     "seconds_retry": 0.0,
-    "tokens_first": 127,
-    "words_final": 99
+    "tokens_first": 128,
+    "words_final": 100
    },
    {
     "site_id": "EIA-58645",
@@ -908,14 +887,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by heat. The primary concern is heat with scores of 6.6 out of 10 and a peak heat index of 103\u00b0F. Two work hours daily will have a heat index at or above 103\u00b0F, and venomous snake sightings have been recorded nearby in August. The best work windows are from 5 AM to 3 PM and from 5 PM to 8 PM. Crews should avoid the period from 3 PM to 5 PM when the heat index reaches its peak. Schedule heavy work early in the day and provide water, rest, and shade at least once an hour.",
+    "first_draft": "Decision: NO-GO The decision to not go is made because the hazard index, driven mainly by heat, reaches 7.4 out of 10. The main concern is heat, which peaks at 103\u00b0F and occurs on 28% of days this month, with venomous snake sightings also recorded nearby. The best work windows are from 5 AM to 3 PM and from 5 PM to 8 PM, while work should be avoided when the heat index is 103\u00b0F or higher between 3 PM and 5 PM. Crews must schedule heavy work early in the day and receive water, rest, and shade at least once an hour.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by heat. The primary concern is heat with scores of 6.6 out of 10 and a peak heat index of 103\u00b0F. Two work hours daily will have a heat index at or above 103\u00b0F, and venomous snake sightings have been recorded nearby in August. The best work windows are from 5 AM to 3 PM and from 5 PM to 8 PM. Crews should avoid the period from 3 PM to 5 PM when the heat index reaches its peak. Schedule heavy work early in the day and provide water, rest, and shade at least once an hour.",
+    "final_draft": "Decision: NO-GO The decision to not go is made because the hazard index, driven mainly by heat, reaches 7.4 out of 10. The main concern is heat, which peaks at 103\u00b0F and occurs on 28% of days this month, with venomous snake sightings also recorded nearby. The best work windows are from 5 AM to 3 PM and from 5 PM to 8 PM, while work should be avoided when the heat index is 103\u00b0F or higher between 3 PM and 5 PM. Crews must schedule heavy work early in the day and receive water, rest, and shade at least once an hour.",
     "final_problems": [],
-    "seconds_first": 7.05,
+    "seconds_first": 6.99,
     "seconds_retry": 0.0,
-    "tokens_first": 146,
-    "words_final": 113
+    "tokens_first": 141,
+    "words_final": 103
    },
    {
     "site_id": "EIA-56238",
@@ -923,14 +902,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with a hazard index of 6.8 out of 10. Rain rates up to 0.24 in/hr are expected with 0.27 in of afternoon and evening rain and 0.32 in of rain expected. Gusts up to 23 mph above the sustained wind will also be present. Work should be avoided during the morning from 5 AM to 8 AM and the afternoon from 2 PM to 5 PM due to thunder likelihood. The best work windows are 8 AM to 2 PM and 5 PM to 8 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting. Access roads and low crossings must be checked before moving equipment in and standing water must never be driven through.",
+    "first_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning with a hazard index of 6.8 out of 10. Rain rates up to 0.24 in/hr are expected with gusts up to 23 mph above the sustained wind. The best work windows are 8 AM to 2 PM and 5 PM to 8 PM. Work should be avoided between 5 AM and 8 AM when thunder is likely with a peak 24% chance per hour. Work should also be avoided between 2 PM and 5 PM when thunder is likely with a peak 29% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard. Crews must wait 30 minutes after the last thunder before restarting work. Access roads and low crossings should be checked before moving equipment in. Never drive through standing water.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The primary concern involves thunderstorms and lightning with a hazard index of 6.8 out of 10. Rain rates up to 0.24 in/hr are expected with 0.27 in of afternoon and evening rain and 0.32 in of rain expected. Gusts up to 23 mph above the sustained wind will also be present. Work should be avoided during the morning from 5 AM to 8 AM and the afternoon from 2 PM to 5 PM due to thunder likelihood. The best work windows are 8 AM to 2 PM and 5 PM to 8 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting. Access roads and low crossings must be checked before moving equipment in and standing water must never be driven through.",
+    "final_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning with a hazard index of 6.8 out of 10. Rain rates up to 0.24 in/hr are expected with gusts up to 23 mph above the sustained wind. The best work windows are 8 AM to 2 PM and 5 PM to 8 PM. Work should be avoided between 5 AM and 8 AM when thunder is likely with a peak 24% chance per hour. Work should also be avoided between 2 PM and 5 PM when thunder is likely with a peak 29% chance per hour. Recommended actions include having a lightning plan to stop work and shelter when thunder is heard. Crews must wait 30 minutes after the last thunder before restarting work. Access roads and low crossings should be checked before moving equipment in. Never drive through standing water.",
     "final_problems": [],
-    "seconds_first": 9.36,
+    "seconds_first": 9.75,
     "seconds_retry": 0.0,
-    "tokens_first": 202,
-    "words_final": 157
+    "tokens_first": 200,
+    "words_final": 155
    },
    {
     "site_id": "EIA-7954",
@@ -938,14 +917,14 @@
     "decision": "NO-GO",
     "has_alert": true,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The live alert for lightning strikes within 10 miles sets the decision to at least no-go. This decision is made because the hazard index is driven mainly by heat, with a score of 7.7 out of 10. The main concerns are heat and thunderstorms and lightning, which pose significant risks during the work day. The best work windows are from 5 AM to 1 PM and from 6 PM to 8 PM to avoid peak heat and thunder. Crews should schedule heavy work early, provide water and shade at least once an hour, and stop work immediately when thunder is heard.",
+    "first_draft": "Decision: NO-GO The decision is set by the live alert indicating a lightning strike within 10 miles. The primary reason for this no-go is the hazard index driven mainly by heat, which scores 6.6 out of 10. The main concerns are heat and thunderstorms and lightning, with heat index peaks at 105\u00b0F and rain rates up to 0.09 in/hr. Venomous snake sightings recorded nearby in July add to the risk, while the best work windows are 5 AM to 1 PM and 6 PM to 8 PM. Crews must avoid the heat index of 103\u00b0F or higher from 1 PM to 3 PM and stop work immediately when thunder is heard.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The live alert for lightning strikes within 10 miles sets the decision to at least no-go. This decision is made because the hazard index is driven mainly by heat, with a score of 7.7 out of 10. The main concerns are heat and thunderstorms and lightning, which pose significant risks during the work day. The best work windows are from 5 AM to 1 PM and from 6 PM to 8 PM to avoid peak heat and thunder. Crews should schedule heavy work early, provide water and shade at least once an hour, and stop work immediately when thunder is heard.",
+    "final_draft": "Decision: NO-GO The decision is set by the live alert indicating a lightning strike within 10 miles. The primary reason for this no-go is the hazard index driven mainly by heat, which scores 6.6 out of 10. The main concerns are heat and thunderstorms and lightning, with heat index peaks at 105\u00b0F and rain rates up to 0.09 in/hr. Venomous snake sightings recorded nearby in July add to the risk, while the best work windows are 5 AM to 1 PM and 6 PM to 8 PM. Crews must avoid the heat index of 103\u00b0F or higher from 1 PM to 3 PM and stop work immediately when thunder is heard.",
     "final_problems": [],
-    "seconds_first": 7.08,
+    "seconds_first": 8.04,
     "seconds_retry": 0.0,
-    "tokens_first": 129,
-    "words_final": 103
+    "tokens_first": 152,
+    "words_final": 111
    },
    {
     "site_id": "EIA-50118",
@@ -953,14 +932,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": false,
-    "first_draft": "Decision: NO-GO The decision to halt operations is driven by a hazard index of 9.5 out of 10, which is primarily caused by flooding conditions. The main concerns are flooding and thunderstorms and lightning, with the river currently at 172% of flood stage and rising at a rate of +10.0 ft in 3 days. Work windows are restricted because thunder is likely from 5 AM to 7 PM with a peak 24% chance per hour, and venomous snake sightings have been recorded nearby in July. Recommended actions include checking access roads and low crossings before moving equipment and ensuring a lightning plan is followed by stopping work and sheltering when thunder is heard.",
+    "first_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by flooding. The primary concern is flooding, which is supported by a river at 172% of flood stage and a rise of +10.0 ft in 3 days. Thunderstorms and lightning are also a main concern with rain rates up to 0.57 in/hr and thunder likely from 5 AM to 7 PM. The work window is restricted to avoid thunder during those hours, and venomous snake sightings recorded nearby in July (135 since 2015) add to the risk. Recommended actions include checking access roads and low crossings before moving equipment and never driving through standing water. A lightning plan must be followed by stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to halt operations is driven by a hazard index of 9.5 out of 10, which is primarily caused by flooding conditions. The main concerns are flooding and thunderstorms and lightning, with the river currently at 172% of flood stage and rising at a rate of +10.0 ft in 3 days. Work windows are restricted because thunder is likely from 5 AM to 7 PM with a peak 24% chance per hour, and venomous snake sightings have been recorded nearby in July. Recommended actions include checking access roads and low crossings before moving equipment and ensuring a lightning plan is followed by stopping work and sheltering when thunder is heard.",
+    "final_draft": "Decision: NO-GO This decision was made because the hazard index is driven mainly by flooding. The primary concern is flooding, which is supported by a river at 172% of flood stage and a rise of +10.0 ft in 3 days. Thunderstorms and lightning are also a main concern with rain rates up to 0.57 in/hr and thunder likely from 5 AM to 7 PM. The work window is restricted to avoid thunder during those hours, and venomous snake sightings recorded nearby in July (135 since 2015) add to the risk. Recommended actions include checking access roads and low crossings before moving equipment and never driving through standing water. A lightning plan must be followed by stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting.",
     "final_problems": [],
-    "seconds_first": 7.1,
+    "seconds_first": 8.46,
     "seconds_retry": 0.0,
-    "tokens_first": 145,
-    "words_final": 113
+    "tokens_first": 174,
+    "words_final": 133
    },
    {
     "site_id": "EIA-3559",
@@ -968,14 +947,14 @@
     "decision": "NO-GO",
     "has_alert": false,
     "has_crew_report": true,
-    "first_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with wildlife sightings, including a snake reported within the last day. Rain rates are expected to reach up to 0.23 in/hr with a total of 1.17 in expected over four hours of heavy rain. Although work windows exist from 5 AM to 8 AM and 9 AM to 4 PM, thunder is likely from 8 AM to 9 AM and 4 PM to 8 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting. Workers should check around water, brush, and parked equipment for snakes before starting and keep clear of any they see.",
+    "first_draft": "Decision: NO-GO The decision to not go to the site is made because the hazard index is driven mainly by thunderstorms and lightning. The main concerns are thunderstorms and lightning along with wildlife sightings, as the hazard index scores 7.7 out of 10. The best work windows are from 5 AM to 8 AM and from 9 AM to 4 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting. Workers should check around water, brush, and parked equipment for snakes before starting and keep clear of any they see.",
     "first_problems": [],
-    "final_draft": "Decision: NO-GO The decision to not go is based on the hazard index driven mainly by thunderstorms and lightning. The primary concerns are thunderstorms and lightning along with wildlife sightings, including a snake reported within the last day. Rain rates are expected to reach up to 0.23 in/hr with a total of 1.17 in expected over four hours of heavy rain. Although work windows exist from 5 AM to 8 AM and 9 AM to 4 PM, thunder is likely from 8 AM to 9 AM and 4 PM to 8 PM. Crews must have a lightning plan to stop work and shelter when thunder is heard and wait 30 minutes after the last thunder before restarting. Workers should check around water, brush, and parked equipment for snakes before starting and keep clear of any they see.",
+    "final_draft": "Decision: NO-GO The decision to not go to the site is made because the hazard index is driven mainly by thunderstorms and lightning. The main concerns are thunderstorms and lightning along with wildlife sightings, as the hazard index scores 7.7 out of 10. The best work windows are from 5 AM to 8 AM and from 9 AM to 4 PM. Crews must have a lightning plan that includes stopping work and sheltering when thunder is heard, then waiting 30 minutes after the last thunder before restarting. Workers should check around water, brush, and parked equipment for snakes before starting and keep clear of any they see.",
     "final_problems": [],
-    "seconds_first": 8.36,
+    "seconds_first": 6.79,
     "seconds_retry": 0.0,
-    "tokens_first": 172,
-    "words_final": 137
+    "tokens_first": 134,
+    "words_final": 107
    }
   ]
  }
