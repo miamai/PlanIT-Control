@@ -151,8 +151,13 @@ Authentication is local and identical in development and production. Login at
 `POST /api/auth/login`; keep the returned 15-minute access token in memory and
 send it as `Authorization: Bearer ...`. The seven-day rotating refresh token is
 an HttpOnly, SameSite=Lax cookie scoped to `/api/auth`. Call
-`POST /api/auth/refresh` with browser credentials enabled. Production requires
-a unique `JWT_SECRET_KEY` of at least 32 random bytes.
+`POST /api/auth/refresh` with browser credentials enabled. Each refresh rotates
+the cookie. Presenting an already rotated or logged-out refresh token is treated
+as theft and revokes every session for that user, except within
+`REFRESH_REUSE_GRACE_SECONDS` (default 30) of its rotation: a reload that aborts
+an in-flight refresh, or two tabs refreshing at once, gets a new session
+instead. Production requires a unique `JWT_SECRET_KEY` of at least 32 random
+bytes.
 
 Roles are:
 

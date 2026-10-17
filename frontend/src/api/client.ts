@@ -39,26 +39,22 @@ function isAuthPath(url: string): boolean {
 
 let refreshing: Promise<TokenResponse | null> | null = null
 
+/** Web Lock held by whichever of the app's tabs is refreshing. */
+const REFRESH_LOCK = 'planit-auth-refresh'
+
 /**
- * Exchange the refresh cookie for a new access token. Concurrent callers share
- * one request, because the backend rotates the cookie on every refresh.
+ * Exchange the refresh cookie for a new access token. The backend rotates the
+ * cookie on every refresh, so concurrent callers in a tab share one request,
+ * and tabs take turns through a Web Lock so each sends the cookie the previous
+ * refresh stored. Web Locks need a secure context (HTTPS or localhost);
+ * elsewhere the backend's reuse grace window still covers overlapping tabs.
  */
 export function refreshSession(): Promise<TokenResponse | null> {
   refreshing ??= (async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-        method: 'POST',
-        credentials: 'include',
-      })
-      if (!response.ok) {
-        useAuthStore.getState().auth.reset()
-        return null
-      }
-      const session = (await response.json()) as TokenResponse
-      useAuthStore
-        .getState()
-        .auth.setSession(session.access_token, session.expires_in, session.user)
-      return session
+      return 'locks' in navigator
+        ? await navigator.locks.request(REFRESH_LOCK, postRefresh)
+        : await postRefresh()
     } catch {
       return null
     } finally {
@@ -66,6 +62,22 @@ export function refreshSession(): Promise<TokenResponse | null> {
     }
   })()
   return refreshing
+}
+
+async function postRefresh(): Promise<TokenResponse | null> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+  if (!response.ok) {
+    useAuthStore.getState().auth.reset()
+    return null
+  }
+  const session = (await response.json()) as TokenResponse
+  useAuthStore
+    .getState()
+    .auth.setSession(session.access_token, session.expires_in, session.user)
+  return session
 }
 
 const retryable = new Map<string, Request>()

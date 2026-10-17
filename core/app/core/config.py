@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     access_token_minutes: int = 15
     refresh_token_days: int = 7
     refresh_cookie_name: str = "planit_refresh_token"
+    # A rotated refresh token presented again this soon after its rotation is a
+    # lost response (reload mid-refresh) or a concurrent tab, not a replay.
+    refresh_reuse_grace_seconds: int = 30
     initial_admin_username: str | None = None
     initial_admin_password: SecretStr | None = None
 

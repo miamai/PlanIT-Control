@@ -88,6 +88,25 @@ async def issue_token_pair(
     return access_token, refresh_token, settings.access_token_minutes * 60, refresh_session
 
 
+def _as_utc(value: datetime) -> datetime:
+    # SQLite drops the offset; stored timestamps are always UTC.
+    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
+
+
+async def _rotation_chain_active(session: AsyncSession, stored: RefreshSession) -> bool:
+    """True while the session that replaced `stored`, or a later rotation of it,
+    is still live, i.e. no logout or revoke-all has ended the chain since."""
+    successor_id = stored.replaced_by
+    while successor_id is not None:
+        successor = await session.get(RefreshSession, successor_id)
+        if successor is None:
+            return False
+        if successor.revoked_at is None:
+            return True
+        successor_id = successor.replaced_by
+    return False
+
+
 async def rotate_refresh_token(
     session: AsyncSession, token: str, settings: Settings
 ) -> tuple[UserAccount, str, str, int]:
@@ -97,21 +116,28 @@ async def rotate_refresh_token(
         select(RefreshSession).where(RefreshSession.id == token_id).with_for_update()
     )
     now = datetime.now(UTC)
-    stored_expiry = stored.expires_at if stored else None
-    if stored_expiry is not None and stored_expiry.tzinfo is None:
-        stored_expiry = stored_expiry.replace(tzinfo=UTC)
-    if not stored or stored.token_hash != _token_hash(token) or stored_expiry <= now:
+    if not stored or stored.token_hash != _token_hash(token) or _as_utc(stored.expires_at) <= now:
         raise jwt.InvalidTokenError("Unknown or expired refresh session")
     if stored.revoked_at is not None:
-        await revoke_user_sessions(session, stored.user_id)
-        await session.commit()
-        raise jwt.InvalidTokenError("Refresh token reuse detected")
+        grace = timedelta(seconds=settings.refresh_reuse_grace_seconds)
+        if stored.replaced_by is None or now - _as_utc(stored.revoked_at) > grace:
+            # A logged-out token, or one rotated long ago, is being replayed:
+            # treat it as stolen and end every session for the user.
+            await revoke_user_sessions(session, stored.user_id)
+            await session.commit()
+            raise jwt.InvalidTokenError("Refresh token reuse detected")
+        if not await _rotation_chain_active(session, stored):
+            raise jwt.InvalidTokenError("Refresh session ended")
+        # Just rotated, but the browser never stored the replacement (a reload
+        # aborted the response) or another tab sent the same cookie at the same
+        # time. Issue a sibling session; `replaced_by` keeps the first one.
     user = await session.get(UserAccount, stored.user_id)
     if not user or user.deleted_at is not None or user.status != UserStatus.ACTIVE:
         raise jwt.InvalidTokenError("Account unavailable")
-    stored.revoked_at = now
     access, refresh, expires_in, replacement = await issue_token_pair(session, user, settings)
-    stored.replaced_by = replacement.id
+    if stored.revoked_at is None:
+        stored.revoked_at = now
+        stored.replaced_by = replacement.id
     return user, access, refresh, expires_in
 
 
