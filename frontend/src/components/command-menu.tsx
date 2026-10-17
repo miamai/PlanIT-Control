@@ -12,6 +12,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command'
+import { settingsSections } from '@/features/settings/data'
 import { sidebarData } from './layout/data/sidebar-data'
 import { ScrollArea } from './ui/scroll-area'
 
@@ -70,6 +71,18 @@ export function CommandMenu() {
               })}
             </CommandGroup>
           ))}
+          <CommandGroup heading='Settings'>
+            {settingsSections.map(({ href, title }) => (
+              <CommandItem
+                key={href}
+                value={`Settings ${title}`}
+                onSelect={() => runCommand(() => navigate({ to: href }))}
+              >
+                <ArrowRight className='size-3 text-muted-foreground' /> Settings{' '}
+                <ChevronRight /> {title}
+              </CommandItem>
+            ))}
+          </CommandGroup>
           <CommandSeparator />
           <CommandGroup heading='Theme'>
             <CommandItem onSelect={() => runCommand(() => setTheme('light'))}>

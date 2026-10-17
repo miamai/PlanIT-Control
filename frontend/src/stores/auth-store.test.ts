@@ -2,8 +2,8 @@ import { clearCookies } from '@/test-utils/cookies'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 async function importAuthStore() {
-  const { useAuthStore } = await import('./auth-store')
-  return useAuthStore
+  const { createAuthStore } = await import('./auth-store')
+  return createAuthStore()
 }
 
 const sampleUser = {
@@ -72,5 +72,30 @@ describe('useAuthStore', () => {
 
     expect(useAuthStoreAfterReload.getState().auth.user).toBeNull()
     expect(useAuthStoreAfterReload.getState().auth.accessToken).toBe('')
+  })
+})
+
+describe('session identity persistence', () => {
+  beforeEach(() => {
+    clearCookies()
+    vi.resetModules()
+  })
+
+  it('retains the signed-in identity across a reload', async () => {
+    const useAuthStore = await importAuthStore()
+    useAuthStore.getState().auth.setUser(sampleUser)
+    useAuthStore.getState().auth.setAccessToken('session-token')
+    vi.resetModules()
+    const restored = await importAuthStore()
+    expect(restored.getState().auth.user).toEqual(sampleUser)
+  })
+
+  it('removes identity persistence on sign-out', async () => {
+    const useAuthStore = await importAuthStore()
+    useAuthStore.getState().auth.setUser(sampleUser)
+    useAuthStore.getState().auth.setAccessToken('session-token')
+    useAuthStore.getState().auth.reset()
+    vi.resetModules()
+    expect((await importAuthStore()).getState().auth.user).toBeNull()
   })
 })

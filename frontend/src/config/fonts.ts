@@ -17,3 +17,9 @@
  *   }
  */
 export const fonts = ['inter', 'manrope', 'system'] as const
+
+export const FONT_CLASS = {
+  inter: 'font-inter',
+  manrope: 'font-manrope',
+  system: 'font-system',
+} as const

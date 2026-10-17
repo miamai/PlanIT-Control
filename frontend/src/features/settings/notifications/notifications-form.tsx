@@ -1,220 +1,117 @@
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from '@tanstack/react-router'
-import { showSubmittedData } from '@/lib/show-submitted-data'
+import { usePreferencesStore } from '@/stores/preferences-store'
+import { DELIVERY_CHANNELS } from '@/lib/notification-channels'
+import { toastError, toastSuccess } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 
-const notificationsFormSchema = z.object({
-  type: z.enum(['all', 'mentions', 'none'], {
-    error: (iss) =>
-      iss.input === undefined
-        ? 'Please select a notification type.'
-        : undefined,
-  }),
-  mobile: z.boolean().default(false).optional(),
-  communication_emails: z.boolean().default(false).optional(),
-  social_emails: z.boolean().default(false).optional(),
-  marketing_emails: z.boolean().default(false).optional(),
-  security_emails: z.boolean(),
-})
-
-type NotificationsFormValues = z.infer<typeof notificationsFormSchema>
-
-// This can come from your database or API.
-const defaultValues: Partial<NotificationsFormValues> = {
-  communication_emails: false,
-  marketing_emails: false,
-  social_emails: true,
-  security_emails: true,
-}
-
 export function NotificationsForm() {
-  const form = useForm<NotificationsFormValues>({
-    resolver: zodResolver(notificationsFormSchema),
-    defaultValues,
-  })
+  const preferences = usePreferencesStore((state) => state.notifications)
+  const save = usePreferencesStore((state) => state.saveNotifications)
+
+  function update(next: typeof preferences) {
+    try {
+      save(next)
+      toastSuccess('Notification preferences saved on this browser')
+    } catch {
+      toastError(
+        'Could not save preferences',
+        'Browser storage is unavailable. Your changes have not been saved.'
+      )
+    }
+  }
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((data) => showSubmittedData(data))}
-        className='space-y-8'
-      >
-        <FormField
-          control={form.control}
-          name='type'
-          render={({ field }) => (
-            <FormItem className='relative space-y-3'>
-              <FormLabel>Notify me about...</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className='flex flex-col gap-2'
-                >
-                  <FormItem className='flex items-center'>
-                    <FormControl>
-                      <RadioGroupItem value='all' />
-                    </FormControl>
-                    <FormLabel className='font-normal'>
-                      All new messages
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className='flex items-center'>
-                    <FormControl>
-                      <RadioGroupItem value='mentions' />
-                    </FormControl>
-                    <FormLabel className='font-normal'>
-                      Direct messages and mentions
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className='flex items-center'>
-                    <FormControl>
-                      <RadioGroupItem value='none' />
-                    </FormControl>
-                    <FormLabel className='font-normal'>Nothing</FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className='relative'>
-          <h3 className='mb-4 text-lg font-medium'>Email Notifications</h3>
-          <div className='space-y-4'>
-            <FormField
-              control={form.control}
-              name='communication_emails'
-              render={({ field }) => (
-                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-                  <div className='space-y-0.5'>
-                    <FormLabel className='text-base'>
-                      Communication emails
-                    </FormLabel>
-                    <FormDescription>
-                      Receive emails about your account activity.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='marketing_emails'
-              render={({ field }) => (
-                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-                  <div className='space-y-0.5'>
-                    <FormLabel className='text-base'>
-                      Marketing emails
-                    </FormLabel>
-                    <FormDescription>
-                      Receive emails about new products, features, and more.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='social_emails'
-              render={({ field }) => (
-                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-                  <div className='space-y-0.5'>
-                    <FormLabel className='text-base'>Social emails</FormLabel>
-                    <FormDescription>
-                      Receive emails for friend requests, follows, and more.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='security_emails'
-              render={({ field }) => (
-                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-                  <div className='space-y-0.5'>
-                    <FormLabel className='text-base'>Security emails</FormLabel>
-                    <FormDescription>
-                      Receive emails about your account activity and security.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      disabled
-                      aria-readonly
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
+    <div className='space-y-6'>
+      <div className='flex items-center justify-between gap-4 rounded-lg border p-4'>
+        <div className='space-y-1'>
+          <Label htmlFor='alert-banners'>In-app alert banners</Label>
+          <p
+            id='alert-banners-description'
+            className='text-sm leading-relaxed text-muted-foreground'
+          >
+            Show pop-up banners for new alerts and lightning countdown resets
+            while this app is open.
+          </p>
         </div>
-        <FormField
-          control={form.control}
-          name='mobile'
-          render={({ field }) => (
-            <FormItem className='relative flex flex-row items-start'>
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className='space-y-1 leading-none'>
-                <FormLabel>
-                  Use different settings for my mobile devices
-                </FormLabel>
-                <FormDescription>
-                  You can manage your mobile notifications in the{' '}
-                  <Link
-                    to='/settings'
-                    className='underline decoration-dashed underline-offset-4 hover:decoration-solid'
-                  >
-                    mobile settings
-                  </Link>{' '}
-                  page.
-                </FormDescription>
-              </div>
-            </FormItem>
-          )}
+        <Switch
+          id='alert-banners'
+          aria-describedby='alert-banners-description'
+          checked={preferences.enabled}
+          onCheckedChange={(enabled) => update({ ...preferences, enabled })}
         />
-        <Button type='submit'>Update notifications</Button>
-      </form>
-    </Form>
+      </div>
+      <div className='space-y-2'>
+        <Label htmlFor='minimum-severity'>Minimum banner severity</Label>
+        <select
+          id='minimum-severity'
+          value={preferences.minimumSeverity}
+          disabled={!preferences.enabled}
+          onChange={(event) =>
+            update({
+              ...preferences,
+              minimumSeverity: event.target
+                .value as typeof preferences.minimumSeverity,
+            })
+          }
+          className='h-10 w-full rounded-md border bg-background px-3 text-sm disabled:opacity-50 sm:w-64'
+        >
+          <option value='critical'>Critical only</option>
+          <option value='warning'>Warning and critical</option>
+          <option value='info'>All severities</option>
+        </select>
+      </div>
+      <p className='text-sm leading-relaxed text-muted-foreground'>
+        These preferences affect optional banners only. All alerts and stop-work
+        countdowns remain available in{' '}
+        <Link
+          to='/alerts'
+          className='font-medium text-foreground underline underline-offset-4'
+        >
+          Alerts
+        </Link>
+        .
+      </p>
+      <Button
+        variant='outline'
+        disabled={!preferences.enabled}
+        onClick={() =>
+          toastSuccess(
+            'Test notification',
+            'In-app banners are enabled on this browser.'
+          )
+        }
+      >
+        Show test banner
+      </Button>
+      <section
+        aria-labelledby='delivery-heading'
+        className='space-y-3 border-t pt-5'
+      >
+        <h3 id='delivery-heading' className='text-sm font-semibold'>
+          External delivery
+        </h3>
+        <dl className='divide-y rounded-lg border px-4'>
+          {DELIVERY_CHANNELS.filter((channel) => channel.id !== 'in-app').map(
+            (channel) => (
+              <div
+                key={channel.id}
+                className='flex flex-wrap items-center justify-between gap-2 py-3 text-sm'
+              >
+                <dt>{channel.label}</dt>
+                <dd className='text-muted-foreground'>
+                  {channel.available ? 'Available' : 'Not connected'}
+                </dd>
+              </div>
+            )
+          )}
+        </dl>
+        <p className='text-xs leading-relaxed text-muted-foreground'>
+          External delivery is unavailable in this demo. Saving these
+          preferences does not subscribe you to SMS, email, or browser push.
+        </p>
+      </section>
+    </div>
   )
 }

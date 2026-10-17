@@ -1,121 +1,52 @@
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { showSubmittedData } from '@/lib/show-submitted-data'
+import { useLayout } from '@/context/layout-provider'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
+import { Label } from '@/components/ui/label'
 
-const items = [
-  {
-    id: 'recents',
-    label: 'Recents',
-  },
-  {
-    id: 'home',
-    label: 'Home',
-  },
-  {
-    id: 'applications',
-    label: 'Applications',
-  },
-  {
-    id: 'desktop',
-    label: 'Desktop',
-  },
-  {
-    id: 'downloads',
-    label: 'Downloads',
-  },
-  {
-    id: 'documents',
-    label: 'Documents',
-  },
-] as const
-
-const displayFormSchema = z.object({
-  items: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: 'You have to select at least one item.',
-  }),
-})
-
-type DisplayFormValues = z.infer<typeof displayFormSchema>
-
-// This can come from your database or API.
-const defaultValues: Partial<DisplayFormValues> = {
-  items: ['recents', 'home'],
-}
+const selectClass =
+  'h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:w-64'
 
 export function DisplayForm() {
-  const form = useForm<DisplayFormValues>({
-    resolver: zodResolver(displayFormSchema),
-    defaultValues,
-  })
-
+  const { variant, setVariant, collapsible, setCollapsible, resetLayout } =
+    useLayout()
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((data) => showSubmittedData(data))}
-        className='space-y-8'
-      >
-        <FormField
-          control={form.control}
-          name='items'
-          render={() => (
-            <FormItem>
-              <div className='mb-4'>
-                <FormLabel className='text-base'>Sidebar</FormLabel>
-                <FormDescription>
-                  Select the items you want to display in the sidebar.
-                </FormDescription>
-              </div>
-              {items.map((item) => (
-                <FormField
-                  key={item.id}
-                  control={form.control}
-                  name='items'
-                  render={({ field }) => {
-                    return (
-                      <FormItem
-                        key={item.id}
-                        className='flex flex-row items-start'
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(item.id)}
-                            onCheckedChange={(checked) => {
-                              return checked
-                                ? field.onChange([...field.value, item.id])
-                                : field.onChange(
-                                    field.value?.filter(
-                                      (value) => value !== item.id
-                                    )
-                                  )
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className='font-normal'>
-                          {item.label}
-                        </FormLabel>
-                      </FormItem>
-                    )
-                  }}
-                />
-              ))}
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type='submit'>Update display</Button>
-      </form>
-    </Form>
+    <div className='space-y-6'>
+      <div className='space-y-2'>
+        <Label htmlFor='sidebar-style'>Sidebar style</Label>
+        <select
+          id='sidebar-style'
+          className={selectClass}
+          value={variant}
+          onChange={(event) => setVariant(event.target.value as typeof variant)}
+        >
+          <option value='inset'>Inset</option>
+          <option value='sidebar'>Sidebar</option>
+          <option value='floating'>Floating</option>
+        </select>
+      </div>
+      <div className='space-y-2'>
+        <Label htmlFor='sidebar-collapse'>Sidebar collapse behavior</Label>
+        <select
+          id='sidebar-collapse'
+          className={selectClass}
+          value={collapsible}
+          onChange={(event) =>
+            setCollapsible(event.target.value as typeof collapsible)
+          }
+        >
+          <option value='icon'>Collapse to icons</option>
+          <option value='offcanvas'>Hide completely</option>
+          <option value='none'>Always expanded</option>
+        </select>
+        <p className='text-xs leading-relaxed text-muted-foreground'>
+          Collapse behavior applies on desktop. Mobile navigation uses a drawer.
+        </p>
+      </div>
+      <p role='status' className='text-xs text-muted-foreground'>
+        Changes apply immediately and are saved on this browser.
+      </p>
+      <Button variant='outline' onClick={resetLayout}>
+        Reset layout
+      </Button>
+    </div>
   )
 }

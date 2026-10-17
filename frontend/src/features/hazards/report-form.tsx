@@ -5,10 +5,10 @@ import { createHazardReport } from '@/api'
 import { Camera, LocateFixed, Loader2, MapPin, Send, X } from 'lucide-react'
 import { SITE_SEED } from '@/api/mock/sites-data'
 import { type AlertSeverity, type HazardReportType } from '@/api/types'
-import { useAuthStore } from '@/stores/auth-store'
 import { REPORT_TYPE_ICON, REPORT_TYPE_LABEL } from '@/lib/planit'
 import { toastError, toastSuccess } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { useProfile } from '@/hooks/use-profile'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -95,7 +95,7 @@ export function HazardReportForm({
 }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const authUser = useAuthStore((state) => state.auth.user)
+  const profile = useProfile()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [siteId, setSiteId] = useState(defaultSiteId ?? SITE_SEED[0].id)
@@ -105,11 +105,9 @@ export function HazardReportForm({
   const [photoUrl, setPhotoUrl] = useState<string | undefined>()
   const [photoName, setPhotoName] = useState('')
   const [reporterRole, setReporterRole] = useState<'crew' | 'supervisor'>(
-    authUser?.role.includes('supervisor') ? 'supervisor' : 'crew'
+    profile.role
   )
-  const [reportedBy, setReportedBy] = useState(
-    authUser?.email ?? 'crew@planit.control'
-  )
+  const [reportedBy, setReportedBy] = useState(profile.name)
 
   const defaults = useDefaultLocation(siteId)
   const [location, setLocation] = useState<{ lat: number; lon: number }>({
