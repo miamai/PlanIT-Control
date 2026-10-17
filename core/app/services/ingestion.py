@@ -88,14 +88,26 @@ async def store_observations(
 
 
 async def run_provider(
-    session: AsyncSession, provider_name: str, settings: Settings
+    session: AsyncSession,
+    provider_name: str,
+    settings: Settings,
+    states: list[str] | None = None,
 ) -> ProviderRun:
     started = datetime.now(UTC)
-    run = ProviderRun(provider=provider_name, started_at=started, status="running")
+    normalized_states = sorted({state.upper() for state in (states or [])})
+    run = ProviderRun(
+        provider=provider_name,
+        started_at=started,
+        status="running",
+        scope={"states": normalized_states, "country": "US"},
+    )
     session.add(run)
     await session.flush()
     try:
-        sites = (await session.scalars(select(Site))).all()
+        site_query = select(Site)
+        if normalized_states:
+            site_query = site_query.where(Site.state.in_(normalized_states))
+        sites = (await session.scalars(site_query)).all()
         async with httpx.AsyncClient(timeout=settings.request_timeout_seconds) as client:
             provider: EnvironmentalProvider
             if provider_name == "weather":

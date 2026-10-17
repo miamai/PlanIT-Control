@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import getpass
 import json
+import os
 from datetime import UTC, datetime
 
 import httpx
@@ -16,14 +18,20 @@ def _expect(response: httpx.Response, expected: int = 200) -> dict:
     return response.json()
 
 
-def run(base_url: str, write_checks: bool = False) -> dict:
-    headers = {
-        "X-PlanIT-Role": "admin",
-        "X-PlanIT-Subject": "api-smoke-check",
-    }
+def run(
+    base_url: str,
+    username: str,
+    password: str,
+    write_checks: bool = False,
+) -> dict:
     results: dict[str, object] = {}
-    with httpx.Client(base_url=base_url.rstrip("/"), headers=headers, timeout=15) as client:
+    with httpx.Client(base_url=base_url.rstrip("/"), timeout=15) as client:
         results["health"] = _expect(client.get("/health"))
+        login = _expect(
+            client.post("/api/auth/login", json={"username": username, "password": password})
+        )
+        token = login["access_token"]
+        client.headers["Authorization"] = f"Bearer {token}"
         sites_payload = _expect(client.get("/api/sites", params={"limit": 1}))
         if not sites_payload["data"]:
             raise RuntimeError(
@@ -42,6 +50,17 @@ def run(base_url: str, write_checks: bool = False) -> dict:
         results["briefings"] = len(_expect(client.get(f"/api/sites/{site_id}/briefings"))["data"])
         results["rankings"] = len(_expect(client.get("/api/risk/rankings"))["data"])
         results["system_ok"] = _expect(client.get("/api/admin/system"))["data"]["ok"]
+        results["feeds"] = {}
+        for feed in ("weather", "lightning", "flood", "wildfire", "soil"):
+            payload = _expect(
+                client.get(
+                    f"/api/sites/{feed}",
+                    params=[("state", site["state"]), ("limit", "2")],
+                )
+            )
+            if payload["meta"]["states"] != [site["state"]]:
+                raise RuntimeError(f"{feed} feed did not preserve the requested state scope")
+            results["feeds"][feed] = payload["meta"]["total"]
 
         if write_checks:
             report = _expect(
@@ -72,14 +91,23 @@ def run(base_url: str, write_checks: bool = False) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Smoke-check a running PlanIT API")
     parser.add_argument("--base-url", default="http://localhost:8000")
+    parser.add_argument("--username", default=os.getenv("PLANIT_SMOKE_USERNAME"))
     parser.add_argument(
         "--write-checks",
         action="store_true",
         help="Also submit one explicitly synthetic crew report",
     )
     args = parser.parse_args()
+    if not args.username:
+        parser.error("--username or PLANIT_SMOKE_USERNAME is required")
+    password = os.getenv("PLANIT_SMOKE_PASSWORD") or getpass.getpass("PlanIT password: ")
     try:
-        result = run(args.base_url, args.write_checks)
+        result = run(
+            args.base_url,
+            args.username,
+            password,
+            args.write_checks,
+        )
     except Exception as exc:
         print(json.dumps({"ok": False, "error": str(exc)}, indent=2))
         raise SystemExit(1) from exc

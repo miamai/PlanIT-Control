@@ -15,6 +15,26 @@ export type HazardType =
   | 'wildlife'
 export type Severity = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL'
 export type AlertStatus = 'ACTIVE' | 'ACKNOWLEDGED' | 'ALL_CLEAR_ELIGIBLE' | 'RESOLVED'
+export type UserRole = 'crew' | 'supervisor' | 'admin'
+export type UserStatus = 'active' | 'disabled'
+
+export interface User {
+  id: string
+  username: string
+  display_name: string | null
+  role: UserRole
+  status: UserStatus
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface TokenResponse {
+  access_token: string
+  token_type: 'bearer'
+  expires_in: number
+  user: User
+}
 
 export interface Site {
   id: string
@@ -52,6 +72,21 @@ export interface HazardObservation {
   quality_status: 'verified' | 'provisional' | 'stale' | 'estimated' | 'synthetic'
   is_estimated: boolean
   metadata: Record<string, unknown>
+}
+
+export interface SiteObservation {
+  site: Site
+  observation: HazardObservation
+}
+
+export interface FeedMeta {
+  limit: number
+  offset: number
+  total: number
+  states: string[]
+  data_mode: 'stored-live' | 'stored-fixture' | 'stored-proxy'
+  last_successful_ingestion: string | null
+  last_run_status: string | null
 }
 
 export interface Alert {
@@ -100,19 +135,47 @@ export interface Briefing {
 
 export function createPlanitApi(
   baseURL: string,
-  getToken?: () => Promise<string | null>,
+  getAccessToken: () => string | null,
+  setAccessToken: (token: string | null) => void,
 ): AxiosInstance {
-  const client = axios.create({ baseURL })
-  client.interceptors.request.use(async (config) => {
-    const token = await getToken?.()
+  const client = axios.create({ baseURL, withCredentials: true })
+  client.interceptors.request.use((config) => {
+    const token = getAccessToken()
     if (token) config.headers.Authorization = `Bearer ${token}`
-    else {
-      config.headers['X-PlanIT-Role'] = 'crew'
-      config.headers['X-PlanIT-Subject'] = 'frontend-developer'
-    }
     return config
   })
+  client.interceptors.response.use(undefined, async (error) => {
+    const request = error.config as typeof error.config & { _planitRetried?: boolean }
+    if (error.response?.status !== 401 || request._planitRetried) throw error
+    request._planitRetried = true
+    const refreshed = await axios.post<TokenResponse>(
+      `${baseURL.replace(/\/$/, '')}/api/auth/refresh`,
+      {},
+      { withCredentials: true },
+    )
+    setAccessToken(refreshed.data.access_token)
+    request.headers.Authorization = `Bearer ${refreshed.data.access_token}`
+    return client.request(request)
+  })
   return client
+}
+
+export async function login(
+  api: AxiosInstance,
+  username: string,
+  password: string,
+): Promise<TokenResponse> {
+  return (await api.post<TokenResponse>('/api/auth/login', { username, password })).data
+}
+
+export async function loadHazardFeed(
+  api: AxiosInstance,
+  feed: 'weather' | 'lightning' | 'flood' | 'wildfire' | 'soil',
+  states: string[],
+): Promise<Envelope<SiteObservation[]> & { meta: FeedMeta }> {
+  const params = new URLSearchParams()
+  for (const state of states) params.append('state', state)
+  return (await api.get(`/api/sites/${feed}`, { params })).data
 }
 
 export const planitKeys = {
@@ -122,6 +185,7 @@ export const planitKeys = {
   alerts: (siteId: string) => ['site', siteId, 'alerts'] as const,
   risk: (siteId: string) => ['site', siteId, 'risk'] as const,
   briefings: (siteId: string) => ['site', siteId, 'briefings'] as const,
+  feed: (name: string, states: string[]) => ['hazard-feed', name, [...states].sort()] as const,
 }
 
 type StreamEvent = {

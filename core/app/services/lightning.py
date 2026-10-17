@@ -11,9 +11,11 @@ from app.models.entities import (
     Alert,
     AlertStatus,
     AlertTransition,
+    HazardObservation,
     HazardType,
     LightningSiteState,
     LightningStrike,
+    QualityStatus,
     Severity,
     Site,
 )
@@ -56,6 +58,43 @@ async def process_strike(
         )
         if state and strike_input.occurred_at <= state.latest_qualifying_strike_at:
             continue
+
+        synthetic = bool(strike_input.metadata.get("synthetic_notice")) or (
+            strike_input.provider.lower() == "fixture"
+        )
+        await session.execute(
+            insert(HazardObservation)
+            .values(
+                site_id=site.id,
+                hazard_type=HazardType.LIGHTNING,
+                source=strike_input.provider,
+                source_event_id=strike_input.strike_id,
+                observed_at=strike_input.occurred_at,
+                metric_name="lightning_strike_distance",
+                numeric_value=distance,
+                unit="miles",
+                latitude=strike_input.latitude,
+                longitude=strike_input.longitude,
+                metadata_={
+                    **strike_input.metadata,
+                    "stop_work_radius_miles": settings.lightning_radius_miles,
+                    "fixture": synthetic,
+                },
+                quality_status=(
+                    QualityStatus.SYNTHETIC if synthetic else QualityStatus.PROVISIONAL
+                ),
+                is_estimated=False,
+            )
+            .on_conflict_do_nothing(
+                index_elements=[
+                    "site_id",
+                    "source",
+                    "source_event_id",
+                    "metric_name",
+                    "observed_at",
+                ]
+            )
+        )
 
         eligible_at = strike_input.occurred_at + timedelta(
             minutes=settings.lightning_all_clear_minutes

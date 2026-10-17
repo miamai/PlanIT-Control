@@ -1,63 +1,58 @@
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, Header, HTTPException, Request, status
-from jwt import PyJWKClient
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
+from app.core.database import get_session
+from app.models.entities import UserAccount, UserStatus
+from app.services.auth import decode_token
 
 
 @dataclass(frozen=True)
 class Principal:
+    user_id: uuid.UUID
     subject: str
     role: str
     claims: dict
 
 
 ROLE_LEVEL = {"crew": 1, "supervisor": 2, "admin": 3}
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_principal(
-    request: Request,
-    authorization: Annotated[str | None, Header()] = None,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+    session: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> Principal:
-    if settings.auth_mode == "development" and settings.environment != "production":
-        role = request.headers.get("X-PlanIT-Role", "admin")
-        if role not in ROLE_LEVEL:
-            raise HTTPException(status_code=403, detail="Unknown development role")
-        return Principal(request.headers.get("X-PlanIT-Subject", "local-developer"), role, {})
-
-    if not authorization or not authorization.startswith("Bearer "):
+    if not credentials or credentials.scheme.lower() != "bearer":
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Bearer token required"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Bearer access token required",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-    token = authorization.removeprefix("Bearer ").strip()
+    token = credentials.credentials
     try:
-        key = PyJWKClient(settings.clerk_jwks_url).get_signing_key_from_jwt(token).key
-        options = {"verify_aud": bool(settings.clerk_audience)}
-        claims = jwt.decode(
-            token,
-            key,
-            algorithms=["RS256"],
-            audience=settings.clerk_audience,
-            issuer=settings.clerk_issuer,
-            options=options,
-        )
-        if (
-            settings.clerk_authorized_parties
-            and claims.get("azp") not in settings.clerk_authorized_parties
-        ):
-            raise jwt.InvalidTokenError("Unauthorized party")
-    except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=401, detail="Invalid authentication token") from exc
-    role = claims.get("planit_role", "crew")
-    if role not in ROLE_LEVEL:
-        raise HTTPException(status_code=403, detail="Token has no recognized PlanIT role")
-    return Principal(subject=claims["sub"], role=role, claims=claims)
+        claims = decode_token(token, settings, "access")
+        user_id = uuid.UUID(claims["sub"])
+    except (jwt.PyJWTError, ValueError, KeyError) as exc:
+        raise HTTPException(status_code=401, detail="Invalid or expired access token") from exc
+    user = await session.get(UserAccount, user_id)
+    if not user or user.deleted_at is not None or user.status != UserStatus.ACTIVE:
+        raise HTTPException(status_code=401, detail="Account is unavailable")
+    return Principal(
+        user_id=user.id,
+        subject=user.username,
+        role=user.role.value,
+        claims=claims,
+    )
 
 
 def require_role(required: str):
@@ -69,6 +64,7 @@ def require_role(required: str):
     return dependency
 
 
+AuthenticatedPrincipal = Annotated[Principal, Depends(get_principal)]
 CrewPrincipal = Annotated[Principal, Depends(require_role("crew"))]
 SupervisorPrincipal = Annotated[Principal, Depends(require_role("supervisor"))]
 AdminPrincipal = Annotated[Principal, Depends(require_role("admin"))]

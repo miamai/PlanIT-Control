@@ -11,6 +11,7 @@ dependencies = [
   "httpx>=0.28,<1",
   "openpyxl>=3.1,<4",
   "pydantic-settings>=2.7,<3",
+  "pwdlib[argon2]>=0.3,<1",
   "pyjwt[crypto]>=2.10,<3",
   "python-multipart>=0.0.20,<1",
   "sqlalchemy[asyncio]>=2.0.36,<3",
@@ -35,6 +36,7 @@ planit-import-sites = "app.cli:import_sites"
 planit-seed-demo = "app.cli:seed_demo"
 planit-db-check = "app.cli:database_check"
 planit-api-smoke = "app.api_smoke:main"
+planit-init-admin = "app.cli:initialize_admin"
 planit-worker = "app.jobs.worker:main"
 
 [build-system]

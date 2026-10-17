@@ -8,6 +8,7 @@ from pathlib import Path
 
 from app.core.config import get_settings
 from app.core.database import SessionFactory
+from app.services.auth import initialize_admin as run_initialize_admin
 from app.services.database_check import inspect_database
 from app.services.eia import (
     CACHE_PATH,
@@ -80,3 +81,18 @@ async def _database_check() -> int:
 
 def database_check() -> None:
     raise SystemExit(asyncio.run(_database_check()))
+
+
+async def _initialize_admin() -> int:
+    async with SessionFactory() as session:
+        try:
+            await run_initialize_admin(session, get_settings())
+        except ValueError as exc:
+            print(f"Initial admin was not created: {exc}")
+            return 1
+    print("Created initial administrator account.")
+    return 0
+
+
+def initialize_admin() -> None:
+    raise SystemExit(asyncio.run(_initialize_admin()))

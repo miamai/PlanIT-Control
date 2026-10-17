@@ -1,0 +1,263 @@
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+from app import cli
+from app.core.config import Settings
+from app.core.database import get_session
+from app.main import app
+from app.models.entities import (
+    Base,
+    HazardObservation,
+    HazardType,
+    QualityStatus,
+    Site,
+    UserAccount,
+)
+from app.services.auth import initialize_admin, verify_password
+
+
+@pytest.mark.asyncio
+async def test_initialized_admin_crud_and_state_feed() -> None:
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    async with factory() as session:
+        await initialize_admin(
+            session,
+            Settings(
+                _env_file=None,
+                initial_admin_username="provisioned.operator",
+                initial_admin_password="test-only-initial-secret",
+            ),
+        )
+        sites = []
+        for plant_id, state in ((1, "LA"), (2, "TX")):
+            site = Site(
+                eia_plant_id=plant_id,
+                name=f"{state} Plant",
+                latitude=30,
+                longitude=-90,
+                state=state,
+                county="Test",
+                timezone="America/Chicago",
+                source_release="test",
+                source_url="test",
+                source_metadata={},
+                is_reference_location=True,
+            )
+            session.add(site)
+            sites.append(site)
+        await session.flush()
+        for site in sites:
+            session.add(
+                HazardObservation(
+                    site_id=site.id,
+                    hazard_type=HazardType.WEATHER,
+                    source="test",
+                    source_event_id=f"weather-{site.state}",
+                    observed_at=datetime.now(UTC),
+                    metric_name="forecast_temperature",
+                    numeric_value=80,
+                    unit="F",
+                    metadata_={},
+                    quality_status=QualityStatus.PROVISIONAL,
+                    is_estimated=False,
+                )
+            )
+            await session.flush()
+        await session.commit()
+
+    async def override_session():
+        async with factory() as session:
+            yield session
+
+    app.dependency_overrides[get_session] = override_session
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            login = await client.post(
+                "/api/auth/login",
+                json={
+                    "username": "provisioned.operator",
+                    "password": "test-only-initial-secret",
+                },
+            )
+            assert login.status_code == 200
+            initial_token = login.json()["access_token"]
+            initial_headers = {"Authorization": f"Bearer {initial_token}"}
+            assert (await client.get("/api/auth/me", headers=initial_headers)).status_code == 200
+            assert (await client.get("/api/sites", headers=initial_headers)).status_code == 200
+
+            changed = await client.patch(
+                "/api/auth/me/password",
+                headers=initial_headers,
+                json={
+                    "current_password": "test-only-initial-secret",
+                    "new_password": "new-secure-password",
+                },
+            )
+            assert changed.status_code == 200
+            refreshed = await client.post("/api/auth/refresh")
+            assert refreshed.status_code == 200
+            token = refreshed.json()["access_token"]
+            headers = {"Authorization": f"Bearer {token}"}
+
+            feed = await client.get("/api/sites/weather?state=LA&state=TX", headers=headers)
+            assert feed.status_code == 200
+            assert feed.json()["meta"]["states"] == ["LA", "TX"]
+            assert feed.json()["meta"]["total"] == 2
+            assert set(feed.json()["data"][0]) == {"site", "observation"}
+
+            created = await client.post(
+                "/api/admin/users",
+                headers=headers,
+                json={
+                    "username": "crew.one",
+                    "password": "temporary-password",
+                    "role": "crew",
+                },
+            )
+            assert created.status_code == 201
+            assert "must_change_password" not in created.json()["data"]
+            crew_id = created.json()["data"]["id"]
+            crew_login = await client.post(
+                "/api/auth/login",
+                json={"username": "crew.one", "password": "temporary-password"},
+            )
+            assert crew_login.status_code == 200
+            crew_headers = {"Authorization": f"Bearer {crew_login.json()['access_token']}"}
+            assert (await client.get("/api/sites", headers=crew_headers)).status_code == 200
+
+            reset = await client.patch(
+                f"/api/admin/users/{crew_id}",
+                headers=headers,
+                json={"password": "administrator-reset-password"},
+            )
+            assert reset.status_code == 200
+            assert (
+                await client.post(
+                    "/api/auth/login",
+                    json={"username": "crew.one", "password": "temporary-password"},
+                )
+            ).status_code == 401
+            reset_login = await client.post(
+                "/api/auth/login",
+                json={"username": "crew.one", "password": "administrator-reset-password"},
+            )
+            assert reset_login.status_code == 200
+            reset_headers = {"Authorization": f"Bearer {reset_login.json()['access_token']}"}
+            assert (await client.get("/api/sites", headers=reset_headers)).status_code == 200
+
+            admin_id = changed.json()["user"]["id"]
+            demote_last_admin = await client.patch(
+                f"/api/admin/users/{admin_id}", headers=headers, json={"role": "crew"}
+            )
+            assert demote_last_admin.status_code == 409
+    finally:
+        app.dependency_overrides.clear()
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_initial_admin_requires_secrets_and_an_empty_user_table() -> None:
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    async with factory() as session:
+        with pytest.raises(ValueError, match="INITIAL_ADMIN_USERNAME"):
+            await initialize_admin(session, Settings(_env_file=None))
+        with pytest.raises(ValueError, match="INITIAL_ADMIN_USERNAME"):
+            await initialize_admin(
+                session,
+                Settings(
+                    _env_file=None,
+                    initial_admin_password="password-without-a-username",
+                ),
+            )
+        with pytest.raises(ValueError, match="INITIAL_ADMIN_PASSWORD"):
+            await initialize_admin(
+                session,
+                Settings(
+                    _env_file=None,
+                    initial_admin_username="username.without.password",
+                ),
+            )
+        with pytest.raises(ValueError, match="invalid format"):
+            await initialize_admin(
+                session,
+                Settings(
+                    _env_file=None,
+                    initial_admin_username="invalid username",
+                    initial_admin_password="valid-test-password",
+                ),
+            )
+        with pytest.raises(ValueError, match="8 to 256"):
+            await initialize_admin(
+                session,
+                Settings(
+                    _env_file=None,
+                    initial_admin_username="valid.username",
+                    initial_admin_password="short",
+                ),
+            )
+        assert await session.scalar(select(func.count()).select_from(UserAccount)) == 0
+        settings = Settings(
+            _env_file=None,
+            initial_admin_username="first.operator",
+            initial_admin_password="test-only-provisioning-secret",
+        )
+        user = await initialize_admin(session, settings)
+        assert user.role.value == "admin"
+        assert verify_password("test-only-provisioning-secret", user.password_hash)
+        with pytest.raises(ValueError, match="no user accounts exist"):
+            await initialize_admin(
+                session,
+                Settings(
+                    _env_file=None,
+                    initial_admin_username="second.operator",
+                    initial_admin_password="another-test-only-secret",
+                ),
+            )
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_init_admin_cli_output_is_credential_neutral(monkeypatch, capsys) -> None:
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+
+    username = "output.must.not.include.this"
+    password = "output-must-not-include-this-password"
+    monkeypatch.setattr(cli, "SessionFactory", factory)
+    monkeypatch.setattr(
+        cli,
+        "get_settings",
+        lambda: Settings(
+            _env_file=None,
+            initial_admin_username=username,
+            initial_admin_password=password,
+        ),
+    )
+
+    assert await cli._initialize_admin() == 0
+    output = capsys.readouterr().out
+    assert output == "Created initial administrator account.\n"
+    assert username not in output
+    assert password not in output
+    assert "$argon2" not in output
+
+    assert await cli._initialize_admin() == 1
+    failure_output = capsys.readouterr().out
+    assert username not in failure_output
+    assert password not in failure_output
+    assert "$argon2" not in failure_output
+    await engine.dispose()

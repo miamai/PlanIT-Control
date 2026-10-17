@@ -6,7 +6,14 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.models.entities import AlertStatus, HazardType, QualityStatus, Severity
+from app.models.entities import (
+    AlertStatus,
+    HazardType,
+    QualityStatus,
+    Severity,
+    UserRole,
+    UserStatus,
+)
 
 
 class ORMModel(BaseModel):
@@ -19,9 +26,16 @@ class PageMeta(BaseModel):
     total: int
 
 
+class FeedMeta(PageMeta):
+    states: list[str]
+    data_mode: str
+    last_successful_ingestion: datetime | None = None
+    last_run_status: str | None = None
+
+
 class Envelope[T](BaseModel):
     data: T
-    meta: dict[str, Any] | PageMeta | None = None
+    meta: FeedMeta | PageMeta | dict[str, Any] | None = None
 
 
 class SiteRead(ORMModel):
@@ -60,6 +74,53 @@ class ObservationRead(ORMModel):
     quality_status: QualityStatus
     is_estimated: bool
     metadata_: dict[str, Any] = Field(serialization_alias="metadata")
+
+
+class SiteObservationRead(BaseModel):
+    site: SiteRead
+    observation: ObservationRead
+
+
+class UserRead(ORMModel):
+    id: uuid.UUID
+    username: str
+    display_name: str | None
+    role: UserRole
+    status: UserStatus
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None
+
+
+class LoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=64)
+    password: str = Field(min_length=1, max_length=256)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    user: UserRead
+
+
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=256)
+    new_password: str = Field(min_length=8, max_length=256)
+
+
+class UserCreate(BaseModel):
+    username: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_.-]+$")
+    password: str = Field(min_length=8, max_length=256)
+    display_name: str | None = Field(default=None, max_length=120)
+    role: UserRole
+
+
+class UserUpdate(BaseModel):
+    display_name: str | None = Field(default=None, max_length=120)
+    role: UserRole | None = None
+    status: UserStatus | None = None
+    password: str | None = Field(default=None, min_length=8, max_length=256)
 
 
 class AlertRead(ORMModel):

@@ -22,6 +22,8 @@ REQUIRED_TABLES = {
     "safety_briefings",
     "provider_runs",
     "event_outbox",
+    "user_accounts",
+    "refresh_sessions",
 }
 
 

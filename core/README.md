@@ -12,17 +12,20 @@ Requirements: Docker with Compose, or Python 3.12 plus PostgreSQL 16.
 ```bash
 cd core
 cp .env.example .env
-docker compose up --build -d
+docker compose build
+docker compose run --rm init-admin
+docker compose up -d
 docker compose exec api planit-import-sites
 docker compose exec api planit-seed-demo
 docker compose exec api planit-db-check
-docker compose exec api planit-api-smoke
+docker compose exec api planit-api-smoke --username <username>
 ```
 
-The API is at `http://localhost:8000`, OpenAPI at `/docs`, and health at
-`/health`. Development authentication accepts `X-PlanIT-Role` (`crew`,
-`supervisor`, or `admin`) and `X-PlanIT-Subject`; it cannot be enabled when
-`ENVIRONMENT=production`.
+Before running `init-admin`, supply `INITIAL_ADMIN_USERNAME` and
+`INITIAL_ADMIN_PASSWORD` through the uncommitted `.env` file or deployment
+secret injection. The command refuses to run if any user account already
+exists. Remove those values from the environment after provisioning. The API is
+at `http://localhost:8000`, OpenAPI at `/docs`, and health at `/health`.
 
 The example host `DATABASE_URL` uses `localhost`. Compose supplies its own
 container URL using the `db` hostname, so the same `.env` works for both the
@@ -35,6 +38,7 @@ Without Docker:
 cd core
 uv sync --extra dev
 uv run alembic upgrade head
+INITIAL_ADMIN_USERNAME=<username> INITIAL_ADMIN_PASSWORD=<secret> uv run planit-init-admin
 uv run planit-import-sites
 uv run planit-seed-demo
 uv run planit-db-check
@@ -46,10 +50,12 @@ In another terminal, verify the running API with:
 
 ```bash
 cd core
-uv run planit-api-smoke
+uv run planit-api-smoke --username <username>
 ```
 
-The smoke command is read-only by default. Pass `--write-checks` only against a
+The smoke command prompts for a password without echoing it. Automation may
+provide `PLANIT_SMOKE_USERNAME` and `PLANIT_SMOKE_PASSWORD` through secret
+injection. It is read-only by default; pass `--write-checks` only against a
 development database when you also want to verify report creation.
 
 ## Frontend API contract
@@ -91,18 +97,30 @@ only from the bundled snapshot; it cannot download an arbitrary URL.
 
 ## Authentication and authorization
 
-Production requires `AUTH_MODE=clerk`, a Clerk JWKS URL, issuer, optional
-audience, and allowed `azp` origins. Configure a `planit_role` session claim
-with one of:
+Authentication is local and identical in development and production. Login at
+`POST /api/auth/login`; keep the returned 15-minute access token in memory and
+send it as `Authorization: Bearer ...`. The seven-day rotating refresh token is
+an HttpOnly, SameSite=Lax cookie scoped to `/api/auth`. Call
+`POST /api/auth/refresh` with browser credentials enabled. Production requires
+a unique `JWT_SECRET_KEY` of at least 32 random bytes.
+
+Roles are:
 
 - `crew`: operational reads and report submission.
 - `supervisor`: crew access, report review, and alert acknowledgement/resolution.
 - `admin`: supervisor access, ingestion, system status, and EIA refresh.
 
-The API verifies RS256 signatures, issuer, expiration, audience when supplied,
-and authorized party when configured. Report submissions are limited to 30 per
-subject per minute using persisted report timestamps. Administrative provider
-runs are limited to one per provider per minute.
+Admins manage all roles through `/api/admin/users`; the last active admin cannot
+be disabled, demoted, or deleted, and an admin cannot self-delete. Password
+changes, disablement, role changes, and soft deletion revoke refresh sessions.
+Report submissions are limited to 30 per user per minute, and provider runs to
+one per provider per minute.
+
+The frontend hazard feeds are stored-data reads and never call upstream services:
+`/api/sites/weather`, `/api/sites/lightning`, `/api/sites/flood`,
+`/api/sites/wildfire`, and `/api/sites/soil`. Filter any feed with repeated US
+state parameters, for example `?state=TX&state=LA`; omitting `state` returns all
+stored U.S. observations. Each row contains `{ "site": ..., "observation": ... }`.
 
 ## Providers and safety semantics
 
@@ -114,8 +132,10 @@ remain available to administrators.
 
 - NWS: hourly forecasts, nearest-station observations, official point alerts,
   and NOAA-formula calculated heat index. Set an identifiable `NWS_USER_AGENT`.
-- USGS: nearby stream gage height and streamflow. Measurements do not alone
-  claim flooding; flood stages must be configured or an official warning used.
+- USGS: nearby stream gage height and streamflow from the modern Water Data OGC
+  API (`api.waterdata.usgs.gov`), replacing the legacy service retiring in 2027.
+  Measurements do not alone claim flooding; flood stages must be configured or
+  an official warning used.
 - NASA FIRMS: VIIRS active-fire detections. `NASA_FIRMS_MAP_KEY` is required.
   Detections are not evacuation orders.
 - Soil: a 72-hour antecedent-rainfall proxy with uncertainty metadata, not a
@@ -181,6 +201,15 @@ uv run alembic upgrade head
 uv run planit-db-check
 ```
 
+For a new Tiger Data database, create the first administrator exactly once after
+the migration, with the connection URL and credentials supplied by secret
+management:
+
+```bash
+DATABASE_URL=<tiger-asyncpg-url> INITIAL_ADMIN_USERNAME=<username> \
+INITIAL_ADMIN_PASSWORD=<secret> uv run planit-init-admin
+```
+
 `planit-db-check` reports the sanitized host/database, TLS state, current and
 expected migration revisions, required tables, row counts, and TimescaleDB
 availability without printing credentials. The authenticated
@@ -199,8 +228,8 @@ uniqueness.
    reverse proxy and administration addresses, and copy the repository.
 2. Store production secrets outside Git (Vultr secret/user-data mechanism or a
    root-readable environment file). Set `ENVIRONMENT=production`,
-   `AUTH_MODE=clerk`, an approved or disabled alert-threshold profile, Clerk
-   values, Tiger Data TLS `DATABASE_URL`, the real
+   a unique `JWT_SECRET_KEY`, an approved or disabled alert-threshold profile,
+   Tiger Data TLS `DATABASE_URL`, the real
    frontend origin, NWS contact, and optional FIRMS key.
 3. In production Compose, omit the local `db` service and point both `api` and
    `worker` at Tiger Data. Run the one-shot migration service before rolling

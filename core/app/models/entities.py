@@ -61,6 +61,48 @@ class QualityStatus(enum.StrEnum):
     SYNTHETIC = "synthetic"
 
 
+class UserRole(enum.StrEnum):
+    CREW = "crew"
+    SUPERVISOR = "supervisor"
+    ADMIN = "admin"
+
+
+class UserStatus(enum.StrEnum):
+    ACTIVE = "active"
+    DISABLED = "disabled"
+
+
+class UserAccount(Base):
+    __tablename__ = "user_accounts"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    username: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    display_name: Mapped[str | None] = mapped_column(String(120))
+    password_hash: Mapped[str] = mapped_column(String(255))
+    role: Mapped[UserRole] = mapped_column(Enum(UserRole, native_enum=False), index=True)
+    status: Mapped[UserStatus] = mapped_column(Enum(UserStatus, native_enum=False), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class RefreshSession(Base):
+    __tablename__ = "refresh_sessions"
+    __table_args__ = (Index("ix_refresh_sessions_user_expiry", "user_id", "expires_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("user_accounts.id", ondelete="CASCADE"), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    replaced_by: Mapped[uuid.UUID | None] = mapped_column(Uuid)
+
+
 class Site(Base):
     __tablename__ = "sites"
     __table_args__ = (
@@ -257,6 +299,7 @@ class ProviderRun(Base):
     status: Mapped[str] = mapped_column(String(32))
     records_written: Mapped[int] = mapped_column(Integer, default=0)
     error: Mapped[str | None] = mapped_column(Text)
+    scope: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
 
 class EventOutbox(Base):

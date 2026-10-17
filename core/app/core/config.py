@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,11 +19,13 @@ class Settings(BaseSettings):
     db_require_tls: bool = False
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
 
-    auth_mode: Literal["clerk", "development"] = "development"
-    clerk_jwks_url: str | None = None
-    clerk_issuer: str | None = None
-    clerk_audience: str | None = None
-    clerk_authorized_parties: list[str] = Field(default_factory=list)
+    jwt_secret_key: str = "development-only-planit-jwt-secret-change-me"
+    jwt_algorithm: Literal["HS256"] = "HS256"
+    access_token_minutes: int = 15
+    refresh_token_days: int = 7
+    refresh_cookie_name: str = "planit_refresh_token"
+    initial_admin_username: str | None = None
+    initial_admin_password: SecretStr | None = None
 
     nws_user_agent: str = "PlanIT-Control/0.1 (contact@example.com)"
     request_timeout_seconds: float = 15.0
@@ -59,14 +61,15 @@ class Settings(BaseSettings):
         return value
 
     def validate_runtime(self) -> None:
-        if self.environment == "production" and self.auth_mode != "clerk":
-            raise ValueError("Production requires AUTH_MODE=clerk")
+        if self.environment == "production" and (
+            len(self.jwt_secret_key.encode()) < 32
+            or self.jwt_secret_key == "development-only-planit-jwt-secret-change-me"
+        ):
+            raise ValueError("Production requires a unique JWT_SECRET_KEY of at least 32 bytes")
         if self.environment == "production" and not self.db_require_tls:
             raise ValueError("Production requires DB_REQUIRE_TLS=true")
         if self.environment == "production" and self.alert_threshold_profile == "demo":
             raise ValueError("Production requires ALERT_THRESHOLD_PROFILE=approved or disabled")
-        if self.auth_mode == "clerk" and not self.clerk_jwks_url:
-            raise ValueError("CLERK_JWKS_URL is required when AUTH_MODE=clerk")
 
 
 @lru_cache

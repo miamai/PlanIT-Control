@@ -62,5 +62,21 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
+  init-admin:
+    build: .
+    profiles: ["setup"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql+asyncpg://planit:planit@db:5432/planit}
+      INITIAL_ADMIN_USERNAME: ${INITIAL_ADMIN_USERNAME:-}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
+    command: ["planit-init-admin"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
 volumes:
   planit-db:

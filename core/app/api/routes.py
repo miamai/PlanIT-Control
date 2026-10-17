@@ -457,6 +457,7 @@ async def ingest_provider(
     _: AdminPrincipal,
     session: DbSession,
     settings: Settings = Depends(get_settings),
+    state: Annotated[list[str] | None, Query()] = None,
 ) -> dict:
     allowed = {"weather", "weather_alerts", "usgs", "wildfire", "soil"}
     if provider not in allowed:
@@ -471,13 +472,21 @@ async def ingest_provider(
     )
     if recent:
         raise HTTPException(status_code=429, detail="Provider was already requested this minute")
-    run = await run_provider(session, provider, settings)
+    states = []
+    for value in state or []:
+        normalized = value.strip().upper()
+        if len(normalized) != 2 or not normalized.isalpha():
+            raise HTTPException(status_code=422, detail=f"Invalid US state code: {value}")
+        if normalized not in states:
+            states.append(normalized)
+    run = await run_provider(session, provider, settings, states)
     return {
         "data": {
             "run_id": str(run.id),
             "status": run.status,
             "records_written": run.records_written,
             "error": run.error,
+            "scope": run.scope,
         }
     }
 

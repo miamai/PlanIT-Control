@@ -42,7 +42,7 @@ class RetryingHTTPProvider:
         stop=stop_after_attempt(3),
         reraise=True,
     )
-    async def get_json(self, url: str, **kwargs) -> dict:
+    async def get_response(self, url: str, **kwargs) -> httpx.Response:
         response = await self.client.get(url, **kwargs)
         if response.status_code == 429:
             raise ProviderError(
@@ -51,4 +51,8 @@ class RetryingHTTPProvider:
         if response.status_code >= 500:
             raise ProviderError(f"Provider server error: {response.status_code}")
         response.raise_for_status()
+        return response
+
+    async def get_json(self, url: str, **kwargs) -> dict:
+        response = await self.get_response(url, **kwargs)
         return response.json()
