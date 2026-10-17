@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Loader2, LogIn } from 'lucide-react'
+import { HardHat, Loader2, LogIn, MonitorSmartphone } from 'lucide-react'
 import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
 import { useAuthStore } from '@/stores/auth-store'
@@ -40,6 +40,7 @@ export function UserAuthForm({
   ...props
 }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const [role, setRole] = useState<'supervisor' | 'crew'>('supervisor')
   const navigate = useNavigate()
   const { auth } = useAuthStore()
 
@@ -63,7 +64,7 @@ export function UserAuthForm({
         const mockUser = {
           accountNo: 'ACC001',
           email: data.email,
-          role: ['user'],
+          role: [role, 'user'],
           exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
         }
 
@@ -88,6 +89,30 @@ export function UserAuthForm({
         className={cn('grid gap-3', className)}
         {...props}
       >
+        <div className='grid gap-2'>
+          <span className='text-sm font-medium'>Sign in as</span>
+          <div className='grid grid-cols-2 gap-2'>
+            <Button
+              type='button'
+              variant={role === 'supervisor' ? 'default' : 'outline'}
+              onClick={() => setRole('supervisor')}
+            >
+              <MonitorSmartphone /> Supervisor
+            </Button>
+            <Button
+              type='button'
+              variant={role === 'crew' ? 'default' : 'outline'}
+              onClick={() => setRole('crew')}
+            >
+              <HardHat /> Crew
+            </Button>
+          </div>
+          <p className='text-xs text-muted-foreground'>
+            {role === 'supervisor'
+              ? 'Full fleet map, alert management, and briefings.'
+              : 'Field mode: report hazards, receive stop-work alerts.'}
+          </p>
+        </div>
         <FormField
           control={form.control}
           name='email'

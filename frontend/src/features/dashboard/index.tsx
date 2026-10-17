@@ -1,218 +1,183 @@
-import { Button } from '@/components/ui/button'
+import { useMemo } from 'react'
+import { format } from 'date-fns'
+import { useQuery } from '@tanstack/react-query'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { getBriefing, listRecentHazardReports } from '@/api'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { Header } from '@/components/layout/header'
+  ListOrdered,
+  MapPinned,
+  RadioTower,
+  Siren,
+  TriangleAlert,
+} from 'lucide-react'
+import { type Recommendation } from '@/api/types'
+import { useLiveStore } from '@/stores/live-store'
+import {
+  useActiveAlerts,
+  useLiveStrikes,
+  useSiteBundles,
+  useSimulateStrike,
+} from '@/hooks/use-planit'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { Main } from '@/components/layout/main'
-import { TopNav } from '@/components/layout/top-nav'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { Analytics } from './components/analytics'
-import { Overview } from './components/overview'
-import { RecentSales } from './components/recent-sales'
+import { AlertsFeed } from '@/components/planit/alerts-feed'
+import { CardActions } from '@/components/planit/card-actions'
+import { PageHeading } from '@/components/planit/page-heading'
+import { PanelHeader } from '@/components/planit/panel-header'
+import { PlanitHeader } from '@/components/planit/planit-header'
+import { RiskLegend } from '@/components/planit/risk-status'
+import { SiteMap } from '@/components/planit/site-map'
+import { BriefingPreview } from './components/briefing-preview'
+import { PrioritySites } from './components/priority-sites'
+import { RecentReports } from './components/recent-reports'
+import { SummaryCards, type Summary } from './components/summary-cards'
+
+const TOP_N = 10
 
 export function Dashboard() {
+  const bundles = useSiteBundles()
+  const alerts = useActiveAlerts()
+  const simulateStrike = useSimulateStrike()
+  const strikes = useLiveStrikes()
+  const now = useLiveStore((state) => state.now)
+  const navigate = useNavigate()
+
+  const briefingQuery = useQuery({
+    queryKey: ['briefing', format(now, 'yyyy-MM-dd-HH')],
+    queryFn: () => getBriefing(),
+    staleTime: 60_000,
+  })
+  const reportsQuery = useQuery({
+    queryKey: ['hazard-reports', 'recent'],
+    queryFn: () => listRecentHazardReports(6),
+    staleTime: 30_000,
+  })
+
+  const ranked = useMemo(
+    () => [...bundles].sort((a, b) => b.risk.score - a.risk.score),
+    [bundles]
+  )
+
+  const reportSiteIds = useMemo(
+    () => new Set((reportsQuery.data ?? []).map((r) => r.siteId)),
+    [reportsQuery.data]
+  )
+
+  const summary: Summary = useMemo(() => {
+    const calls: Record<Recommendation, number> = {
+      GO: 0,
+      CAUTION: 0,
+      'NO-GO': 0,
+    }
+    for (const bundle of bundles) calls[bundle.risk.recommendation] += 1
+    const lightning = alerts.filter((a) => a.type === 'lightning')
+    return {
+      sites: bundles.length,
+      calls,
+      activeAlerts: alerts.length,
+      critical: alerts.filter((a) => a.severity === 'critical').length,
+      warning: alerts.filter((a) => a.severity === 'warning').length,
+      advisory: alerts.filter((a) => a.severity === 'info').length,
+      lightningSites: new Set(lightning.map((a) => a.siteId)).size,
+      avgScore:
+        Math.round(
+          (bundles.reduce((sum, b) => sum + b.risk.score, 0) /
+            (bundles.length || 1)) *
+            10
+        ) / 10,
+    }
+  }, [bundles, alerts])
+
   return (
     <>
-      {/* ===== Top Heading ===== */}
-      <Header>
-        <TopNav links={topNav} className='me-auto' />
-        <Search />
-        <ThemeSwitch />
-        <ConfigDrawer />
-        <ProfileDropdown />
-      </Header>
-
-      {/* ===== Main ===== */}
+      <PlanitHeader />
       <Main>
-        <div className='mb-2 flex items-center justify-between space-y-2'>
-          <h1 className='text-2xl font-bold tracking-tight'>Dashboard</h1>
-          <div className='flex items-center space-x-2'>
-            <Button>Download</Button>
-          </div>
+        <PageHeading
+          title='Dashboard'
+          description={format(now, 'EEEE, MMMM d')}
+          actions={
+            <>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => simulateStrike()}
+              >
+                <RadioTower /> Simulate strike
+              </Button>
+              <Button asChild size='sm'>
+                <Link to='/hazards/new'>
+                  <TriangleAlert /> Report hazard
+                </Link>
+              </Button>
+            </>
+          }
+        />
+
+        <SummaryCards summary={summary} />
+
+        <div className='mt-4 grid gap-4 lg:grid-cols-5'>
+          <Card className='min-w-0 gap-4 lg:col-span-3'>
+            <PanelHeader
+              icon={MapPinned}
+              title='Risk map'
+              aside={<CardActions to='/sites' label='All sites' />}
+            />
+            <CardContent className='flex-1'>
+              <SiteMap
+                markers={bundles.map((bundle) => ({
+                  site: bundle.site,
+                  score: bundle.risk.score,
+                  activeLightning: bundle.conditions.lightningActive,
+                  hasReports: reportSiteIds.has(bundle.site.id),
+                }))}
+                strikes={strikes}
+                rankLabels={TOP_N}
+                onSelect={(siteId) =>
+                  navigate({ to: '/sites/$siteId', params: { siteId } })
+                }
+                height='h-[380px] lg:h-full lg:min-h-[440px]'
+              />
+            </CardContent>
+          </Card>
+
+          <Card className='min-w-0 gap-4 lg:col-span-2'>
+            <PanelHeader
+              icon={ListOrdered}
+              title={`Top ${TOP_N} by hazard index`}
+              aside={<CardActions to='/sites' />}
+            />
+            <CardContent className='space-y-3'>
+              <RiskLegend desktopOnly className='border-b pb-3' />
+              <PrioritySites items={ranked.slice(0, TOP_N)} />
+            </CardContent>
+          </Card>
         </div>
-        <Tabs
-          orientation='vertical'
-          defaultValue='overview'
-          className='space-y-4'
-        >
-          <div className='w-full overflow-x-auto pb-2'>
-            <TabsList>
-              <TabsTrigger value='overview'>Overview</TabsTrigger>
-              <TabsTrigger value='analytics'>Analytics</TabsTrigger>
-              <TabsTrigger value='reports' disabled>
-                Reports
-              </TabsTrigger>
-              <TabsTrigger value='notifications' disabled>
-                Notifications
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          <TabsContent value='overview' className='space-y-4'>
-            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Total Revenue
-                  </CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <path d='M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>$45,231.89</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +20.1% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Subscriptions
-                  </CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' />
-                    <circle cx='9' cy='7' r='4' />
-                    <path d='M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>+2350</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +180.1% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>Sales</CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <rect width='20' height='14' x='2' y='5' rx='2' />
-                    <path d='M2 10h20' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>+12,234</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +19% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Active Now
-                  </CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <path d='M22 12h-4l-3 9L9 3l-3 9H2' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>+573</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +201 since last hour
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-            <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
-              <Card className='col-span-1 lg:col-span-4'>
-                <CardHeader>
-                  <CardTitle>Overview</CardTitle>
-                </CardHeader>
-                <CardContent className='ps-2'>
-                  <Overview />
-                </CardContent>
-              </Card>
-              <Card className='col-span-1 lg:col-span-3'>
-                <CardHeader>
-                  <CardTitle>Recent Sales</CardTitle>
-                  <CardDescription>
-                    You made 265 sales this month.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RecentSales />
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          <TabsContent value='analytics' className='space-y-4'>
-            <Analytics />
-          </TabsContent>
-        </Tabs>
+
+        <div className='mt-4 grid gap-4 lg:grid-cols-3'>
+          <Card className='gap-4'>
+            <PanelHeader
+              icon={Siren}
+              title='Active alerts'
+              aside={<CardActions to='/alerts' />}
+            />
+            <CardContent>
+              <AlertsFeed alerts={alerts} limit={4} />
+            </CardContent>
+          </Card>
+
+          <BriefingPreview
+            briefing={briefingQuery.data}
+            isLoading={briefingQuery.isLoading}
+          />
+
+          <RecentReports
+            reports={reportsQuery.data}
+            isLoading={reportsQuery.isLoading}
+            limit={3}
+          />
+        </div>
       </Main>
     </>
   )
 }
-
-const topNav = [
-  {
-    title: 'Overview',
-    href: 'dashboard/overview',
-    isActive: true,
-    disabled: false,
-  },
-  {
-    title: 'Customers',
-    href: 'dashboard/customers',
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: 'Products',
-    href: 'dashboard/products',
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: 'Settings',
-    href: 'dashboard/settings',
-    isActive: false,
-    disabled: true,
-  },
-]
