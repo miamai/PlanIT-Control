@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, type RenderResult } from 'vitest-browser-react'
 import { type Locator, userEvent } from 'vitest/browser'
 import { ApiError } from '@/api/client'
+import { SignIn } from '..'
 import { UserAuthForm } from './user-auth-form'
 
 const FORM_MESSAGES = {
@@ -22,6 +23,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   return {
     ...actual,
     useNavigate: () => navigate,
+    useSearch: () => ({ redirect: '/settings' }),
   }
 })
 
@@ -42,7 +44,7 @@ const session = {
 }
 
 describe('UserAuthForm', () => {
-  describe('Rendering without redirectTo', () => {
+  describe('Sign-in form', () => {
     let screen: RenderResult
     let usernameInput: Locator
     let passwordInput: Locator
@@ -74,7 +76,7 @@ describe('UserAuthForm', () => {
       expect(login).not.toHaveBeenCalled()
     })
 
-    it('logs in with the API and navigates to the default route', async () => {
+    it('logs in with the API and navigates to the dashboard', async () => {
       login.mockResolvedValueOnce(session)
       await userEvent.fill(usernameInput, 'admin')
       await userEvent.fill(passwordInput, 'secret-pass')
@@ -105,13 +107,11 @@ describe('UserAuthForm', () => {
     })
   })
 
-  it('navigates to redirectTo when provided', async () => {
+  it('always opens the dashboard even when the sign-in search includes a redirect', async () => {
     vi.clearAllMocks()
     login.mockResolvedValueOnce(session)
 
-    const { getByRole, getByLabelText } = await render(
-      <UserAuthForm redirectTo='/settings' />
-    )
+    const { getByRole, getByLabelText } = await render(<SignIn />)
 
     await userEvent.fill(getByRole('textbox', { name: /Username/i }), 'admin')
     await userEvent.fill(getByLabelText('Password'), 'secret-pass')
@@ -120,7 +120,7 @@ describe('UserAuthForm', () => {
 
     await vi.waitFor(() =>
       expect(navigate).toHaveBeenCalledWith({
-        to: '/settings',
+        to: '/',
         replace: true,
       })
     )
