@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import { Zap } from 'lucide-react'
 import type { SiteBundle } from '@/hooks/use-planit'
+import { RiskDriverIcon } from '@/components/planit/risk-driver-icon'
 import { RecommendationStatus } from '@/components/planit/risk-status'
 import { ScoreBar } from '@/components/planit/score-bar'
 
@@ -21,12 +21,10 @@ export function PrioritySites({ items }: { items: SiteBundle[] }) {
             <span className='col-span-2 min-w-0 sm:col-span-1'>
               <span className='flex items-start gap-1 text-sm leading-5 font-semibold'>
                 <span className='min-w-0 break-words'>{bundle.site.name}</span>
-                {bundle.conditions.lightningActive ? (
-                  <Zap
-                    className='mt-0.5 size-3.5 shrink-0 text-red-600 dark:text-red-400'
-                    aria-label='Lightning stop-work active'
-                  />
-                ) : null}
+                <RiskDriverIcon
+                  driver={bundle.risk.reasons[0]}
+                  className='mt-0.5'
+                />
               </span>
               <span className='block text-xs leading-5 text-muted-foreground'>
                 {bundle.risk.reasons[0]?.label ?? 'No dominant driver'} ·{' '}
