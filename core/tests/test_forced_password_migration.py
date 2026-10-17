@@ -99,3 +99,52 @@ async def test_existing_admin_is_usable_after_forced_password_column_removal() -
         app.dependency_overrides.clear()
         await reset_application_schema(engine)
         await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_ml_migration_backfills_prediction_date_for_existing_scores() -> None:
+    engine = create_async_engine(TEST_DATABASE_URL)
+    try:
+        await reset_application_schema(engine)
+        run_alembic("20261017_0003")
+        async with engine.begin() as connection:
+            await connection.execute(
+                text(
+                    """
+                    WITH new_site AS (
+                        INSERT INTO sites (
+                            id, eia_plant_id, name, latitude, longitude, state, timezone,
+                            source_release, source_url, source_metadata, is_reference_location
+                        ) VALUES (
+                            gen_random_uuid(), 999003, 'Migration Test', 30, -90, 'LA',
+                            'America/Chicago', 'test', 'test', '{}'::json, true
+                        ) RETURNING id
+                    )
+                    INSERT INTO risk_scores (
+                        id, site_id, score, generated_at, valid_for_seconds, model_version,
+                        score_source, contributing_factors
+                    )
+                    SELECT gen_random_uuid(), id, 4.5, '2026-10-17T23:30:00Z', 86400,
+                           'existing-v1', 'model', '{}'::json
+                    FROM new_site
+                    """
+                )
+            )
+        run_alembic("head")
+        async with engine.connect() as connection:
+            prediction_date = await connection.scalar(
+                text("SELECT prediction_date FROM risk_scores WHERE model_version = 'existing-v1'")
+            )
+            nullable = await connection.scalar(
+                text(
+                    """
+                    SELECT is_nullable FROM information_schema.columns
+                    WHERE table_name = 'risk_scores' AND column_name = 'prediction_date'
+                    """
+                )
+            )
+        assert prediction_date.isoformat() == "2026-10-17"
+        assert nullable == "NO"
+    finally:
+        await reset_application_schema(engine)
+        await engine.dispose()

@@ -17,13 +17,11 @@ import sys
 import time
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import briefing as B  # noqa: E402
-from common import MODELS, PROCESSED  # noqa: E402
-from common import RAW  # noqa: E402
+from common import MODELS, PROCESSED, RAW  # noqa: E402
 from score import HazardModels, recommendation, work_plan  # noqa: E402
 
 CANDIDATES = [
@@ -42,7 +40,6 @@ def build_cases(m: HazardModels, n: int, seed: int = 0) -> list[dict]:
         scored.append(pd.DataFrame({"site_id": sid, "date": sc.index, "index": sc["hazard_index"].to_numpy()}))
     scored = pd.concat(scored, ignore_index=True)
     scored["rec"] = [recommendation(round(x, 1)) for x in scored["index"]]
-    rng = np.random.default_rng(seed)
     picks = []
     for rec in ["go", "caution", "no-go"]:
         pool = scored[scored["rec"] == rec]
@@ -56,7 +53,7 @@ def build_cases(m: HazardModels, n: int, seed: int = 0) -> list[dict]:
         if i % 7 == 3:
             alerts = [{"type": "lightning", "action": "no-go", "message": "Strike within 10 mi"}]
         if i % 6 == 1:
-            crew = [{"animal": rng.choice(["alligator", "snake"]),
+            crew = [{"hazard_type": "wildlife",
                      "reported_at": (day - pd.Timedelta(hours=16)).isoformat()}]
         site = m.site(sid)
         feats = t[t["site_id"] == sid].set_index("date")

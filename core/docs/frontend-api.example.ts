@@ -26,6 +26,9 @@ export interface User {
   status: UserStatus
   created_at: string
   updated_at: string
+  ml_supported: boolean
+  ml_site_id: string | null
+  ml_model_version: string | null
   deleted_at: string | null
 }
 
@@ -112,6 +115,7 @@ export interface RiskScore {
   site_id: string
   score: number
   generated_at: string
+  prediction_date: string
   valid_for_seconds: number
   model_version: string
   score_source: string
@@ -120,7 +124,7 @@ export interface RiskScore {
 
 export interface RiskResult {
   site_id: string
-  status: 'available' | 'missing'
+  status: 'available' | 'missing' | 'stale' | 'unsupported'
   score: RiskScore | null
 }
 

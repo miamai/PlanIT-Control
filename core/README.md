@@ -7,7 +7,7 @@ soil/flood indicators are marked as estimates or proxies.
 
 ## Local startup
 
-Requirements: Docker with Compose, or Python 3.12 plus PostgreSQL 16.
+Requirements: Docker with Compose, Python 3.12, and a Tiger Cloud service.
 
 ```bash
 cd core
@@ -16,6 +16,7 @@ docker compose build
 docker compose run --rm init-admin
 docker compose up -d
 docker compose exec api planit-import-sites
+docker compose exec api planit-ml-sync-sites
 docker compose exec api planit-seed-demo
 docker compose exec api planit-db-check
 docker compose exec api planit-api-smoke --username <username>
@@ -27,10 +28,10 @@ secret injection. The command refuses to run if any user account already
 exists. Remove those values from the environment after provisioning. The API is
 at `http://localhost:8000`, OpenAPI at `/docs`, and health at `/health`.
 
-The example host `DATABASE_URL` uses `localhost`. Compose supplies its own
-container URL using the `db` hostname, so the same `.env` works for both the
-host CLI and the container stack. Set `DOCKER_DATABASE_URL` only when Compose
-should use a different database, such as Tiger Data.
+Set both `DATABASE_URL` and `DOCKER_DATABASE_URL` in the ignored `.env` file to
+the Tiger Cloud URL using the `postgresql+asyncpg://` scheme and
+`sslmode=require`. Compose intentionally has no local PostgreSQL service; it
+fails fast when `DOCKER_DATABASE_URL` is missing.
 
 Without Docker:
 
@@ -57,6 +58,34 @@ The smoke command prompts for a password without echoing it. Automation may
 provide `PLANIT_SMOKE_USERNAME` and `PLANIT_SMOKE_PASSWORD` through secret
 injection. It is read-only by default; pass `--write-checks` only against a
 development database when you also want to verify report creation.
+
+## Daily ML hazard index and briefing
+
+The worker generates a next-day briefing after 6 PM in each site's timezone. For sites in the
+checked-in model catalog it calls the internal `ml` service, stores the validated 0–10 hazard index,
+and writes a checked Gemini briefing (or the deterministic template fallback). Active alerts may
+raise the recommendation but never alter the numeric index. Sites outside the catalog receive a
+deterministic report/alert briefing and expose `unsupported` risk status; the system never substitutes
+a nearby modeled site.
+
+Synchronize coverage after migrations and the regular EIA import:
+
+```bash
+docker compose exec api planit-ml-sync-sites
+```
+
+The sync is additive and does not delete existing sites. Core sends reports since the previous
+briefing (24 hours for the first run), without reporter identity. All reports contribute to aggregate
+counts. Wildlife is handled as one category without species filters or weights; animal metadata is
+not forwarded to ML or used in briefing generation.
+The ML container alone receives `GEMINI_API_KEY`: copy `ml/.env.example` to the ignored `ml/.env`
+and inject the key there (or through an equivalent deployment secret). Leave it unset to use the
+deterministic template. Core's API and worker explicitly clear this variable, and no paid Gemini call
+is made by the test suite.
+
+For a due site-specific operational retry, use `planit-ml-generate <core-site-uuid>`. The command
+still enforces the site's local 6 PM cutoff. `GET /api/admin/system` reports ML health, model version,
+catalog size, and the last successful stored generation.
 
 ## Frontend API contract
 
@@ -231,9 +260,8 @@ uniqueness.
    a unique `JWT_SECRET_KEY`, an approved or disabled alert-threshold profile,
    Tiger Data TLS `DATABASE_URL`, the real
    frontend origin, NWS contact, and optional FIRMS key.
-3. In production Compose, omit the local `db` service and point both `api` and
-   `worker` at Tiger Data. Run the one-shot migration service before rolling
-   API/worker containers.
+3. Point both `api` and `worker` at Tiger Data. Run the one-shot migration
+   service before rolling API/worker containers.
 4. Build immutable, version-tagged images, start one worker plus the desired API
    replicas, verify `/health`, then exercise authenticated REST and SSE reads.
 5. Roll back by redeploying the previous image tag. Prefer forward database
@@ -249,8 +277,8 @@ contacted without explicit credentials.
 - Soil moisture uses a rainfall proxy; SMAP ingestion is not implemented.
 - River flood-stage thresholds require site-specific configuration; USGS values
   are stored without declaring a flood otherwise.
-- The inference adapter intentionally raises until an actual trained model is
-  configured. Seeded risk scores use `score_source=demo` and
-  `model_version=demo-not-a-model-v1`.
+- ML coverage is deliberately partial and explicitly exposed per site. Unsupported sites receive a
+  deterministic briefing but no fabricated numeric score. Seeded risk scores remain labeled
+  `score_source=demo` and `model_version=demo-not-a-model-v1`.
 - Tiger Data connectivity and extension availability must be verified with the
   actual deployment credentials using `planit-db-check`.

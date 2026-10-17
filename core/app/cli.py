@@ -4,11 +4,14 @@ import argparse
 import asyncio
 import json
 import tempfile
+import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 
 from app.core.config import get_settings
 from app.core.database import SessionFactory
 from app.services.auth import initialize_admin as run_initialize_admin
+from app.services.briefing import generate_due_briefings
 from app.services.database_check import inspect_database
 from app.services.eia import (
     CACHE_PATH,
@@ -17,6 +20,7 @@ from app.services.eia import (
     parse_cached_sites,
     parse_eia_workbook,
 )
+from app.services.ml import MLClient, sync_ml_sites
 from app.services.seed import seed_demo as run_seed_demo
 
 
@@ -96,3 +100,35 @@ async def _initialize_admin() -> int:
 
 def initialize_admin() -> None:
     raise SystemExit(asyncio.run(_initialize_admin()))
+
+
+async def _sync_ml() -> int:
+    settings = get_settings()
+    async with SessionFactory() as session:
+        count = await sync_ml_sites(session, MLClient(settings))
+    print(f"Synchronized {count} ML-supported sites.")
+    return 0
+
+
+def sync_ml_catalog() -> None:
+    raise SystemExit(asyncio.run(_sync_ml()))
+
+
+async def _generate_ml(site_id: uuid.UUID, now: datetime) -> int:
+    settings = get_settings()
+    async with SessionFactory() as session:
+        count = await generate_due_briefings(
+            session, now, settings.data_stale_minutes, settings, site_id=site_id
+        )
+        await session.commit()
+    print(f"Generated or refreshed {count} briefing(s).")
+    return 0 if count else 1
+
+
+def generate_ml_briefing() -> None:
+    parser = argparse.ArgumentParser(description="Generate a due next-day ML briefing for one site")
+    parser.add_argument("site_id", type=uuid.UUID)
+    parser.add_argument("--now", type=datetime.fromisoformat, default=datetime.now(UTC))
+    args = parser.parse_args()
+    now = args.now if args.now.tzinfo else args.now.replace(tzinfo=UTC)
+    raise SystemExit(asyncio.run(_generate_ml(args.site_id, now)))

@@ -9,7 +9,7 @@ GET  /score?site_id=EIA-56407       tomorrow's risk JSON (site-local "tomorrow")
 POST /score                         same, with A's live alerts and recent crew reports:
      {"site_id": "...", "date": "2026-10-17",
       "alerts": [{"type": "lightning", "action": "no-go", "message": "Strike within 10 mi"}],
-      "crew_reports": [{"animal": "alligator", "reported_at": "2026-10-16T14:00:00"}]}
+      "crew_reports": [{"hazard_type": "wildlife", "reported_at": "2026-10-16T14:00:00"}]}
 
 Add ?mock=true (or run before models exist) to get a placeholder in the same shape.
 """
@@ -24,16 +24,30 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from common import MODELS
 import briefing
 import score
+from common import MODELS
 
 app = FastAPI(title="PlanIT hazard scoring", version="v1")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
+def model_status() -> dict:
+    """Load every runtime artifact so health means scoring can actually start."""
+    try:
+        models = score.get_models()
+        return {
+            "ok": True,
+            "models_ready": True,
+            "model_version": models.version,
+            "site_count": len(models.sites),
+        }
+    except Exception as exc:  # noqa: BLE001 - health must describe an incomplete image
+        return {"ok": False, "models_ready": False, "error": type(exc).__name__}
+
+
 def models_ready() -> bool:
-    return (MODELS / "metadata.json").exists() and (MODELS / "sites.parquet").exists()
+    return bool(model_status()["models_ready"])
 
 
 class ScoreRequest(BaseModel):
@@ -45,7 +59,10 @@ class ScoreRequest(BaseModel):
 
 @app.get("/health")
 def health() -> dict:
-    return {"ok": True, "models_ready": models_ready()}
+    status = model_status()
+    if not status["ok"]:
+        raise HTTPException(503, detail=status)
+    return status
 
 
 @app.get("/sites")
@@ -55,7 +72,9 @@ def sites() -> list[dict]:
         raise HTTPException(503, "sites not built yet; run pipeline/01_sites.py and 07_build_table.py")
     cols = ["site_id", "name", "state", "county", "lat", "lon", "timezone", "region", "technology", "capacity_mw"]
     df = pd.read_parquet(path)[cols]
-    return df.astype(object).where(df.notna(), None).to_dict(orient="records")
+    rows = df.astype(object).where(df.notna(), None).to_dict(orient="records")
+    version = score.get_models().version
+    return [{**row, "model_version": version} for row in rows]
 
 
 def _score(req: ScoreRequest, mock: bool) -> dict:

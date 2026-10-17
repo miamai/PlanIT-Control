@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     enabled_providers: list[Literal["weather", "weather_alerts", "usgs", "wildfire", "soil"]] = (
         Field(default_factory=list)
     )
+    ml_enabled: bool = False
+    ml_base_url: str = "http://localhost:8001"
+    ml_timeout_seconds: float = 120.0
+    ml_briefing_backend: Literal["gemini", "template", "auto"] = "gemini"
 
     alert_threshold_profile: Literal["disabled", "demo", "approved"] = "demo"
     heat_high_threshold_f: float = 103.0
@@ -57,7 +61,10 @@ class Settings(BaseSettings):
     @classmethod
     def require_async_driver(cls, value: str) -> str:
         if value.startswith("postgresql://"):
-            return value.replace("postgresql://", "postgresql+asyncpg://", 1)
+            value = value.replace("postgresql://", "postgresql+asyncpg://", 1)
+        # Tiger and libpq publish sslmode=require, while asyncpg expects the
+        # equivalent `ssl=require` query argument.
+        value = value.replace("?sslmode=", "?ssl=").replace("&sslmode=", "&ssl=")
         return value
 
     def validate_runtime(self) -> None:
@@ -70,6 +77,8 @@ class Settings(BaseSettings):
             raise ValueError("Production requires DB_REQUIRE_TLS=true")
         if self.environment == "production" and self.alert_threshold_profile == "demo":
             raise ValueError("Production requires ALERT_THRESHOLD_PROFILE=approved or disabled")
+        if self.environment == "production" and self.ml_enabled and not self.ml_base_url:
+            raise ValueError("Production ML integration requires ML_BASE_URL")
 
 
 @lru_cache

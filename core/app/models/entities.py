@@ -130,6 +130,12 @@ class Site(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+    ml_site_id: Mapped[str | None] = mapped_column(String(80), unique=True)
+    ml_model_version: Mapped[str | None] = mapped_column(String(120))
+
+    @property
+    def ml_supported(self) -> bool:
+        return self.ml_site_id is not None
 
 
 class HazardObservation(Base):
@@ -260,7 +266,7 @@ class RiskScore(Base):
     __tablename__ = "risk_scores"
     __table_args__ = (
         CheckConstraint("score BETWEEN 0 AND 10", name="ck_risk_score_range"),
-        UniqueConstraint("site_id", "generated_at", "model_version", name="uq_risk_prediction"),
+        UniqueConstraint("site_id", "prediction_date", "model_version", name="uq_risk_prediction"),
         Index("ix_risk_site_generated", "site_id", "generated_at"),
     )
 
@@ -268,6 +274,7 @@ class RiskScore(Base):
     site_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"))
     score: Mapped[float] = mapped_column(Float)
     generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    prediction_date: Mapped[date] = mapped_column(Date)
     valid_for_seconds: Mapped[int] = mapped_column(Integer)
     model_version: Mapped[str] = mapped_column(String(120))
     score_source: Mapped[str] = mapped_column(String(32))

@@ -67,7 +67,7 @@ async def run() -> None:
         async def maintenance(session, maintenance_time=now):
             expired = await expire_lightning_alerts(session, maintenance_time)
             briefings = await generate_due_briefings(
-                session, maintenance_time, settings.data_stale_minutes
+                session, maintenance_time, settings.data_stale_minutes, settings
             )
             if expired or briefings:
                 await log.ainfo(

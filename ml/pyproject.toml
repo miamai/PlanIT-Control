@@ -19,5 +19,23 @@ dependencies = [
     "mlx-lm>=0.32 ; platform_machine == 'arm64' and sys_platform == 'darwin'",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3,<9",
+    "ruff>=0.9,<1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
 [tool.uv]
 package = false

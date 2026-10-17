@@ -11,7 +11,7 @@ cd ml
 uv sync
 ./run_all.sh                         # full pipeline (~2.5 h, mostly the weather pull)
 uv run python score.py EIA-56407     # tomorrow's risk JSON for one site
-uv run uvicorn api:app --port 8000   # HTTP endpoint for A and C
+uv run uvicorn api:app --port 8001   # internal HTTP endpoint for core
 ```
 
 Each script under `pipeline/` can be run on its own and skips work that is already on disk.
@@ -46,12 +46,13 @@ Shared code: `features.py` (used by training **and** live scoring), `labels.py`,
 ```json
 {"site_id": "EIA-59145",
  "alerts": [{"type": "lightning", "action": "no-go", "message": "Strike within 10 mi"}],
- "crew_reports": [{"animal": "alligator", "reported_at": "2026-10-16T14:00:00"}]}
+ "crew_reports": [{"hazard_type": "wildlife", "reported_at": "2026-10-16T14:00:00"}]}
 ```
 
 `GET /briefing?site_id=...` (and `POST`, same body) returns `{risk, briefing, source, facts, tried}`.
-`GET /sites` lists the sites. Add `?mock=true` (or start the API before models exist) for a
-deterministic placeholder in the same shape.
+`GET /sites` lists the model-supported sites and their model version. `GET /health` loads and
+validates runtime artifacts and reports the version and site count. Mock responses are only a local
+development aid; core rejects them.
 
 Response (the agreed shape, plus `hazard` on each reason and `overrides` when an alert applied):
 
@@ -98,11 +99,15 @@ models decide; the language model only explains:
 1. **Fact sheet**: everything the briefing may say (decision, index, scores, reasons, work windows,
    live alerts, recommended actions), built from the risk JSON.
 2. **Writer**: a local open model on Apple Silicon (MLX, weights from Hugging Face), or Gemini over
-   REST when `GEMINI_API_KEY` is set (`GEMINI_MODEL` picks the model; not tested here without a key).
+   REST when `GEMINI_API_KEY` is set (`GEMINI_MODEL` defaults to the pinned `gemini-3.8-flash`).
 3. **Checker**: rejects a draft if it uses any number not in the fact sheet (digits or words), states
    a different decision, leaves out the main concern or a live alert, invents an alert, or brings up a
    hazard the facts don't mention (tornado, snake, ...). A rejected draft gets one retry with the
    checker's feedback; if neither draft is faithful, a template that always passes is sent instead.
+
+Crew reports are aggregated by hazard and verification status. Report descriptions are bounded,
+control-character stripped, explicitly marked untrusted in the prompt, and never treated as
+instructions. Wildlife reports are scored as one category without species filters or weights.
 
 The response says which writer produced the text (`source`) and what the checker found (`tried`).
 The local model needs Apple Silicon; on Linux (e.g. Vultr) `mlx-lm` isn't installed and `/briefing`
@@ -148,7 +153,8 @@ these rules, so the briefing should still be read as an explanation of the score
 
 ## Sites and labels (v2)
 
-**200 sites.** The plan's four hazard regions grew from 50 to 145 sites (Gulf/FL 35, Mississippi 25,
+**200-site pipeline target; 50 sites in the currently checked-in runtime artifact.** Core exposes this
+coverage explicitly and never substitutes a nearby site. The plan's four hazard regions grew from 50 to 145 sites (Gulf/FL 35, Mississippi 25,
 CA/AZ 35, Plains 35), plus three regions for wider coverage: Southeast 25, Ohio Valley 20, Mountain West 25.
 The original 50 sites are unchanged. The weather pull is capped at 8,500 Open-Meteo calls per UTC day
 (the free tier is 10k, shared with live `/score`), so the 150 new sites take about three days to download.
@@ -226,10 +232,9 @@ index say no-go far too often. Three convective labels compared on 2025, origina
 
 ## Wildlife score (heuristic, not a trained model)
 
-Per animal group (alligator, venomous snake, bear): GBIF sightings within 25 km in that calendar
-month (2015–2025) → presence 0–1 (saturates at 20). Reptiles are scaled by temperature (×0.2 below
-60°F, up to ×1.5 above 80°F) and ×1.2 at wet sites. Each group contributes up to ~8% chance; a crew
-report adds 50%, decaying with a 3-day time constant. Be upfront in the demo that this is a heuristic.
+All GBIF wildlife sightings within 25 km in that calendar month (2015–2025) are aggregated into one
+presence value from 0–1 (saturating at 20 total sightings), contributing up to ~8% chance. A wildlife
+crew report adds 50%, decaying with a 3-day time constant. This is a heuristic, not a trained model.
 
 ## Results (2025 test year, never seen in training or calibration)
 

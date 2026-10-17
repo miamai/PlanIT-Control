@@ -55,6 +55,9 @@ class SiteRead(ORMModel):
     is_reference_location: bool
     created_at: datetime
     updated_at: datetime
+    ml_supported: bool
+    ml_site_id: str | None
+    ml_model_version: str | None
 
 
 class ObservationRead(ORMModel):
@@ -178,6 +181,7 @@ class RiskRead(ORMModel):
     site_id: uuid.UUID
     score: float
     generated_at: datetime
+    prediction_date: date
     valid_for_seconds: int
     model_version: str
     score_source: str
@@ -188,6 +192,7 @@ class RiskPredictionCreate(BaseModel):
     site_id: uuid.UUID
     score: float = Field(ge=0, le=10)
     generated_at: datetime
+    prediction_date: date
     valid_for_seconds: int = Field(gt=0, le=604800)
     model_version: str = Field(min_length=1, max_length=120)
     contributing_factors: dict[str, Any] = Field(default_factory=dict)

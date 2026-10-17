@@ -47,6 +47,7 @@ from app.services.database_check import inspect_database
 from app.services.eia import import_plants, parse_cached_sites
 from app.services.events import publish_event
 from app.services.ingestion import run_provider
+from app.services.ml import MLClient
 from app.services.risk import historical_features
 from app.services.rules import evaluate_observation
 from app.utils.geo import haversine_miles
@@ -70,7 +71,20 @@ async def system_status(
     session: DbSession,
     settings: Settings = Depends(get_settings),
 ) -> dict:
-    return {"data": (await inspect_database(session, settings)).to_dict()}
+    data = (await inspect_database(session, settings)).to_dict()
+    if settings.ml_enabled:
+        try:
+            health = await MLClient(settings).health()
+            data["ml"] = health.model_dump()
+        except Exception:  # noqa: BLE001 - system status must remain available during ML outage
+            data["ml"] = {"ok": False, "models_ready": False}
+    else:
+        data["ml"] = {"ok": False, "enabled": False}
+    last_ml = await session.scalar(
+        select(func.max(RiskScore.generated_at)).where(RiskScore.score_source == "ml_service")
+    )
+    data["ml"]["last_successful_generation"] = last_ml.isoformat() if last_ml else None
+    return {"data": data}
 
 
 @router.get("/api/sites", response_model=Envelope[list[SiteRead]], tags=["sites"])
@@ -357,13 +371,15 @@ async def _latest_risk(session: AsyncSession, site_id: uuid.UUID) -> RiskScore |
 async def site_risk(
     site_id: uuid.UUID, _: CrewPrincipal, session: DbSession
 ) -> Envelope[RiskResult]:
-    if not await session.get(Site, site_id):
+    site = await session.get(Site, site_id)
+    if not site:
         raise HTTPException(status_code=404, detail="Site not found")
     score = await _latest_risk(session, site_id)
+    status = _risk_status(site, score)
     return Envelope(
         data=RiskResult(
             site_id=site_id,
-            status="available" if score else "missing",
+            status=status,
             score=RiskRead.model_validate(score) if score else None,
         )
     )
@@ -379,7 +395,7 @@ async def risk_rankings(_: CrewPrincipal, session: DbSession) -> Envelope[list[R
             RiskRanking(
                 site=SiteRead.model_validate(site),
                 risk=RiskRead.model_validate(score) if score else None,
-                status="available" if score else "missing",
+                status=_risk_status(site, score),
             )
         )
     rankings.sort(key=lambda row: row.risk.score if row.risk else -1, reverse=True)
@@ -413,7 +429,7 @@ async def store_risk_prediction(
     existing = await session.scalar(
         select(RiskScore).where(
             RiskScore.site_id == body.site_id,
-            RiskScore.generated_at == body.generated_at,
+            RiskScore.prediction_date == body.prediction_date,
             RiskScore.model_version == body.model_version,
         )
     )
@@ -431,6 +447,13 @@ async def store_risk_prediction(
     await session.commit()
     await session.refresh(score)
     return Envelope(data=RiskRead.model_validate(score))
+
+
+def _risk_status(site: Site, score: RiskScore | None) -> str:
+    if score:
+        expires = score.generated_at + timedelta(seconds=score.valid_for_seconds)
+        return "available" if expires > datetime.now(UTC) else "stale"
+    return "unsupported" if not site.ml_supported else "missing"
 
 
 @router.get(

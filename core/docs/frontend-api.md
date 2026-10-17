@@ -86,7 +86,7 @@ insufficient role, `422` as invalid input, `429` as rate limited, and `503` as d
 | PATCH | `/api/alerts/{alert_id}` | Supervisor | Acknowledge or resolve an alert |
 | POST | `/api/reports` | Crew | Submit a crew hazard report |
 | GET | `/api/reports` | Supervisor | Review submitted reports |
-| GET | `/api/sites/{site_id}/risk` | Crew | Latest risk score or explicit `missing` status |
+| GET | `/api/sites/{site_id}/risk` | Crew | Latest score with available/missing/stale/unsupported status |
 | GET | `/api/risk/rankings` | Crew | Sites sorted by latest risk; missing scores are last |
 | GET | `/api/sites/{site_id}/briefings` | Crew | Stored next-day safety briefings |
 | GET | `/api/stream` | Crew | SSE alert and risk events |
@@ -158,8 +158,10 @@ POST /api/reports
 }
 ```
 
-Risk endpoints intentionally return `score: null` with `status: "missing"` when no trained-model or
-demo score exists. Never interpret a missing score as zero risk.
+Every site includes `ml_supported`, `ml_site_id`, and `ml_model_version`. Risk scores include the
+site-local `prediction_date`. Risk endpoints return `score: null` with `status: "unsupported"` for
+sites outside the current model catalog and `status: "missing"` when a supported site has no score;
+expired scores are `stale`. Never interpret any absent score as zero risk.
 
 ## Real-time stream
 
