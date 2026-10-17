@@ -73,25 +73,25 @@ insufficient role, `422` as invalid input, `429` as rate limited, and `503` as d
 | POST | `/api/auth/logout` | Any user | Revoke the current refresh token |
 | GET | `/api/auth/me` | Any user | Current account details |
 | PATCH | `/api/auth/me/password` | Any user | Change own password and revoke old sessions |
-| GET | `/api/sites` | Crew | Paginated sites; filters: `state`, `county` |
-| GET | `/api/sites/weather` | Crew | Stored weather and heat observations; repeated `state` filter |
-| GET | `/api/sites/lightning` | Crew | Stored qualifying strike observations; repeated `state` filter |
-| GET | `/api/sites/flood` | Crew | Stored USGS/NWS flood observations; repeated `state` filter |
-| GET | `/api/sites/wildfire` | Crew | Stored FIRMS observations; repeated `state` filter |
-| GET | `/api/sites/soil` | Crew | Stored soil proxy observations; repeated `state` filter |
-| GET | `/api/sites/{site_id}` | Crew | Site details |
-| GET | `/api/sites/{site_id}/hazards` | Crew | Recent observations; filters: `hazard_type`, `since`, pagination |
-| GET | `/api/sites/{site_id}/alerts` | Crew | Site alerts; filters: type, severity, status, pagination |
-| GET | `/api/alerts` | Crew | Cross-site alert feed with the same filters |
-| PATCH | `/api/alerts/{alert_id}` | Supervisor | Acknowledge or resolve an alert |
-| POST | `/api/reports` | Crew | Submit a crew hazard report |
-| GET | `/api/reports` | Supervisor | Review submitted reports |
-| GET | `/api/sites/{site_id}/risk` | Crew | Latest score with available/missing/stale/unsupported status |
-| GET | `/api/sites/{site_id}/risk/history` | Crew | Latest score per prediction date; filter: `days` (default 14) |
-| GET | `/api/risk/rankings` | Crew | Sites sorted by latest risk; missing scores are last |
-| GET | `/api/sites/{site_id}/briefings` | Crew | Stored next-day safety briefings |
-| GET | `/api/briefings` | Crew | Briefings across all sites; filters: `briefing_date`, `since`, pagination |
-| GET | `/api/stream` | Crew | SSE alert and risk events |
+| GET | `/api/sites` | User | Paginated sites; filters: `state`, `county` |
+| GET | `/api/sites/weather` | User | Stored weather and heat observations; repeated `state` filter |
+| GET | `/api/sites/lightning` | User | Stored qualifying strike observations; repeated `state` filter |
+| GET | `/api/sites/flood` | User | Stored USGS/NWS flood observations; repeated `state` filter |
+| GET | `/api/sites/wildfire` | User | Stored FIRMS observations; repeated `state` filter |
+| GET | `/api/sites/soil` | User | Stored soil proxy observations; repeated `state` filter |
+| GET | `/api/sites/{site_id}` | User | Site details |
+| GET | `/api/sites/{site_id}/hazards` | User | Recent observations; filters: `hazard_type`, `since`, pagination |
+| GET | `/api/sites/{site_id}/alerts` | User | Site alerts; filters: type, severity, status, pagination |
+| GET | `/api/alerts` | User | Cross-site alert feed with the same filters |
+| PATCH | `/api/alerts/{alert_id}` | Admin | Acknowledge or resolve an alert |
+| POST | `/api/reports` | User | Submit a crew hazard report |
+| GET | `/api/reports` | Admin | Review submitted reports |
+| GET | `/api/sites/{site_id}/risk` | User | Latest score with available/missing/stale/unsupported status |
+| GET | `/api/sites/{site_id}/risk/history` | User | Latest score per prediction date; filter: `days` (default 14) |
+| GET | `/api/risk/rankings` | User | Sites sorted by latest risk; missing scores are last |
+| GET | `/api/sites/{site_id}/briefings` | User | Stored next-day safety briefings |
+| GET | `/api/briefings` | User | Briefings across all sites; filters: `briefing_date`, `since`, pagination |
+| GET | `/api/stream` | User | SSE alert and risk events |
 | GET | `/api/risk/features` | Admin | Normalized historical feature window |
 | POST | `/api/risk/predictions` | Admin | Store a trained-model prediction |
 | GET | `/api/admin/system` | Admin | Sanitized database/Tiger readiness |

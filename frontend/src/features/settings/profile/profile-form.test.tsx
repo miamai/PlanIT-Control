@@ -36,13 +36,10 @@ beforeEach(() => {
 describe('profile saving', () => {
   it('saves a valid display name with the current identity', async () => {
     const screen = await render(<ProfileForm />)
-    await userEvent.fill(
-      screen.getByLabelText('Display name'),
-      'Field Supervisor'
-    )
+    await userEvent.fill(screen.getByLabelText('Display name'), 'Field Admin')
     await userEvent.click(screen.getByRole('button', { name: 'Save profile' }))
     expect(mocks.save).toHaveBeenCalledWith('dana', {
-      name: 'Field Supervisor',
+      name: 'Field Admin',
       bio: '',
     })
     expect(mocks.success).toHaveBeenCalledWith('Profile saved on this browser')

@@ -15,7 +15,7 @@ export type HazardType =
   | 'wildlife'
 export type Severity = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL'
 export type AlertStatus = 'ACTIVE' | 'ACKNOWLEDGED' | 'ALL_CLEAR_ELIGIBLE' | 'RESOLVED'
-export type UserRole = 'crew' | 'supervisor' | 'admin'
+export type UserRole = 'user' | 'admin'
 export type UserStatus = 'active' | 'disabled'
 
 export interface User {

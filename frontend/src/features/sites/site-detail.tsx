@@ -320,9 +320,7 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                   reports={reportsQuery.reports}
                   isLoading={reportsQuery.isLoading}
                   emptyMessage={
-                    reportsQuery.canView
-                      ? 'No reports'
-                      : 'Visible to supervisors and admins'
+                    reportsQuery.canView ? 'No reports' : 'Visible to admins'
                   }
                 />
               </CardContent>

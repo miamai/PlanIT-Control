@@ -110,7 +110,7 @@ export function Alerts() {
               ) : (
                 <>
                   <span className='inline-flex size-2 rounded-full bg-amber-500' />
-                  Lightning all-clear awaiting supervisor sign-off
+                  Lightning all-clear awaiting admin sign-off
                 </>
               )}
             </h2>

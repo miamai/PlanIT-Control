@@ -306,10 +306,10 @@ export function useSiteDetail(siteId: string) {
   }
 }
 
-/** Crew reports. The backend restricts reading them to supervisors and admins. */
+/** Field reports. The backend restricts reading them to admins. */
 export function useHazardReports(siteId?: string) {
   const user = useAuthStore((state) => state.auth.user)
-  const canView = hasRole(user, 'supervisor')
+  const canView = hasRole(user, 'admin')
   const query = useQuery({
     queryKey: planitKeys.reports(siteId),
     queryFn: () => listHazardReports(siteId),

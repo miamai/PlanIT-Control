@@ -165,7 +165,7 @@ export async function listStrikes(): Promise<LightningStrike[]> {
   return toStrikes(rows)
 }
 
-/** Crew reports, newest first. Requires the supervisor role. */
+/** Crew reports, newest first. Requires the admin role. */
 export async function listHazardReports(
   siteId?: string
 ): Promise<HazardReport[]> {

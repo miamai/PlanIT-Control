@@ -163,7 +163,7 @@ export function Hazards() {
                 emptyMessage={
                   reportsQuery.canView
                     ? 'No reports'
-                    : 'Crew reports are visible to supervisors and admins.'
+                    : 'Field reports are visible to admins.'
                 }
               />
             </CardContent>

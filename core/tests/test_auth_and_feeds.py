@@ -118,24 +118,24 @@ async def test_initialized_admin_crud_and_state_feed() -> None:
                 "/api/admin/users",
                 headers=headers,
                 json={
-                    "username": "crew.one",
+                    "username": "user.one",
                     "password": "temporary-password",
-                    "role": "crew",
+                    "role": "user",
                 },
             )
             assert created.status_code == 201
             assert "must_change_password" not in created.json()["data"]
-            crew_id = created.json()["data"]["id"]
-            crew_login = await client.post(
+            regular_id = created.json()["data"]["id"]
+            regular_login = await client.post(
                 "/api/auth/login",
-                json={"username": "crew.one", "password": "temporary-password"},
+                json={"username": "user.one", "password": "temporary-password"},
             )
-            assert crew_login.status_code == 200
-            crew_headers = {"Authorization": f"Bearer {crew_login.json()['access_token']}"}
-            assert (await client.get("/api/sites", headers=crew_headers)).status_code == 200
+            assert regular_login.status_code == 200
+            regular_headers = {"Authorization": f"Bearer {regular_login.json()['access_token']}"}
+            assert (await client.get("/api/sites", headers=regular_headers)).status_code == 200
 
             reset = await client.patch(
-                f"/api/admin/users/{crew_id}",
+                f"/api/admin/users/{regular_id}",
                 headers=headers,
                 json={"password": "administrator-reset-password"},
             )
@@ -143,12 +143,12 @@ async def test_initialized_admin_crud_and_state_feed() -> None:
             assert (
                 await client.post(
                     "/api/auth/login",
-                    json={"username": "crew.one", "password": "temporary-password"},
+                    json={"username": "user.one", "password": "temporary-password"},
                 )
             ).status_code == 401
             reset_login = await client.post(
                 "/api/auth/login",
-                json={"username": "crew.one", "password": "administrator-reset-password"},
+                json={"username": "user.one", "password": "administrator-reset-password"},
             )
             assert reset_login.status_code == 200
             reset_headers = {"Authorization": f"Bearer {reset_login.json()['access_token']}"}
@@ -156,7 +156,7 @@ async def test_initialized_admin_crud_and_state_feed() -> None:
 
             admin_id = changed.json()["user"]["id"]
             demote_last_admin = await client.patch(
-                f"/api/admin/users/{admin_id}", headers=headers, json={"role": "crew"}
+                f"/api/admin/users/{admin_id}", headers=headers, json={"role": "user"}
             )
             assert demote_last_admin.status_code == 409
     finally:

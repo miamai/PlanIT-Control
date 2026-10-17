@@ -16,7 +16,7 @@ swapped onto a real API without changing components.
 
 We turned a generic admin template into a hazard-intelligence control center:
 
-- A **supervisor dashboard** ranking all monitored sites by a fused 0–10 hazard
+- A **admin dashboard** ranking all monitored sites by a fused 0–10 hazard
   index, with a live alert feed and an interactive US map.
 - A **sites explorer** with search/filters plus a **site detail** page showing
   the combined risk picture (weather, heat, lightning, flood, wildfire, soil,
@@ -28,7 +28,7 @@ We turned a generic admin template into a hazard-intelligence control center:
   (headline, summary, per-site actions, watchlist, SMS preview).
 - A **shared hazard database** and a mobile-first **crew hazard report form**
   (photo, GPS pin, hazard type, severity, note) that persists locally.
-- **Auth roles** (`supervisor` / `crew`) selectable at sign-in.
+- **Auth roles** (`user` / `admin`) assigned by the backend; sign-in uses username and password.
 
 The whole app is driven by **72 real US power-plant locations** (see
 [§3](#3-mock-data-the-real-provenance)) and a **deterministic hazard engine**.
@@ -46,10 +46,10 @@ The whole app is driven by **72 real US power-plant locations** (see
 | 6 PM local next-day briefing | `BRIEFING_HOUR = 18`, `generateBriefing()` in `engine.ts`; `src/features/briefing` |
 | Crew hazard reporting (photo, GPS, type, share) | `src/features/hazards/report-form.tsx`, `createHazardReport()` in `src/api/index.ts` |
 | Shared hazard database | `src/features/hazards/index.tsx` + `listHazardReports()` |
-| Supervisor map ranking sites by risk | `src/features/dashboard` (`SiteMap` with numbered top-10 markers + `priority-sites`), `src/features/sites` (`risk-ranked-table`) |
+| Admin map ranking sites by risk | `src/features/dashboard` (`SiteMap` with numbered top-10 markers + `priority-sites`), `src/features/sites` (`risk-ranked-table`) |
 | Hazard index 0–10 with explanations | `scoreRisk()`/`computeRisk()` (`engine.ts`); "Score drivers" card on site detail; `HazardGauge` |
 | ≥ 50 real power-plant locations | `src/api/mock/sites-data.ts` (72 plants) |
-| Auth roles crew / supervisor | `src/features/auth/sign-in/components/user-auth-form.tsx`, `src/stores/auth-store.ts`, `src/components/profile-dropdown.tsx` |
+| Auth roles user / admin | `src/features/auth/sign-in/components/user-auth-form.tsx`, `src/stores/auth-store.ts`, `src/components/profile-dropdown.tsx` |
 
 ---
 
@@ -168,7 +168,7 @@ using the ML service's cut-offs: GO < 3.5, CAUTION 3.5–6.5, NO-GO ≥ 6.5
 
 ### 5.1 Dashboard (`/`)
 
-Supervisor overview: KPI cards (GO / CAUTION / NO-GO split, lightning
+Admin overview: KPI cards (GO / CAUTION / NO-GO split, lightning
 stop-work count with the next all-clear, alerts by severity, average index), a
 US risk map whose top 10 markers carry their rank number, the matching top-10
 list, and compact panels for active alerts, tomorrow's briefing and crew
@@ -225,11 +225,12 @@ reloads and immediately appear in lists and maps.
 
 ## 6. Auth roles
 
-The template's mock sign-in now includes a **"Sign in as"** toggle
-(`Supervisor` / `Crew`). The chosen role is stored in `auth-store` as
-`role: [role, 'user']`. The profile dropdown reads the store and shows the role
-and email, so the crew vs. supervisor experience is represented end-to-end. The
-crew form defaults its role selector from the signed-in user.
+Authentication uses the core API's username/password login with exactly two roles:
+`user` and `admin`. User accounts can read operational data and submit hazard
+reports. Admins additionally review reports, acknowledge/resolve alerts, manage
+accounts, and perform ingestion/system operations. There is no sign-in role
+selector. Access tokens remain in memory; the HttpOnly refresh cookie restores
+sessions. The user-management screen is available only to Admins.
 
 ---
 

@@ -1579,8 +1579,7 @@
       },
       "UserRole": {
         "enum": [
-          "crew",
-          "supervisor",
+          "user",
           "admin"
         ],
         "title": "UserRole",

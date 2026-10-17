@@ -1,9 +1,13 @@
+import { useState } from 'react'
+import { LogOut } from 'lucide-react'
 import { useLiveStore } from '@/stores/live-store'
 import { formatDuration } from '@/lib/planit'
+import { Button } from '@/components/ui/button'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
+import { SignOutDialog } from '@/components/sign-out-dialog'
 import { ThemeSwitch } from '@/components/theme-switch'
 
 const STATUS_STYLE = {
@@ -51,6 +55,8 @@ function LiveIndicator() {
 
 /** Desktop accounts live in the sidebar; mobile accounts remain in the app bar. */
 export function PlanitHeader() {
+  const [signOutOpen, setSignOutOpen] = useState(false)
+
   return (
     <Header className='@container/planit-header'>
       <LiveIndicator />
@@ -64,7 +70,19 @@ export function PlanitHeader() {
         <div className='md:hidden'>
           <ProfileDropdown />
         </div>
+        <Button
+          variant='outline'
+          size='sm'
+          aria-label='Sign out'
+          title='Sign out'
+          className='shrink-0 @max-[640px]/planit-header:size-8 @max-[640px]/planit-header:p-0'
+          onClick={() => setSignOutOpen(true)}
+        >
+          <LogOut />
+          <span className='@max-[640px]/planit-header:sr-only'>Sign out</span>
+        </Button>
       </div>
+      <SignOutDialog open={signOutOpen} onOpenChange={setSignOutOpen} />
     </Header>
   )
 }
