@@ -3,7 +3,6 @@ import {
   FileWarning,
   LayoutDashboard,
   MapPinned,
-  RadioTower,
   Settings,
   Siren,
 } from 'lucide-react'
@@ -15,18 +14,6 @@ export const sidebarData: SidebarData = {
     email: 'dana.reyes@gridwatch.energy',
     avatar: '/avatars/shadcn.jpg',
   },
-  teams: [
-    {
-      name: 'GridWatch Energy',
-      logo: RadioTower,
-      plan: 'Control Center',
-    },
-    {
-      name: 'Crew Tablet',
-      logo: MapPinned,
-      plan: 'Field mode',
-    },
-  ],
   navGroups: [
     {
       title: 'Operations',
