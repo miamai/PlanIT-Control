@@ -1,13 +1,6 @@
 import { Gauge, MapPin, Siren, Zap } from 'lucide-react'
 import { type Recommendation } from '@/api/types'
-import {
-  formatDuration,
-  RECOMMENDATION_TEXT,
-  recommendationFromScore,
-} from '@/lib/planit'
-import { cn } from '@/lib/utils'
-import { useCountdown } from '@/hooks/use-planit'
-import { RiskDistributionBar, ScoreBar } from '@/components/planit/score-bar'
+import { RECOMMENDATION_BG, recommendationFromScore } from '@/lib/planit'
 import { StatCard } from '@/components/planit/stat-card'
 
 export interface Summary {
@@ -18,67 +11,70 @@ export interface Summary {
   warning: number
   advisory: number
   lightningSites: number
-  /** Soonest lightning all-clear across the fleet, if any stop-work is active. */
-  nextAllClearAt?: string
   avgScore: number
 }
 
 export function SummaryCards({ summary }: { summary: Summary }) {
-  const nextAllClear = useCountdown(summary.nextAllClearAt)
-  const fleetCall = recommendationFromScore(summary.avgScore)
-
   return (
     <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
-      <StatCard label='Sites monitored' value={summary.sites} icon={MapPin}>
-        <RiskDistributionBar counts={summary.calls} />
-      </StatCard>
+      <StatCard
+        label='Sites monitored'
+        value={summary.sites}
+        icon={MapPin}
+        to='/sites'
+        segments={[
+          {
+            value: summary.calls['NO-GO'],
+            label: 'NO-GO',
+            color: RECOMMENDATION_BG['NO-GO'],
+          },
+          {
+            value: summary.calls.CAUTION,
+            label: 'CAUTION',
+            color: RECOMMENDATION_BG.CAUTION,
+          },
+          { value: summary.calls.GO, label: 'GO', color: RECOMMENDATION_BG.GO },
+        ]}
+      />
       <StatCard
         label='Lightning stop-work'
-        value={
-          <>
-            {summary.lightningSites}
-            <span className='ms-1 text-sm font-normal text-muted-foreground'>
-              site{summary.lightningSites === 1 ? '' : 's'}
-            </span>
-          </>
-        }
+        value={summary.lightningSites}
         icon={Zap}
-        tone={summary.lightningSites > 0 ? 'danger' : 'success'}
-        hint={
-          summary.lightningSites > 0 && nextAllClear > 0
-            ? `Next all-clear in ${formatDuration(nextAllClear)}`
-            : undefined
-        }
+        to='/alerts'
+        max={summary.sites}
+        segments={[
+          {
+            value: summary.lightningSites,
+            label: `of ${summary.sites} sites stopped`,
+            color: 'bg-red-600',
+          },
+        ]}
       />
       <StatCard
         label='Active alerts'
         value={summary.activeAlerts}
         icon={Siren}
-        tone={summary.critical > 0 ? 'danger' : 'default'}
-        hint={
-          <>
-            <span className='font-medium'>{summary.critical} critical</span>
-            <span className='text-muted-foreground'>
-              {' '}
-              · {summary.warning} warning · {summary.advisory} advisory
-            </span>
-          </>
-        }
+        to='/alerts'
+        segments={[
+          { value: summary.critical, label: 'critical', color: 'bg-red-600' },
+          { value: summary.warning, label: 'warning', color: 'bg-amber-500' },
+          { value: summary.advisory, label: 'advisory', color: 'bg-sky-500' },
+        ]}
       />
       <StatCard
         label='Avg. hazard index'
-        value={
-          <span className={cn(RECOMMENDATION_TEXT[fleetCall])}>
-            {summary.avgScore.toFixed(1)}
-            <span className='ms-0.5 text-sm font-normal text-muted-foreground'>
-              / 10
-            </span>
-          </span>
-        }
+        value={summary.avgScore.toFixed(1)}
         icon={Gauge}
-      >
-        <ScoreBar score={summary.avgScore} showValue={false} />
-      </StatCard>
+        to='/sites'
+        max={10}
+        segments={[
+          {
+            value: summary.avgScore,
+            label: 'of 10',
+            color: RECOMMENDATION_BG[recommendationFromScore(summary.avgScore)],
+          },
+        ]}
+      />
     </div>
   )
 }

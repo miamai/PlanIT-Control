@@ -71,13 +71,6 @@ export function Dashboard() {
     }
     for (const bundle of bundles) calls[bundle.risk.recommendation] += 1
     const lightning = alerts.filter((a) => a.type === 'lightning')
-    const nextAllClearAt = lightning
-      .map((a) => a.allClearAt)
-      .filter(
-        (at): at is string =>
-          typeof at === 'string' && new Date(at).getTime() > now
-      )
-      .sort()[0]
     return {
       sites: bundles.length,
       calls,
@@ -86,7 +79,6 @@ export function Dashboard() {
       warning: alerts.filter((a) => a.severity === 'warning').length,
       advisory: alerts.filter((a) => a.severity === 'info').length,
       lightningSites: new Set(lightning.map((a) => a.siteId)).size,
-      nextAllClearAt,
       avgScore:
         Math.round(
           (bundles.reduce((sum, b) => sum + b.risk.score, 0) /

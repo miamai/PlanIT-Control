@@ -11,7 +11,8 @@ import {
   Plus,
 } from 'lucide-react'
 import { SITE_SEED } from '@/api/mock/sites-data'
-import { REPORT_TYPE_LABEL, relativeTime } from '@/lib/planit'
+import { REPORT_TYPE_LABEL } from '@/lib/planit'
+import { useLiveNow } from '@/hooks/use-planit'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -42,6 +43,7 @@ export function Hazards() {
   })
   const [type, setType] = useState<string>(ALL)
 
+  const now = useLiveNow()
   const reports = useMemo(() => reportsQuery.data ?? [], [reportsQuery.data])
 
   const filtered = useMemo(
@@ -56,6 +58,11 @@ export function Hazards() {
   }, [reports])
 
   const verified = reports.filter((r) => r.status === 'verified').length
+  const recent = reports.filter(
+    (r) => now - new Date(r.createdAt).getTime() < 24 * 60 * 60 * 1000
+  ).length
+  const bySeverity = { critical: 0, warning: 0, info: 0 }
+  for (const report of reports) bySeverity[report.severity] += 1
 
   return (
     <>
@@ -74,24 +81,52 @@ export function Hazards() {
 
         <div className='mb-4 grid gap-4 sm:grid-cols-3'>
           <StatCard
-            label='Reports on file'
+            label='Reports'
             value={reports.length}
             icon={Database}
+            segments={[
+              {
+                value: bySeverity.critical,
+                label: 'critical',
+                color: 'bg-red-600',
+              },
+              {
+                value: bySeverity.warning,
+                label: 'warning',
+                color: 'bg-amber-500',
+              },
+              {
+                value: bySeverity.info,
+                label: 'advisory',
+                color: 'bg-sky-500',
+              },
+            ]}
           />
-          <StatCard label='Verified' value={verified} icon={BadgeCheck} />
           <StatCard
-            label='Latest report'
-            value={
-              reports.length
-                ? relativeTime(reports[0].createdAt).replace(' ago', '')
-                : '—'
-            }
+            label='Verified'
+            value={verified}
+            icon={BadgeCheck}
+            max={reports.length}
+            segments={[
+              {
+                value: verified,
+                label: `of ${reports.length} verified`,
+                color: 'bg-emerald-500',
+              },
+            ]}
+          />
+          <StatCard
+            label='Last 24 hours'
+            value={recent}
             icon={Clock}
-            hint={
-              reports.length
-                ? `${REPORT_TYPE_LABEL[reports[0].type]} · ${SITE_SEED.find((s) => s.id === reports[0].siteId)?.name ?? ''}`
-                : undefined
-            }
+            max={reports.length}
+            segments={[
+              {
+                value: recent,
+                label: `of ${reports.length} in the last 24 h`,
+                color: 'bg-foreground/60',
+              },
+            ]}
           />
         </div>
 
