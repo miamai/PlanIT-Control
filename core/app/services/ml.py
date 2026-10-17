@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from datetime import date
 from typing import Any, Literal
 
@@ -120,40 +121,53 @@ class MLClient:
         alerts: list[Alert],
         reports: list[CrewReport],
     ) -> MLBriefing:
-        if not site.ml_site_id or not site.ml_model_version:
-            raise ValueError("Site does not have ML coverage")
-        payload = {
-            "site_id": site.ml_site_id,
-            "date": prediction_date.isoformat(),
-            "alerts": [
-                {
-                    "type": alert.hazard_type.value,
-                    "action": alert.action_code or _severity_action(alert.severity.value),
-                    "message": alert.message[:500],
-                }
-                for alert in alerts
-            ],
-            "crew_reports": [_report_payload(report) for report in reports],
-        }
         raw = await self._request(
-            "POST", "/briefing", params={"backend": self.backend}, json=payload
+            "POST",
+            "/briefing",
+            params={"backend": self.backend},
+            json=_request_payload(site, prediction_date, alerts, reports),
         )
         result = MLBriefing.model_validate(raw)
         _check_risk(site, prediction_date, result.risk)
         return result
 
-    async def score(self, site: Site, prediction_date: date) -> MLRisk:
+    async def score(
+        self,
+        site: Site,
+        prediction_date: date,
+        alerts: Sequence[Alert] = (),
+        reports: Sequence[CrewReport] = (),
+    ) -> MLRisk:
         """Hazard index only, no briefing. The service accepts dates up to ~2 weeks back."""
-        if not site.ml_site_id or not site.ml_model_version:
-            raise ValueError("Site does not have ML coverage")
         raw = await self._request(
-            "POST",
-            "/score",
-            json={"site_id": site.ml_site_id, "date": prediction_date.isoformat()},
+            "POST", "/score", json=_request_payload(site, prediction_date, alerts, reports)
         )
         risk = MLRisk.model_validate(raw)
         _check_risk(site, prediction_date, risk)
         return risk
+
+
+def _request_payload(
+    site: Site,
+    prediction_date: date,
+    alerts: Sequence[Alert],
+    reports: Sequence[CrewReport],
+) -> dict[str, Any]:
+    if not site.ml_site_id or not site.ml_model_version:
+        raise ValueError("Site does not have ML coverage")
+    return {
+        "site_id": site.ml_site_id,
+        "date": prediction_date.isoformat(),
+        "alerts": [
+            {
+                "type": alert.hazard_type.value,
+                "action": alert.action_code or _severity_action(alert.severity.value),
+                "message": alert.message[:500],
+            }
+            for alert in alerts
+        ],
+        "crew_reports": [_report_payload(report) for report in reports],
+    }
 
 
 def _check_risk(site: Site, prediction_date: date, risk: MLRisk) -> None:

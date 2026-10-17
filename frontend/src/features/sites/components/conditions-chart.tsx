@@ -106,101 +106,105 @@ export function ConditionsChart({ points }: { points: TimelinePoint[] }) {
                     </span>{' '}
                     {metric.unit}
                   </>
-                ) : (
-                  'no data'
-                )}
+                ) : null}
               </p>
             </div>
-            <ResponsiveContainer width='100%' height={130}>
-              {metric.key === 'precipIn' ? (
-                <BarChart
-                  data={data}
-                  margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
-                >
-                  <XAxis
-                    dataKey='time'
-                    stroke='#888888'
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    interval='preserveStartEnd'
-                    minTickGap={24}
-                  />
-                  <YAxis
-                    stroke='#888888'
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    allowDecimals
-                    width={32}
-                  />
-                  <Tooltip
-                    cursor={{ fill: 'currentColor', fillOpacity: 0.06 }}
-                    content={(props) => (
-                      <ChartTooltip {...props} unit={metric.unit} />
-                    )}
-                  />
-                  <Bar
-                    dataKey={metric.key}
-                    fill={metric.color}
-                    radius={[2, 2, 0, 0]}
-                  />
-                </BarChart>
-              ) : (
-                <AreaChart
-                  data={data}
-                  margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
-                >
-                  <XAxis
-                    dataKey='time'
-                    stroke='#888888'
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    interval='preserveStartEnd'
-                    minTickGap={24}
-                  />
-                  <YAxis
-                    stroke='#888888'
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    domain={['auto', 'auto']}
-                    width={32}
-                  />
-                  <Tooltip
-                    cursor={{ stroke: '#888888', strokeDasharray: '3 3' }}
-                    content={(props) => (
-                      <ChartTooltip {...props} unit={metric.unit} />
-                    )}
-                  />
-                  {metric.threshold ? (
-                    <ReferenceLine
-                      y={metric.threshold.value}
-                      stroke='#dc2626'
-                      strokeDasharray='4 4'
-                      ifOverflow='extendDomain'
-                      label={{
-                        value: metric.threshold.label,
-                        position: 'insideTopRight',
-                        fontSize: 10,
-                        fill: '#dc2626',
-                      }}
+            {values.length === 0 ? (
+              <div className='flex h-[130px] items-center justify-center rounded-lg border border-dashed text-xs text-muted-foreground'>
+                No data
+              </div>
+            ) : (
+              <ResponsiveContainer width='100%' height={130}>
+                {metric.key === 'precipIn' ? (
+                  <BarChart
+                    data={data}
+                    margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+                  >
+                    <XAxis
+                      dataKey='time'
+                      stroke='#888888'
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      interval='preserveStartEnd'
+                      minTickGap={24}
                     />
-                  ) : null}
-                  <Area
-                    type='monotone'
-                    dataKey={metric.key}
-                    stroke={metric.color}
-                    fill={metric.color}
-                    fillOpacity={0.12}
-                    strokeWidth={2}
-                    dot={values.length < 3}
-                    connectNulls
-                  />
-                </AreaChart>
-              )}
-            </ResponsiveContainer>
+                    <YAxis
+                      stroke='#888888'
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      allowDecimals
+                      width={32}
+                    />
+                    <Tooltip
+                      cursor={{ fill: 'currentColor', fillOpacity: 0.06 }}
+                      content={(props) => (
+                        <ChartTooltip {...props} unit={metric.unit} />
+                      )}
+                    />
+                    <Bar
+                      dataKey={metric.key}
+                      fill={metric.color}
+                      radius={[2, 2, 0, 0]}
+                    />
+                  </BarChart>
+                ) : (
+                  <AreaChart
+                    data={data}
+                    margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+                  >
+                    <XAxis
+                      dataKey='time'
+                      stroke='#888888'
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      interval='preserveStartEnd'
+                      minTickGap={24}
+                    />
+                    <YAxis
+                      stroke='#888888'
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      domain={['auto', 'auto']}
+                      width={32}
+                    />
+                    <Tooltip
+                      cursor={{ stroke: '#888888', strokeDasharray: '3 3' }}
+                      content={(props) => (
+                        <ChartTooltip {...props} unit={metric.unit} />
+                      )}
+                    />
+                    {metric.threshold ? (
+                      <ReferenceLine
+                        y={metric.threshold.value}
+                        stroke='#dc2626'
+                        strokeDasharray='4 4'
+                        ifOverflow='extendDomain'
+                        label={{
+                          value: metric.threshold.label,
+                          position: 'insideTopRight',
+                          fontSize: 10,
+                          fill: '#dc2626',
+                        }}
+                      />
+                    ) : null}
+                    <Area
+                      type='monotone'
+                      dataKey={metric.key}
+                      stroke={metric.color}
+                      fill={metric.color}
+                      fillOpacity={0.12}
+                      strokeWidth={2}
+                      dot={values.length < 3}
+                      connectNulls
+                    />
+                  </AreaChart>
+                )}
+              </ResponsiveContainer>
+            )}
           </div>
         )
       })}

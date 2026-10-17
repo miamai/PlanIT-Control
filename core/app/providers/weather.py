@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from datetime import datetime
 
 import httpx
 
 from app.models.entities import HazardType, QualityStatus, Site
-from app.providers.base import EnvironmentalProvider, RetryingHTTPProvider
+from app.providers.base import EnvironmentalProvider, ProviderError, RetryingHTTPProvider
 from app.schemas.domain import NormalizedObservation
 from app.services.heat import heat_index_fahrenheit
 
@@ -20,49 +20,81 @@ class NWSWeatherProvider(EnvironmentalProvider, RetryingHTTPProvider):
     def __init__(self, client: httpx.AsyncClient, user_agent: str) -> None:
         RetryingHTTPProvider.__init__(self, client)
         self.headers = {"User-Agent": user_agent, "Accept": "application/geo+json"}
+        # Sites and stations left out of the last fetch, with why.
+        self.skipped: list[str] = []
 
     async def fetch(self, sites: Sequence[Site]) -> list[NormalizedObservation]:
+        return await self._each_site(sites, self._site_weather)
+
+    async def fetch_alerts(self, sites: Sequence[Site]) -> list[NormalizedObservation]:
+        return await self._each_site(sites, self._site_alerts)
+
+    async def _each_site(
+        self,
+        sites: Sequence[Site],
+        fetch_site: Callable[[Site], Awaitable[list[NormalizedObservation]]],
+    ) -> list[NormalizedObservation]:
+        """Fetch site by site; one failing site is skipped instead of failing every site."""
+        self.skipped = []
         observations: list[NormalizedObservation] = []
+        failed = 0
         for site in sites:
-            point = await self._point(site)
-            station_url = await self._nearest_station(point)
-            if station_url:
+            try:
+                observations.extend(await fetch_site(site))
+            except Exception as exc:  # noqa: BLE001 - noted in `skipped`, the rest still run
+                failed += 1
+                self.skipped.append(f"{site.name}: {_first_line(exc)}")
+        if sites and failed == len(sites):
+            raise ProviderError(f"Every site failed; first: {self.skipped[0]}")
+        return observations
+
+    async def _site_weather(self, site: Site) -> list[NormalizedObservation]:
+        observations: list[NormalizedObservation] = []
+        point = await self._point(site)
+        station_url = await self._nearest_station(point)
+        if station_url:
+            try:
                 latest = await self.get_json(
                     f"{station_url}/observations/latest", headers=self.headers
                 )
+            except httpx.HTTPStatusError as exc:
+                # A station without a recent report answers 404; the forecast is still worth it.
+                self.skipped.append(
+                    f"{site.name}: no latest reading from {station_url} "
+                    f"({exc.response.status_code})"
+                )
+            else:
                 observations.extend(
                     self._station_observations(site, station_url, latest.get("properties", {}))
                 )
-            hourly_url = point["properties"]["forecastHourly"]
-            forecast = await self.get_json(hourly_url, headers=self.headers)
-            for period in forecast["properties"].get("periods", [])[:24]:
-                observed_at = datetime.fromisoformat(period["startTime"])
-                event_id = f"{site.eia_plant_id}:{period['number']}:{period['startTime']}"
-                observations.append(
-                    NormalizedObservation(
-                        site_id=site.id,
-                        hazard_type=HazardType.WEATHER,
-                        source=self.name,
-                        source_event_id=event_id,
-                        observed_at=observed_at,
-                        valid_until=datetime.fromisoformat(period["endTime"]),
-                        metric_name="forecast_temperature",
-                        numeric_value=float(period["temperature"]),
-                        unit="degF" if period["temperatureUnit"] == "F" else "degC",
-                        latitude=site.latitude,
-                        longitude=site.longitude,
-                        quality_status=QualityStatus.PROVISIONAL,
-                        metadata={
-                            "value_kind": "forecast",
-                            "short_forecast": period.get("shortForecast"),
-                            "wind_speed": period.get("windSpeed"),
-                            "wind_direction": period.get("windDirection"),
-                            "probability_of_precipitation": period.get(
-                                "probabilityOfPrecipitation"
-                            ),
-                        },
-                    )
+        hourly_url = point["properties"]["forecastHourly"]
+        forecast = await self.get_json(hourly_url, headers=self.headers)
+        for period in forecast["properties"].get("periods", [])[:24]:
+            observed_at = datetime.fromisoformat(period["startTime"])
+            event_id = f"{site.eia_plant_id}:{period['number']}:{period['startTime']}"
+            observations.append(
+                NormalizedObservation(
+                    site_id=site.id,
+                    hazard_type=HazardType.WEATHER,
+                    source=self.name,
+                    source_event_id=event_id,
+                    observed_at=observed_at,
+                    valid_until=datetime.fromisoformat(period["endTime"]),
+                    metric_name="forecast_temperature",
+                    numeric_value=float(period["temperature"]),
+                    unit="degF" if period["temperatureUnit"] == "F" else "degC",
+                    latitude=site.latitude,
+                    longitude=site.longitude,
+                    quality_status=QualityStatus.PROVISIONAL,
+                    metadata={
+                        "value_kind": "forecast",
+                        "short_forecast": period.get("shortForecast"),
+                        "wind_speed": period.get("windSpeed"),
+                        "wind_direction": period.get("windDirection"),
+                        "probability_of_precipitation": period.get("probabilityOfPrecipitation"),
+                    },
                 )
+            )
         return observations
 
     async def fetch_history(
@@ -176,48 +208,49 @@ class NWSWeatherProvider(EnvironmentalProvider, RetryingHTTPProvider):
                 )
         return observations
 
-    async def fetch_alerts(self, sites: Sequence[Site]) -> list[NormalizedObservation]:
+    async def _site_alerts(self, site: Site) -> list[NormalizedObservation]:
         observations: list[NormalizedObservation] = []
-        for site in sites:
-            payload = await self.get_json(
-                "https://api.weather.gov/alerts/active",
-                params={"point": f"{site.latitude},{site.longitude}"},
-                headers=self.headers,
-            )
-            for feature in payload.get("features", []):
-                props = feature["properties"]
-                observations.append(
-                    NormalizedObservation(
-                        site_id=site.id,
-                        hazard_type=(
-                            HazardType.FLOOD
-                            if "Flood" in props.get("event", "")
-                            else HazardType.WEATHER
-                        ),
-                        source="nws_alerts",
-                        source_event_id=feature["id"],
-                        observed_at=datetime.fromisoformat(props["sent"]),
-                        valid_until=(
-                            datetime.fromisoformat(props["expires"])
-                            if props.get("expires")
-                            else None
-                        ),
-                        metric_name="official_alert",
-                        latitude=site.latitude,
-                        longitude=site.longitude,
-                        quality_status=QualityStatus.VERIFIED,
-                        metadata={
-                            "event": props.get("event"),
-                            "severity": props.get("severity"),
-                            "urgency": props.get("urgency"),
-                            "headline": props.get("headline"),
-                            "instruction": props.get("instruction"),
-                        },
-                    )
+        payload = await self.get_json(
+            "https://api.weather.gov/alerts/active",
+            params={"point": f"{site.latitude},{site.longitude}"},
+            headers=self.headers,
+        )
+        for feature in payload.get("features", []):
+            props = feature["properties"]
+            observations.append(
+                NormalizedObservation(
+                    site_id=site.id,
+                    hazard_type=(
+                        HazardType.FLOOD
+                        if "Flood" in props.get("event", "")
+                        else HazardType.WEATHER
+                    ),
+                    source="nws_alerts",
+                    source_event_id=feature["id"],
+                    observed_at=datetime.fromisoformat(props["sent"]),
+                    valid_until=(
+                        datetime.fromisoformat(props["expires"]) if props.get("expires") else None
+                    ),
+                    metric_name="official_alert",
+                    latitude=site.latitude,
+                    longitude=site.longitude,
+                    quality_status=QualityStatus.VERIFIED,
+                    metadata={
+                        "event": props.get("event"),
+                        "severity": props.get("severity"),
+                        "urgency": props.get("urgency"),
+                        "headline": props.get("headline"),
+                        "instruction": props.get("instruction"),
+                    },
                 )
+            )
         return observations
 
 
 def _hourly_rank(props: dict) -> tuple[bool, str]:
     """Prefer the routine hourly report (the only one carrying rainfall), then the newest."""
     return ("precipitationLastHour" in props, props["timestamp"])
+
+
+def _first_line(exc: Exception) -> str:
+    return (str(exc).splitlines() or [type(exc).__name__])[0][:200]

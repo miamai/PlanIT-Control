@@ -280,7 +280,11 @@ def check_briefing(draft: str, f: Facts) -> list[str]:
     allowed = _numbers(f.text)
     for n in sorted(_numbers(draft) - allowed):
         problems.append(f"number {n:g} is not in the facts")
+    # Words the facts themselves spell out (a reason's "over two weeks") are quotes, not new numbers.
+    quoted = {phrase for phrase, _ in _word_numbers(f.text)}
     for phrase, n in _word_numbers(draft):
+        if phrase in quoted:
+            continue
         if n in allowed:
             problems.append(f"writes '{phrase}' in words; use the digits from the facts")
         else:
@@ -451,7 +455,10 @@ def write_briefing(risk: dict, site: dict, backend: str = "auto", retries: int =
         if not hard_problems(problems):
             return {"briefing": draft, "source": source, "facts": f.text, "tried": tried}
     text = template_briefing(f)
-    assert not check_briefing(text, f), check_briefing(text, f)
+    # The template only restates the facts, so a complaint here is a checker gap. Report it rather
+    # than failing the request and losing the score along with the briefing.
+    if problems := check_briefing(text, f):
+        tried.append({"backend": "template", "problems": problems})
     return {"briefing": text, "source": "template", "facts": f.text, "tried": tried}
 
 

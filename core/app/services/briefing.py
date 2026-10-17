@@ -151,6 +151,8 @@ async def _persist_ml_result(
     alerts: list[Alert],
     reports: list[CrewReport],
     cutoff: datetime,
+    status: str = "generated",
+    warnings: list[str] | None = None,
 ) -> None:
     risk = await session.scalar(
         select(RiskScore).where(
@@ -186,7 +188,7 @@ async def _persist_ml_result(
         site.id,
     )
     details = _provenance(
-        "generated", risk.id, result.source, alerts, reports, cutoff, [], "available"
+        status, risk.id, result.source, alerts, reports, cutoff, warnings or [], "available"
     )
     if existing:
         existing.summary = result.briefing
@@ -237,7 +239,11 @@ async def generate_due_briefings(
         )
         if existing:
             details = existing.hazard_details or {}
-            if details.get("generation_status") == "generated" or details.get("risk_status") == "unsupported":
+            # Retry only when there is still no score; briefing text alone is not worth a retry.
+            if details.get("generation_status") == "generated" or details.get("risk_status") in {
+                "unsupported",
+                "available",
+            }:
                 continue
         alerts = list((await session.scalars(_active_alert_query(site.id))).all())
         reports, cutoff = await _reports_since_previous(
@@ -247,15 +253,42 @@ async def generate_due_briefings(
         if client and site.ml_supported:
             try:
                 result = await client.briefing(site, prediction_date, alerts, reports)
+                status = "generated"
             except Exception:  # noqa: BLE001 - a safe fallback must survive any service failure
-                warnings.append("ML prediction was unavailable; a deterministic briefing was used.")
-                risk_status = "unavailable"
-            else:
+                # A failed briefing must not cost the score: ask for the score alone.
+                try:
+                    risk = await client.score(site, prediction_date, alerts, reports)
+                except Exception:  # noqa: BLE001
+                    result = None
+                else:
+                    result = MLBriefing(
+                        risk=risk,
+                        briefing=_fallback_summary(site, alerts, reports),
+                        source="template",
+                    )
+                    status = "fallback"
+                    warnings.append(
+                        "ML briefing text was unavailable; a deterministic briefing was used "
+                        "with the model's score."
+                    )
+            if result is not None:
                 await _persist_ml_result(
-                    session, site, prediction_date, now, result, existing, alerts, reports, cutoff
+                    session,
+                    site,
+                    prediction_date,
+                    now,
+                    result,
+                    existing,
+                    alerts,
+                    reports,
+                    cutoff,
+                    status=status,
+                    warnings=warnings if status == "fallback" else None,
                 )
                 count += 1
                 continue
+            warnings.append("ML prediction was unavailable; a deterministic briefing was used.")
+            risk_status = "unavailable"
         else:
             risk_status = "unsupported" if not site.ml_supported else "unavailable"
             if not site.ml_supported:

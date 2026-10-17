@@ -115,3 +115,24 @@ def test_template_fallback_is_checked(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result["source"] == "template"
     facts = briefing.build_facts(_risk(), {"name": "Test"})
     assert briefing.check_briefing(result["briefing"], facts) == []
+
+
+def test_number_words_quoted_from_the_facts_pass_the_check() -> None:
+    risk = _risk() | {"reasons": [{"hazard": "flood", "impact": 1.0, "text": "5.85 in of rain over two weeks"}]}
+    facts = briefing.build_facts(risk, {"name": "Test"})
+    result = briefing.write_briefing(risk, {"name": "Test"}, backend="template")
+    assert "over two weeks" in result["briefing"]
+    assert briefing.check_briefing(result["briefing"], facts) == []
+    # A number word the facts do not contain is still caught.
+    assert briefing.check_briefing(result["briefing"] + " Expect three storms.", facts) == [
+        "number 'three' (3) is not in the facts"
+    ]
+
+
+def test_template_that_trips_the_checker_still_returns_a_briefing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(briefing, "check_briefing", lambda draft, f: ["checker gap"])
+    result = briefing.write_briefing(_risk(), {"name": "Test"}, backend="template")
+    assert result["source"] == "template" and result["briefing"]
+    assert result["tried"] == [{"backend": "template", "problems": ["checker gap"]}]

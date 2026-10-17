@@ -134,6 +134,9 @@ async def run_provider(
                 raise ValueError(f"Unknown provider: {provider_name}")
         run.records_written = await store_observations(session, observations)
         run.status = "success"
+        if skipped := getattr(provider, "skipped", []):
+            # Partial runs still succeed; the error notes which sites or stations were left out.
+            run.error = f"Skipped {len(skipped)}: {'; '.join(skipped)}"[:4000]
     except Exception as exc:
         run.status = "failed"
         run.error = str(exc)[:4000]

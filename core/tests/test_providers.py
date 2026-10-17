@@ -99,3 +99,70 @@ async def test_firms_bounds_requests_by_state_group() -> None:
         rows = await FIRMSProvider(client, "test-key").fetch(sites)
     assert rows == []
     assert route.call_count == 2
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_nws_skips_a_failing_station_or_site_instead_of_the_whole_run() -> None:
+    good = SimpleNamespace(id=uuid4(), name="Good", eia_plant_id=1, latitude=39.0, longitude=-77.0)
+    no_station = SimpleNamespace(
+        id=uuid4(), name="No reading", eia_plant_id=2, latitude=40.0, longitude=-77.0
+    )
+    broken = SimpleNamespace(
+        id=uuid4(), name="Broken", eia_plant_id=3, latitude=41.0, longitude=-77.0
+    )
+    forecast = {
+        "properties": {
+            "periods": [
+                {
+                    "number": 1,
+                    "startTime": "2026-10-17T12:00:00+00:00",
+                    "endTime": "2026-10-17T13:00:00+00:00",
+                    "temperature": 88,
+                    "temperatureUnit": "F",
+                }
+            ]
+        }
+    }
+    for lat, stations in ((39, None), (40, "https://api.weather.gov/gridpoints/X/2,2/stations")):
+        hourly = f"https://api.weather.gov/gridpoints/X/{lat},1/forecast/hourly"
+        respx.get(f"https://api.weather.gov/points/{lat}.0000,-77.0000").mock(
+            return_value=httpx.Response(
+                200,
+                json={"properties": {"forecastHourly": hourly, "observationStations": stations}},
+            )
+        )
+        respx.get(hourly).mock(return_value=httpx.Response(200, json=forecast))
+    respx.get("https://api.weather.gov/gridpoints/X/2,2/stations").mock(
+        return_value=httpx.Response(
+            200, json={"features": [{"id": "https://api.weather.gov/stations/KSFZ"}]}
+        )
+    )
+    respx.get("https://api.weather.gov/stations/KSFZ/observations/latest").mock(
+        return_value=httpx.Response(404)
+    )
+    respx.get("https://api.weather.gov/points/41.0000,-77.0000").mock(
+        return_value=httpx.Response(404)
+    )
+    async with httpx.AsyncClient() as client:
+        provider = NWSWeatherProvider(client, "test@example.com")
+        rows = await provider.fetch([good, no_station, broken])
+    # Both reachable sites keep their forecast; only the broken site is lost.
+    assert sorted(row.site_id for row in rows) == sorted([good.id, no_station.id])
+    assert provider.skipped[0].startswith("No reading: no latest reading from")
+    assert provider.skipped[1].startswith("Broken: ")
+    assert len(provider.skipped) == 2
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_nws_fails_the_run_when_every_site_fails() -> None:
+    from app.providers.base import ProviderError
+
+    site = SimpleNamespace(
+        id=uuid4(), name="Broken", eia_plant_id=3, latitude=41.0, longitude=-77.0
+    )
+    respx.get("https://api.weather.gov/alerts/active").mock(return_value=httpx.Response(404))
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(ProviderError, match="Every site failed"):
+            await NWSWeatherProvider(client, "test@example.com").fetch_alerts([site])
