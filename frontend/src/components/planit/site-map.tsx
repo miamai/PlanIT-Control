@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { type LatLngBounds, divIcon, latLngBounds } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import {
@@ -74,29 +74,35 @@ function rankIcon(rank: number, color: string) {
 
 function MapFocus({ site }: { site?: { lat: number; lon: number } }) {
   const map = useMap()
+  const lat = site?.lat
+  const lon = site?.lon
   useEffect(() => {
-    if (!site) return
-    map.flyTo([site.lat, site.lon], Math.max(map.getZoom(), 10), {
+    if (lat === undefined || lon === undefined) return
+    map.flyTo([lat, lon], Math.max(map.getZoom(), 10), {
       duration: 0.8,
     })
-  }, [map, site])
+  }, [map, lat, lon])
   return null
 }
 
-/** Keep the whole fleet in view as the card resizes (sidebar toggle, breakpoints). */
+/** Fit once when sites arrive; subsequent updates preserve the user's view. */
 function FitBounds({ bounds }: { bounds?: LatLngBounds }) {
   const map = useMap()
+  const initialized = useRef(false)
   useEffect(() => {
-    if (!bounds) return
-    const fit = () => {
-      map.invalidateSize()
-      map.fitBounds(bounds, { padding: [12, 12] })
-    }
-    fit()
-    const observer = new ResizeObserver(fit)
+    if (!bounds || initialized.current) return
+    initialized.current = true
+    map.fitBounds(bounds, { padding: [12, 12], animate: false })
+  }, [map, bounds])
+
+  useEffect(() => {
+    // Update tile coverage after layout changes, preserving center and zoom.
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize({ animate: false })
+    })
     observer.observe(map.getContainer())
     return () => observer.disconnect()
-  }, [map, bounds])
+  }, [map])
   return null
 }
 
