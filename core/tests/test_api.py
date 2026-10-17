@@ -71,12 +71,14 @@ async def test_site_list_contract_and_jwt_auth() -> None:
         await engine.dispose()
 
 
-async def _seed_site_with_history(factory):
+async def _seed_site_with_history(factory, now=None, timezone="America/Chicago"):
     from datetime import UTC, date, datetime, timedelta
+    from zoneinfo import ZoneInfo
 
     from app.models.entities import RiskScore, SafetyBriefing
 
-    today = datetime.now(UTC).date()
+    now = now or datetime.now(UTC)
+    today = now.astimezone(ZoneInfo(timezone)).date()
     async with factory() as session:
         site = Site(
             eia_plant_id=456,
@@ -85,7 +87,7 @@ async def _seed_site_with_history(factory):
             longitude=-95,
             state="TX",
             county="Harris",
-            timezone="America/Chicago",
+            timezone=timezone,
             source_release="test",
             source_url="test",
             source_metadata={},
@@ -99,7 +101,7 @@ async def _seed_site_with_history(factory):
         )
         session.add_all([site, user])
         await session.flush()
-        generated = datetime.now(UTC)
+        generated = now
 
         def score(prediction_date: date, value: float, version: str, offset_minutes: int):
             return RiskScore(
@@ -116,10 +118,13 @@ async def _seed_site_with_history(factory):
         session.add_all(
             [
                 score(today - timedelta(days=40), 9.0, "v1", 0),
+                score(today - timedelta(days=14), 9.0, "v1", 0),
+                score(today - timedelta(days=13), 2.0, "v1", 0),
                 score(today - timedelta(days=2), 3.0, "v1", 0),
                 score(today - timedelta(days=1), 4.0, "v1", 30),
                 score(today - timedelta(days=1), 5.0, "v2", 0),
                 score(today, 6.0, "v1", 0),
+                score(today + timedelta(days=1), 7.0, "v1", 0),
                 SafetyBriefing(
                     site_id=site.id,
                     briefing_date=today,
@@ -181,13 +186,13 @@ async def test_risk_history_and_fleet_briefings() -> None:
         assert unauthenticated.status_code == 401
         assert history.status_code == 200
         points = history.json()["data"]
-        # The 40-day-old score is outside the default window, and only the latest
-        # generated score is kept for a day with two model versions.
-        assert [point["score"] for point in points] == [3.0, 5.0, 6.0]
+        # Exactly 14 local calendar dates through today, excluding tomorrow's
+        # forecast, and only the latest generated score for each date.
+        assert [point["score"] for point in points] == [2.0, 3.0, 5.0, 6.0]
         assert [point["prediction_date"] for point in points] == sorted(
             point["prediction_date"] for point in points
         )
-        assert [point["score"] for point in short.json()["data"]] == [5.0, 6.0]
+        assert [point["score"] for point in short.json()["data"]] == [6.0]
         assert missing.status_code == 404
 
         assert all_briefings.status_code == 200
@@ -199,6 +204,50 @@ async def test_risk_history_and_fleet_briefings() -> None:
         assert [row["summary"] for row in dated.json()["data"]] == ["Today briefing."]
         assert since.json()["meta"]["total"] == 1
         assert briefings_unauthenticated.status_code == 401
+    finally:
+        app.dependency_overrides.clear()
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("timezone", ["America/Anchorage", "Pacific/Kiritimati"])
+async def test_history_uses_site_local_dates_at_utc_midnight(monkeypatch, timezone) -> None:
+    from datetime import UTC, datetime, timedelta
+    from zoneinfo import ZoneInfo
+
+    from app.api import routes
+
+    now = datetime(2026, 10, 18, 1, tzinfo=UTC)
+
+    class FrozenDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return now.astimezone(tz)
+
+    monkeypatch.setattr(routes, "datetime", FrozenDateTime)
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    site_id, token, today = await _seed_site_with_history(factory, now, timezone)
+
+    async def override_session():
+        async with factory() as session:
+            yield session
+
+    app.dependency_overrides[get_session] = override_session
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.get(
+                f"/api/sites/{site_id}/risk/history",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+        assert response.status_code == 200
+        assert today == now.astimezone(ZoneInfo(timezone)).date()
+        points = response.json()["data"]
+        assert [point["prediction_date"] for point in points] == [
+            (today - timedelta(days=offset)).isoformat() for offset in [13, 2, 1, 0]
+        ]
     finally:
         app.dependency_overrides.clear()
         await engine.dispose()

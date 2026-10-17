@@ -10,7 +10,7 @@ const SESSION: TokenResponse = {
     id: '00000000-0000-0000-0000-000000000001',
     username: 'tester',
     display_name: null,
-    role: 'crew',
+    role: 'user',
     status: 'active',
     created_at: '2026-10-17T00:00:00Z',
     updated_at: '2026-10-17T00:00:00Z',

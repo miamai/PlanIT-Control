@@ -136,7 +136,8 @@ export function SiteDetail({ siteId }: { siteId: string }) {
               {risk.trend ? <TrendIndicator trend={risk.trend} /> : null}
               {risk.predictionDate ? (
                 <span className='text-[11px] text-muted-foreground'>
-                  for {format(parseISO(risk.predictionDate), 'EEE, MMM d')}
+                  Forecast ·{' '}
+                  {format(parseISO(risk.predictionDate), 'EEE, MMM d')}
                   {risk.status === 'stale' ? ' · stale' : ''}
                 </span>
               ) : null}
@@ -160,7 +161,15 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                 aside='Last 14 days'
               />
               <CardContent>
-                {history ? (
+                {detail.historyError ? (
+                  <p
+                    role='alert'
+                    className='rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground'
+                  >
+                    Could not load historical scores. Please try refreshing this
+                    page.
+                  </p>
+                ) : history ? (
                   history.length > 0 ? (
                     <>
                       <HazardIndexChart points={history} />
@@ -174,8 +183,8 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                   ) : (
                     <div className='rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground'>
                       {site.mlSupported
-                        ? 'No hazard index has been stored in the last 14 days.'
-                        : 'This site is outside the hazard model catalog.'}
+                        ? 'No historical scores are available for the last 14 days. Forecasts are shown separately above.'
+                        : 'Historical hazard scores are unavailable because this site is not covered by the hazard model.'}
                     </div>
                   )
                 ) : (
@@ -206,7 +215,7 @@ export function SiteDetail({ siteId }: { siteId: string }) {
             </Card>
           </div>
 
-          <div className='space-y-4'>
+          <div className='min-w-0 space-y-4'>
             <Card className='gap-4'>
               <PanelHeader icon={Scale} title='Score drivers' />
               <CardContent className='space-y-3'>

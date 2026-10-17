@@ -87,7 +87,7 @@ insufficient role, `422` as invalid input, `429` as rate limited, and `503` as d
 | POST | `/api/reports` | User | Submit a crew hazard report |
 | GET | `/api/reports` | Admin | Review submitted reports |
 | GET | `/api/sites/{site_id}/risk` | User | Latest score with available/missing/stale/unsupported status |
-| GET | `/api/sites/{site_id}/risk/history` | User | Latest score per prediction date; filter: `days` (default 14) |
+| GET | `/api/sites/{site_id}/risk/history` | User | Latest score per day over `days` site-local calendar dates through today (default 14); excludes future forecasts; returns only stored scores |
 | GET | `/api/risk/rankings` | User | Sites sorted by latest risk; missing scores are last |
 | GET | `/api/sites/{site_id}/briefings` | User | Stored next-day safety briefings |
 | GET | `/api/briefings` | User | Briefings across all sites; filters: `briefing_date`, `since`, pagination |

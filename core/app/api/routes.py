@@ -5,6 +5,7 @@ import json
 import uuid
 from datetime import UTC, date, datetime, timedelta
 from typing import Annotated
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -396,13 +397,19 @@ async def site_risk_history(
     session: DbSession,
     days: int = Query(14, ge=1, le=90),
 ) -> Envelope[list[RiskRead]]:
-    if not await session.get(Site, site_id):
+    site = await session.get(Site, site_id)
+    if not site:
         raise HTTPException(status_code=404, detail="Site not found")
-    cutoff = datetime.now(UTC).date() - timedelta(days=days)
+    today = datetime.now(UTC).astimezone(ZoneInfo(site.timezone)).date()
+    cutoff = today - timedelta(days=days - 1)
     rows = (
         await session.scalars(
             select(RiskScore)
-            .where(RiskScore.site_id == site_id, RiskScore.prediction_date >= cutoff)
+            .where(
+                RiskScore.site_id == site_id,
+                RiskScore.prediction_date >= cutoff,
+                RiskScore.prediction_date <= today,
+            )
             .order_by(RiskScore.prediction_date, RiskScore.generated_at.desc())
         )
     ).all()

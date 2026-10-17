@@ -42,7 +42,7 @@ export function LightningCountdown({
     return (
       <div
         className={cn(
-          'flex items-center gap-2 rounded-md border px-2 py-1.5',
+          'flex min-w-0 flex-wrap items-center gap-2 rounded-md border px-2 py-1.5',
           cleared
             ? 'border-amber-500/30 bg-amber-500/5'
             : 'border-red-600/30 bg-red-600/5',
@@ -54,7 +54,7 @@ export function LightningCountdown({
         ) : (
           <Zap className='size-3.5 shrink-0 fill-red-600 text-red-600' />
         )}
-        <span className='text-xs whitespace-nowrap'>
+        <span className='min-w-0 flex-1 text-xs leading-5 break-words'>
           {cleared ? (
             'All-clear eligible · admin sign-off required'
           ) : (
@@ -66,15 +66,17 @@ export function LightningCountdown({
             </>
           )}
         </span>
-        <span className='h-1 min-w-10 flex-1 overflow-hidden rounded-full bg-muted'>
-          <span
-            className={cn(
-              'block h-full rounded-full transition-[width] duration-1000 ease-linear',
-              cleared ? 'bg-amber-500' : 'bg-red-600'
-            )}
-            style={{ width: `${remainingShare * 100}%` }}
-          />
-        </span>
+        {!cleared ? (
+          <span className='h-1 w-full overflow-hidden rounded-full bg-muted'>
+            <span
+              className={cn(
+                'block h-full rounded-full transition-[width] duration-1000 ease-linear',
+                cleared ? 'bg-amber-500' : 'bg-red-600'
+              )}
+              style={{ width: `${remainingShare * 100}%` }}
+            />
+          </span>
+        ) : null}
       </div>
     )
   }
@@ -85,7 +87,7 @@ export function LightningCountdown({
   const circumference = 2 * Math.PI * radius
 
   return (
-    <div className={cn('flex items-center gap-4', className)}>
+    <div className={cn('flex min-w-0 flex-wrap items-center gap-4', className)}>
       <div className='relative shrink-0' style={{ width: size, height: size }}>
         <svg width={size} height={size} className='-rotate-90'>
           <circle
@@ -120,7 +122,7 @@ export function LightningCountdown({
         </div>
       </div>
 
-      <div className='min-w-0 space-y-1'>
+      <div className='min-w-0 flex-1 basis-40 space-y-1 break-words'>
         {heading ? (
           <div className='text-sm font-semibold'>{heading}</div>
         ) : (

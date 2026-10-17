@@ -300,6 +300,7 @@ export function useSiteDetail(siteId: string) {
     timeline,
     strikes,
     history: historyQuery.data,
+    historyError: historyQuery.isError,
     lightningActive: alerts.some(isLightningStop),
     isLoading: siteQuery.isLoading || riskQuery.isLoading,
     notFound: siteQuery.isSuccess && !siteQuery.data,

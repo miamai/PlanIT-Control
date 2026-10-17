@@ -4,6 +4,7 @@ import json
 from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 import httpx
 import pytest
@@ -134,13 +135,13 @@ async def test_backfilled_scores_are_history_only() -> None:
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
     now = datetime.now(UTC)
-    today = now.date()
+    today = now.astimezone(ZoneInfo("America/Chicago")).date()
     async with factory() as session:
         site = _site(3)
         user = UserAccount(
             username="backfill-tester",
             password_hash=hash_password("testing-password"),
-            role=UserRole.CREW,
+            role=UserRole.USER,
             status=UserStatus.ACTIVE,
         )
         session.add_all([site, user])
@@ -172,7 +173,6 @@ async def test_backfilled_scores_are_history_only() -> None:
         assert current.json()["data"]["score"]["score"] == 3.0
         assert [(row["score"], row["score_source"]) for row in history.json()["data"]] == [
             (8.0, BACKFILL_SCORE_SOURCE),
-            (3.0, "ml_service"),
         ]
         assert rankings.json()["data"][0]["risk"]["score"] == 3.0
     finally:
