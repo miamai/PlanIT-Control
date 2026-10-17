@@ -1,30 +1,34 @@
 import { useState } from 'react'
 import { confirmHazardReport } from '@/api'
-import { BadgeCheck, Camera, MapPin } from 'lucide-react'
+import { BadgeCheck, MapPin } from 'lucide-react'
 import { SITE_SEED } from '@/api/mock/sites-data'
 import { type HazardReport } from '@/api/types'
 import {
+  ALERT_SEVERITY_ICON_BOX,
+  REPORT_TYPE_ICON,
   REPORT_TYPE_LABEL,
   relativeTime,
-  SEVERITY_BADGE,
-  severityFromAlert,
 } from '@/lib/planit'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { AlertSeverityBadge } from './risk-badge'
 
 export function ReportList({
   reports,
   isLoading,
-  emptyMessage = 'No crew reports yet for this site.',
+  emptyMessage = 'No reports',
   showSite = false,
+  compact = false,
   className,
 }: {
   reports: HazardReport[] | undefined
   isLoading?: boolean
   emptyMessage?: string
   showSite?: boolean
+  /** Hide the confirm action and photo, for narrow side panels. */
+  compact?: boolean
   className?: string
 }) {
   const [confirming, setConfirming] = useState<string | null>(null)
@@ -33,8 +37,8 @@ export function ReportList({
   if (isLoading) {
     return (
       <div className={cn('space-y-3', className)}>
-        <Skeleton className='h-20 w-full' />
-        <Skeleton className='h-20 w-full' />
+        <Skeleton className='h-16 w-full' />
+        <Skeleton className='h-16 w-full' />
       </div>
     )
   }
@@ -62,89 +66,96 @@ export function ReportList({
   }
 
   return (
-    <div className={cn('space-y-3', className)}>
+    <ul className={cn('divide-y', className)}>
       {reports.map((report) => {
         const site = SITE_SEED.find((s) => s.id === report.siteId)
+        const Icon = REPORT_TYPE_ICON[report.type]
+        const confirmed = confirmedIds.includes(report.id)
         return (
-          <div key={report.id} className='rounded-lg border p-3'>
-            <div className='flex flex-wrap items-center gap-1.5'>
-              <Badge
-                variant='outline'
-                className={cn(
-                  'text-[10px]',
-                  SEVERITY_BADGE[severityFromAlert(report.severity)]
-                )}
-              >
-                {REPORT_TYPE_LABEL[report.type]}
-              </Badge>
-              <Badge
-                variant='outline'
-                className='text-[10px] text-muted-foreground'
-              >
-                {report.status}
-              </Badge>
-              <span className='ms-auto text-[11px] text-muted-foreground'>
-                {relativeTime(report.createdAt)}
-              </span>
-            </div>
-
-            <div className='mt-2 flex gap-3'>
-              {report.photoUrl ? (
-                <img
-                  src={report.photoUrl}
-                  alt='Hazard photo'
-                  className='size-16 shrink-0 rounded-md border object-cover'
-                />
-              ) : (
-                <span className='flex size-16 shrink-0 items-center justify-center rounded-md border bg-muted/50 text-muted-foreground'>
-                  <Camera className='size-5' />
-                </span>
+          <li key={report.id} className='flex gap-3 py-3 first:pt-0 last:pb-0'>
+            <span
+              className={cn(
+                'flex size-8 shrink-0 items-center justify-center rounded-md',
+                ALERT_SEVERITY_ICON_BOX[report.severity]
               )}
-              <div className='min-w-0 flex-1 space-y-1'>
-                <p className='text-sm'>{report.note}</p>
-                <p className='flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground'>
-                  <span className='font-medium text-foreground'>
-                    {report.reportedBy}
+            >
+              <Icon className='size-4' />
+            </span>
+            <div className='min-w-0 flex-1 space-y-1'>
+              <div className='flex items-start justify-between gap-2'>
+                <div className='flex flex-wrap items-center gap-1.5'>
+                  <span className='text-sm font-medium'>
+                    {REPORT_TYPE_LABEL[report.type]}
                   </span>
-                  <span className='uppercase'>{report.reporterRole}</span>
-                  {showSite && site ? (
-                    <span className='flex items-center gap-1'>
-                      <MapPin className='size-3' />
-                      {site.name} ({site.state})
-                    </span>
-                  ) : (
-                    <span>
-                      {report.lat.toFixed(4)}, {report.lon.toFixed(4)}
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div className='mt-2 flex items-center justify-between'>
-              <Button
-                variant='outline'
-                size='sm'
-                className='h-7 text-xs'
-                disabled={
-                  confirming === report.id || confirmedIds.includes(report.id)
-                }
-                onClick={() => handleConfirm(report)}
-              >
-                <BadgeCheck />{' '}
-                {confirmedIds.includes(report.id) ? 'Confirmed' : 'Confirm'}
-                <span className='ms-1 tabular-nums'>
-                  {report.confirmations +
-                    (confirmedIds.includes(report.id) ? 1 : 0)}
+                  <AlertSeverityBadge
+                    severity={report.severity}
+                    className='px-1.5 py-0 text-[10px]'
+                  />
+                  {report.status === 'verified' ? (
+                    <Badge
+                      variant='outline'
+                      className='gap-1 px-1.5 py-0 text-[10px] text-muted-foreground'
+                    >
+                      <BadgeCheck className='size-3' /> Verified
+                    </Badge>
+                  ) : null}
+                </div>
+                <span className='shrink-0 text-[11px] whitespace-nowrap text-muted-foreground'>
+                  {relativeTime(report.createdAt)}
                 </span>
-              </Button>
-              <span className='text-[11px] text-muted-foreground'>
-                Shared with network owners
-              </span>
+              </div>
+              <div className='flex gap-3'>
+                <p
+                  className={cn(
+                    'min-w-0 flex-1 text-sm text-muted-foreground',
+                    compact && 'line-clamp-2'
+                  )}
+                >
+                  {report.note}
+                </p>
+                {report.photoUrl && !compact ? (
+                  <img
+                    src={report.photoUrl}
+                    alt='Hazard photo'
+                    className='size-14 shrink-0 rounded-md border object-cover'
+                  />
+                ) : null}
+              </div>
+              <div className='flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground'>
+                <span className='font-medium text-foreground'>
+                  {report.reportedBy}
+                </span>
+                {!compact ? (
+                  <span className='capitalize'>{report.reporterRole}</span>
+                ) : null}
+                {showSite && site ? (
+                  <span className='inline-flex items-center gap-1'>
+                    <MapPin className='size-3' />
+                    {site.name} ({site.state})
+                  </span>
+                ) : null}
+                {compact ? (
+                  <span>· {report.confirmations} confirmed</span>
+                ) : null}
+              </div>
+              {!compact ? (
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='mt-1 h-7 text-xs'
+                  disabled={confirming === report.id || confirmed}
+                  onClick={() => handleConfirm(report)}
+                >
+                  <BadgeCheck /> {confirmed ? 'Confirmed' : 'Still there'}
+                  <span className='ms-1 text-muted-foreground tabular-nums'>
+                    {report.confirmations + (confirmed ? 1 : 0)}
+                  </span>
+                </Button>
+              ) : null}
             </div>
-          </div>
+          </li>
         )
       })}
-    </div>
+    </ul>
   )
 }

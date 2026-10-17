@@ -6,25 +6,101 @@ import { getBriefing, listBriefings } from '@/api'
 import {
   ArrowRight,
   CalendarDays,
+  CircleCheck,
   Eye,
+  Flame,
+  History,
   MessageSquareText,
+  PawPrint,
   Radar,
   Sparkles,
+  Thermometer,
+  TrendingDown,
+  TrendingUp,
+  Waves,
+  Zap,
 } from 'lucide-react'
-import { RECOMMENDATION_TEXT, relativeTime } from '@/lib/planit'
+import { SITE_SEED } from '@/api/mock/sites-data'
+import { useLiveStore } from '@/stores/live-store'
+import {
+  formatCountdownTo,
+  RECOMMENDATION_BG,
+  RECOMMENDATION_HEX,
+  RISK_BANDS,
+  recommendationFromScore,
+} from '@/lib/planit'
 import { cn } from '@/lib/utils'
 import { useSiteBundles } from '@/hooks/use-planit'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Main } from '@/components/layout/main'
-import { HazardGauge } from '@/components/planit/hazard-gauge'
+import { PageHeading } from '@/components/planit/page-heading'
+import { PanelHeader } from '@/components/planit/panel-header'
 import { PlanitHeader } from '@/components/planit/planit-header'
 import { RecommendationBadge } from '@/components/planit/risk-badge'
+import { ScoreBar } from '@/components/planit/score-bar'
+
+const WATCH_ICON: Record<string, typeof Zap> = {
+  Lightning: Zap,
+  'Flood & river': Waves,
+  'Extreme heat': Thermometer,
+  'Wildfire smoke': Flame,
+  Wildlife: PawPrint,
+}
+
+/** Leading site count from a watchlist line such as "3 site(s) inside ...". */
+function siteCount(detail: string): number | undefined {
+  const match = /^(\d+)\s+site/.exec(detail)
+  return match ? Number(match[1]) : undefined
+}
+
+/** Today (hollow) and tomorrow (filled) on one 0-10 track with the risk bands. */
+function ScoreShift({ today, tomorrow }: { today: number; tomorrow: number }) {
+  const left = Math.min(today, tomorrow) * 10
+  const right = Math.max(today, tomorrow) * 10
+  return (
+    <div className='relative h-4'>
+      <div className='absolute inset-x-0 top-1/2 flex h-1.5 -translate-y-1/2 overflow-hidden rounded-full'>
+        {RISK_BANDS.map((band) => (
+          <span
+            key={band.recommendation}
+            className='h-full'
+            style={{
+              width: `${(band.to - band.from) * 10}%`,
+              background: RECOMMENDATION_HEX[band.recommendation],
+              opacity: 0.2,
+            }}
+          />
+        ))}
+      </div>
+      <span
+        className='absolute top-1/2 h-0.5 -translate-y-1/2 bg-foreground/40'
+        style={{ left: `${left}%`, width: `${right - left}%` }}
+      />
+      <span
+        className='absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-background'
+        style={{
+          left: `${today * 10}%`,
+          borderColor: RECOMMENDATION_HEX[recommendationFromScore(today)],
+        }}
+        title={`Today ${today.toFixed(1)}`}
+      />
+      <span
+        className='absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-background'
+        style={{
+          left: `${tomorrow * 10}%`,
+          background: RECOMMENDATION_HEX[recommendationFromScore(tomorrow)],
+        }}
+        title={`Tomorrow ${tomorrow.toFixed(1)}`}
+      />
+    </div>
+  )
+}
 
 export function BriefingPage() {
   const bundles = useSiteBundles()
+  const now = useLiveStore((state) => state.now)
 
   const currentQuery = useQuery({
     queryKey: ['briefing', 'current'],
@@ -40,58 +116,23 @@ export function BriefingPage() {
   const briefing = currentQuery.data
   const history = historyQuery.data ?? []
 
-  const scoresBySite = useMemo(() => {
-    const map = new Map<string, { score: number; recommendation: string }>()
-    for (const bundle of bundles) {
-      map.set(bundle.site.id, {
-        score: bundle.risk.score,
-        recommendation: bundle.risk.recommendation,
-      })
-    }
+  const todayBySite = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const bundle of bundles) map.set(bundle.site.id, bundle.risk.score)
     return map
   }, [bundles])
 
   return (
     <>
-      <PlanitHeader active='briefing' />
+      <PlanitHeader />
       <Main>
-        <div className='mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between'>
-          <div className='space-y-1'>
-            <h1 className='text-2xl font-bold tracking-tight'>
-              Shift briefing
-            </h1>
-            <p className='text-sm text-muted-foreground'>
-              Every day at 6:00 PM local time we push tomorrow&apos;s safety
-              briefing to every supervisor on the network.
-            </p>
-          </div>
-          <div className='flex items-center gap-2'>
-            <Badge
-              variant='outline'
-              className='flex items-center gap-1 text-muted-foreground'
-            >
-              <Sparkles className='size-3' />
-              {briefing?.generator === 'gemini'
-                ? 'Gemini generated'
-                : 'Template fallback'}
-            </Badge>
-            <Button size='sm' variant='outline' asChild>
-              <a
-                href='#briefing-sms'
-                onClick={(e) => e.preventDefault()}
-                className='hidden sm:inline-flex'
-              >
-                <MessageSquareText /> SMS preview
-              </a>
-            </Button>
-          </div>
-        </div>
+        <PageHeading title='Briefing' />
 
         <div className='grid gap-4 lg:grid-cols-3'>
-          <div className='space-y-4 lg:col-span-2'>
+          <div className='min-w-0 space-y-4 lg:col-span-2'>
             {currentQuery.isLoading || !briefing ? (
               <Card>
-                <CardContent className='space-y-3 p-5'>
+                <CardContent className='space-y-3'>
                   <Skeleton className='h-6 w-2/3' />
                   <Skeleton className='h-4 w-full' />
                   <Skeleton className='h-4 w-5/6' />
@@ -100,23 +141,26 @@ export function BriefingPage() {
               </Card>
             ) : (
               <>
-                <Card>
-                  <CardHeader className='pb-3'>
-                    <div className='flex flex-wrap items-center justify-between gap-2'>
-                      <CardTitle className='flex items-center gap-2 text-base'>
-                        <CalendarDays className='size-4 text-muted-foreground' />
-                        {format(
-                          parseISO(briefing.shiftDate),
-                          'EEEE, MMMM d, yyyy'
-                        )}{' '}
-                        shift
-                      </CardTitle>
-                      <span className='text-xs text-muted-foreground'>
-                        Generated {relativeTime(briefing.generatedAt)}
-                      </span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className='space-y-3'>
+                <Card className='gap-4'>
+                  <PanelHeader
+                    icon={CalendarDays}
+                    title={format(parseISO(briefing.shiftDate), 'EEEE, MMMM d')}
+                    aside={
+                      <>
+                        <Badge variant='outline' className='gap-1'>
+                          <Sparkles className='size-3 text-violet-500' />
+                          {briefing.generator === 'gemini'
+                            ? 'Gemini'
+                            : 'Template'}
+                        </Badge>
+                        <span className='tabular-nums'>
+                          Sends 18:00 ·{' '}
+                          {formatCountdownTo(briefing.sendAt, now)}
+                        </span>
+                      </>
+                    }
+                  />
+                  <CardContent className='space-y-2'>
                     <p className='text-lg font-semibold'>{briefing.headline}</p>
                     <p className='text-sm leading-relaxed text-muted-foreground'>
                       {briefing.summary}
@@ -124,137 +168,210 @@ export function BriefingPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader className='pb-3'>
-                    <CardTitle className='flex items-center gap-2 text-base'>
-                      <Radar className='size-4 text-muted-foreground' />
-                      Sites needing attention tomorrow
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className='space-y-3'>
-                    {briefing.sites.map((site) => {
-                      const live = scoresBySite.get(site.siteId)
-                      return (
-                        <div
-                          key={site.siteId}
-                          className='rounded-lg border p-3'
-                        >
-                          <div className='flex flex-wrap items-center gap-2'>
-                            <Link
-                              to='/sites/$siteId'
-                              params={{ siteId: site.siteId }}
-                              className='text-sm font-medium hover:underline'
+                <Card className='gap-4'>
+                  <PanelHeader icon={Radar} title='Flagged sites' />
+                  <CardContent>
+                    <ol className='divide-y'>
+                      {briefing.sites.map((entry, index) => {
+                        const site = SITE_SEED.find(
+                          (s) => s.id === entry.siteId
+                        )
+                        return (
+                          <li
+                            key={entry.siteId}
+                            className='flex gap-3 py-4 first:pt-0 last:pb-0'
+                          >
+                            <span
+                              className={cn(
+                                'flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white',
+                                RECOMMENDATION_BG[entry.recommendation]
+                              )}
                             >
-                              {site.headline}
-                            </Link>
-                            <RecommendationBadge
-                              recommendation={site.recommendation}
-                            />
-                            {live ? (
-                              <span
-                                className={cn(
-                                  'ms-auto text-xs tabular-nums',
-                                  RECOMMENDATION_TEXT[site.recommendation]
-                                )}
-                              >
-                                forecast {site.score.toFixed(1)} / 10
-                              </span>
-                            ) : null}
-                          </div>
-                          <ul className='mt-2 list-inside list-disc text-xs text-muted-foreground'>
-                            {site.actions.map((action) => (
-                              <li key={action}>{action}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )
-                    })}
+                              {index + 1}
+                            </span>
+                            <div className='min-w-0 flex-1 space-y-2'>
+                              <div className='flex flex-wrap items-start justify-between gap-x-4 gap-y-2'>
+                                <div className='min-w-0'>
+                                  <Link
+                                    to='/sites/$siteId'
+                                    params={{ siteId: entry.siteId }}
+                                    className='font-medium hover:underline'
+                                  >
+                                    {site?.name ?? entry.siteId}
+                                  </Link>
+                                  {site ? (
+                                    <span className='text-sm text-muted-foreground'>
+                                      {' '}
+                                      · {site.county} County, {site.state}
+                                    </span>
+                                  ) : null}
+                                  <p className='text-xs text-muted-foreground'>
+                                    {entry.headline}
+                                  </p>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                  <ScoreBar
+                                    score={entry.score}
+                                    className='w-28'
+                                  />
+                                  <RecommendationBadge
+                                    recommendation={entry.recommendation}
+                                    className='w-[76px] justify-center'
+                                  />
+                                </div>
+                              </div>
+                              <ul className='space-y-1'>
+                                {entry.actions.map((action) => (
+                                  <li
+                                    key={action}
+                                    className='flex items-start gap-2 text-sm'
+                                  >
+                                    <CircleCheck className='mt-0.5 size-3.5 shrink-0 text-muted-foreground' />
+                                    {action}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ol>
                   </CardContent>
                 </Card>
 
-                <Card id='briefing-sms'>
-                  <CardHeader className='pb-3'>
-                    <CardTitle className='flex items-center gap-2 text-base'>
-                      <MessageSquareText className='size-4 text-muted-foreground' />
-                      SMS preview (160 chars)
-                    </CardTitle>
-                  </CardHeader>
+                <Card className='gap-4'>
+                  <PanelHeader icon={Eye} title='Watchlist' />
                   <CardContent>
-                    <p className='rounded-md bg-muted/60 p-3 font-mono text-xs leading-relaxed'>
-                      {briefing.smsPreview}
-                    </p>
+                    <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5'>
+                      {briefing.watchlist.map((item) => {
+                        const Icon = WATCH_ICON[item.label] ?? Eye
+                        const count = siteCount(item.detail)
+                        return (
+                          <div
+                            key={item.label}
+                            className='rounded-lg border p-3'
+                          >
+                            <div className='min-w-0'>
+                              <p className='flex items-center gap-1.5 truncate text-xs text-muted-foreground'>
+                                <Icon className='size-3.5 shrink-0' />
+                                {item.label}
+                              </p>
+                              <p
+                                className='text-lg leading-tight font-semibold tabular-nums'
+                                title={item.detail}
+                              >
+                                {count ?? '—'}
+                                <span className='ms-1 text-xs font-normal text-muted-foreground'>
+                                  site{count === 1 ? '' : 's'}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
                   </CardContent>
                 </Card>
               </>
             )}
-
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='flex items-center gap-2 text-base'>
-                  <Eye className='size-4 text-muted-foreground' />
-                  Watchlist
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-3'>
-                {briefing?.watchlist.map((item) => (
-                  <div key={item.label} className='space-y-1'>
-                    <p className='text-sm font-medium'>{item.label}</p>
-                    <p className='text-xs leading-relaxed text-muted-foreground'>
-                      {item.detail}
-                    </p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
           </div>
 
           <div className='space-y-4'>
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='text-base'>Today vs tomorrow</CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-3'>
-                {bundles.slice(0, 6).map((bundle) => (
-                  <Link
-                    key={bundle.site.id}
-                    to='/sites/$siteId'
-                    params={{ siteId: bundle.site.id }}
-                    className='flex items-center justify-between rounded-md px-2 py-1 hover:bg-muted/60'
-                  >
-                    <span className='truncate text-sm'>{bundle.site.name}</span>
-                    <HazardGauge
-                      score={bundle.risk.score}
-                      recommendation={bundle.risk.recommendation}
-                      size='sm'
-                    />
-                  </Link>
-                ))}
-                <Button asChild variant='outline' size='sm' className='w-full'>
-                  <Link to='/sites'>
-                    See all monitored sites <ArrowRight />
-                  </Link>
-                </Button>
+            <Card className='gap-4'>
+              <PanelHeader title='Today → tomorrow' />
+              <CardContent className='space-y-4'>
+                {briefing?.sites.map((entry) => {
+                  const today = todayBySite.get(entry.siteId) ?? entry.score
+                  const delta = entry.score - today
+                  const DeltaIcon = delta >= 0 ? TrendingUp : TrendingDown
+                  return (
+                    <Link
+                      key={entry.siteId}
+                      to='/sites/$siteId'
+                      params={{ siteId: entry.siteId }}
+                      className='-mx-2 block space-y-1.5 rounded-md px-2 py-1 hover:bg-accent'
+                    >
+                      <div className='flex items-center justify-between gap-2 text-sm'>
+                        <span className='truncate font-medium'>
+                          {SITE_SEED.find((s) => s.id === entry.siteId)?.name ??
+                            entry.siteId}
+                        </span>
+                        <span className='flex shrink-0 items-center gap-1 text-xs tabular-nums'>
+                          <span className='text-muted-foreground'>
+                            {today.toFixed(1)}
+                          </span>
+                          <ArrowRight className='size-3 text-muted-foreground' />
+                          <span className='font-semibold'>
+                            {entry.score.toFixed(1)}
+                          </span>
+                          {Math.abs(delta) >= 0.05 ? (
+                            <DeltaIcon
+                              className={cn(
+                                'size-3.5',
+                                delta > 0 ? 'text-red-600' : 'text-emerald-600'
+                              )}
+                            />
+                          ) : null}
+                        </span>
+                      </div>
+                      <ScoreShift today={today} tomorrow={entry.score} />
+                    </Link>
+                  )
+                })}
+                <div className='flex items-center gap-4 border-t pt-3 text-[11px] text-muted-foreground'>
+                  <span className='flex items-center gap-1.5'>
+                    <span className='size-2.5 rounded-full border-2 border-foreground/50' />
+                    Today
+                  </span>
+                  <span className='flex items-center gap-1.5'>
+                    <span className='size-2.5 rounded-full bg-foreground/60' />
+                    Tomorrow
+                  </span>
+                </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='text-base'>Previous briefings</CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-2'>
-                {history.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className='flex items-center justify-between rounded-md border px-3 py-2 text-sm'
-                  >
-                    <span>
-                      {format(parseISO(entry.shiftDate), 'EEE, MMM d')}
-                    </span>
-                    <span className='text-xs text-muted-foreground'>
-                      {entry.sites.length} sites flagged
-                    </span>
+            {briefing ? (
+              <Card className='gap-4'>
+                <PanelHeader icon={MessageSquareText} title='SMS' />
+                <CardContent>
+                  <div className='rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2.5 text-sm leading-relaxed'>
+                    {briefing.smsPreview}
                   </div>
-                ))}
+                </CardContent>
+              </Card>
+            ) : null}
+
+            <Card className='gap-4'>
+              <PanelHeader icon={History} title='Previous' />
+              <CardContent>
+                <ul className='divide-y'>
+                  {history.map((entry) => {
+                    const noGo = entry.sites.filter(
+                      (s) => s.recommendation === 'NO-GO'
+                    ).length
+                    return (
+                      <li
+                        key={entry.id}
+                        className='flex items-center justify-between py-2 text-sm first:pt-0 last:pb-0'
+                      >
+                        <span>
+                          {format(parseISO(entry.shiftDate), 'EEE, MMM d')}
+                        </span>
+                        <span className='text-xs text-muted-foreground'>
+                          {noGo > 0 ? (
+                            <span className='font-medium text-red-600 dark:text-red-400'>
+                              {noGo} NO-GO
+                            </span>
+                          ) : (
+                            'No stand-downs'
+                          )}{' '}
+                          · {entry.sites.length} flagged
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
               </CardContent>
             </Card>
           </div>

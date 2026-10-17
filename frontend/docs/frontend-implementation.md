@@ -41,13 +41,13 @@ The whole app is driven by **72 real US power-plant locations** (see
 | --- | --- |
 | Real-time stop-work alert if lightning within 10 mi | `src/api/mock/engine.ts` (`LIGHTNING_RADIUS_MI = 10`), `src/stores/live-store.ts`, `src/components/planit/lightning-countdown.tsx` |
 | 30-minute all-clear countdown that resets per strike | `ALL_CLEAR_MINUTES = 30` in `engine.ts`; countdown derived in `useCountdown`; resets because each new strike pushes `clearAt` forward |
-| Combined risk picture per site (weather/heat/lightning/flood/wildfire/soil/wildlife) | `computeSiteRiskBundle` + `buildDomains` (`engine.ts`); rendered by `DomainCard` grid on site detail |
+| Combined risk picture per site (weather/heat/lightning/flood/wildfire/soil/wildlife) | `computeSiteRiskBundle` + `buildDomains` (`engine.ts`); rendered by `RiskPicture` on site detail |
 | Flood alerts | `flood` domain + alert generation in `engine.ts` (river-proximity + rainfall) |
 | 6 PM local next-day briefing | `BRIEFING_HOUR = 18`, `generateBriefing()` in `engine.ts`; `src/features/briefing` |
 | Crew hazard reporting (photo, GPS, type, share) | `src/features/hazards/report-form.tsx`, `createHazardReport()` in `src/api/index.ts` |
 | Shared hazard database | `src/features/hazards/index.tsx` + `listHazardReports()` |
-| Supervisor map ranking sites by risk | `src/features/dashboard` (`risk-ranked-table` + `SiteMap`), `src/features/sites` |
-| Hazard index 0–10 with explanations | `scoreRisk()`/`computeRisk()` (`engine.ts`); "Why this score" card on site detail; `HazardGauge` |
+| Supervisor map ranking sites by risk | `src/features/dashboard` (`SiteMap` with numbered top-10 markers + `priority-sites`), `src/features/sites` (`risk-ranked-table`) |
+| Hazard index 0–10 with explanations | `scoreRisk()`/`computeRisk()` (`engine.ts`); "Score drivers" card on site detail; `HazardGauge` |
 | ≥ 50 real power-plant locations | `src/api/mock/sites-data.ts` (72 plants) |
 | Auth roles crew / supervisor | `src/features/auth/sign-in/components/user-auth-form.tsx`, `src/stores/auth-store.ts`, `src/components/profile-dropdown.tsx` |
 
@@ -162,12 +162,17 @@ Components shouldn't know how risk is derived. The hooks memoize bundles with a
 
 ## 5. Screens
 
+Every 0–10 score (gauge, bars, map markers, charts) is colored by its call
+using the ML service's cut-offs: GO < 3.5, CAUTION 3.5–6.5, NO-GO ≥ 6.5
+(`GO_BELOW` / `CAUTION_BELOW` / `RISK_BANDS` in `src/lib/planit.ts`).
+
 ### 5.1 Dashboard (`/`)
 
-Supervisor overview: summary stat cards, an interactive US map of all 72 sites
-colored by risk (with strike radii and report pins), the alert feed, a
-**risk-ranked table** of every site, a briefing preview, and recent crew reports.
-This is the "rank sites by risk" control-center view.
+Supervisor overview: KPI cards (GO / CAUTION / NO-GO split, lightning
+stop-work count with the next all-clear, alerts by severity, average index), a
+US risk map whose top 10 markers carry their rank number, the matching top-10
+list, and compact panels for active alerts, tomorrow's briefing and crew
+reports. Clicking a marker or row opens the site.
 
 ### 5.2 Sites (`/sites`)
 
@@ -179,21 +184,26 @@ Each row links to the site detail page.
 
 The combined risk picture for one location:
 
-- `HazardGauge` for the 0–10 index + recommendation badge;
-- a **"Why this score"** card: recommendation rationale, contributor bars with
-  per-domain `% of score`, plain-language reasons, model version + validation;
-- a grid of 7 `DomainCard`s (heat, lightning, flood, wildfire, soil, wildlife,
-  storm) each with severity, source, and detail;
-- a **14-day hazard-index chart** and a **24-hour conditions chart** (recharts);
-- live alerts with the lightning countdown and a simulate button;
+- a stop-work banner with the all-clear ring whenever lightning is active;
+- `HazardGauge`: the 0–10 index on a dial split into the GO / CAUTION / NO-GO
+  bands, with the recommendation badge;
+- **Hazards** (`RiskPicture`): one row per domain (heat, lightning, flood,
+  storm, wildfire, soil, wildlife) with the reading, a 4-step severity meter
+  and trend; source and detail are on hover;
+- **Score drivers**: contributor bars with per-domain `% of score`;
+- a **14-day hazard-index chart** drawn over the GO / CAUTION / NO-GO bands and
+  **24-hour weather** as three small charts (heat index with the 100°F line,
+  wind, rainfall);
+- site alerts with inline countdowns and crew actions;
 - a focused site map with strikes and crew reports;
 - the crew reports filed at that site.
 
 ### 5.4 Alerts (`/alerts`)
 
-Active alerts across the fleet, tabbed by hazard type with counts, headline stat
-cards, a **detection-rules** panel documenting the lightning/flood/heat/red-flag
-rules, and a notification-channels panel (push, Twilio SMS, 6 PM email).
+A **stop-work** row of countdown rings (one per site inside a lightning
+radius), then the remaining alerts as a compact list, tabbed by hazard type,
+most severe first. Side panels list the alert thresholds and delivery channels
+(push, Twilio SMS, 6 PM email).
 
 ### 5.5 Briefing (`/briefing`)
 
@@ -235,10 +245,11 @@ teams/user, profile dropdown, and nav-user avatar initials now read "PlanIT
 Control" / GridWatch Energy.
 
 **Rewritten**: `src/components/layout/data/sidebar-data.ts` now lists the PlanIT
-navigation (Dashboard, Sites, Alerts, Shift Briefing, Hazard Reports, Settings).
+navigation (Dashboard, Sites, Alerts, Briefing, Hazard Reports, Settings).
 
-**Wired**: `AuthenticatedLayout` starts the live feed; `PlanitHeader` acts as the
-top app bar (section nav + LIVE indicator + search/theme/profile).
+**Wired**: `AuthenticatedLayout` starts the live feed; `PlanitHeader` is the
+top app bar (LIVE indicator + search/theme/profile); navigation lives only in
+the sidebar.
 
 **Tests**: `src/context/search-provider.test.tsx` was updated to reference the
 new nav items (`Alerts`, `Settings Profile`) instead of the removed demo routes.
@@ -249,7 +260,9 @@ code) to avoid regenerating the frozen lockfile; CI installs with
 
 ### Dependencies added
 
-- `leaflet`, `react-leaflet`, `@types/leaflet` — the risk map.
+- `leaflet`, `react-leaflet`, `@types/leaflet` — the risk map. Basemaps are
+  Esri's keyless Light/Dark Gray Canvas (CARTO now watermarks keyless tiles);
+  the report form uses Esri World Topo for on-the-ground context.
 - `pnpm-workspace.yaml` with `allowBuilds` for `@clerk/shared` and `esbuild`, so
   `pnpm install` exits 0 under pnpm 12 (required by CI).
 

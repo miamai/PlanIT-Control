@@ -3,15 +3,24 @@ import { parse } from 'date-fns'
 import {
   Area,
   AreaChart,
-  ReferenceLine,
+  CartesianGrid,
+  ReferenceArea,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
 import { type HazardIndexPoint } from '@/api/types'
-import { severityFromScore } from '@/lib/planit'
+import {
+  CAUTION_BELOW,
+  GO_BELOW,
+  RECOMMENDATION_HEX,
+  RISK_BANDS,
+  recommendationFromScore,
+} from '@/lib/planit'
+import { RecommendationBadge } from '@/components/planit/risk-badge'
 
+/** 14-day hazard index over the GO / CAUTION / NO-GO bands. */
 export function HazardIndexChart({ points }: { points: HazardIndexPoint[] }) {
   const data = useMemo(
     () =>
@@ -21,7 +30,6 @@ export function HazardIndexChart({ points }: { points: HazardIndexPoint[] }) {
           { month: 'short', day: 'numeric' }
         ),
         score: point.score,
-        severity: severityFromScore(point.score),
       })),
     [points]
   )
@@ -30,14 +38,30 @@ export function HazardIndexChart({ points }: { points: HazardIndexPoint[] }) {
     <ResponsiveContainer width='100%' height={240}>
       <AreaChart
         data={data}
-        margin={{ top: 8, right: 8, left: -18, bottom: 0 }}
+        margin={{ top: 8, right: 56, left: -12, bottom: 0 }}
       >
-        <defs>
-          <linearGradient id='hazardFill' x1='0' y1='0' x2='0' y2='1'>
-            <stop offset='0%' stopColor='currentColor' stopOpacity={0.35} />
-            <stop offset='100%' stopColor='currentColor' stopOpacity={0.02} />
-          </linearGradient>
-        </defs>
+        {RISK_BANDS.map((band) => (
+          <ReferenceArea
+            key={band.recommendation}
+            y1={band.from}
+            y2={band.to}
+            fill={RECOMMENDATION_HEX[band.recommendation]}
+            fillOpacity={0.07}
+            strokeOpacity={0}
+            ifOverflow='extendDomain'
+            label={{
+              value: band.recommendation,
+              position: 'right',
+              fontSize: 10,
+              fill: RECOMMENDATION_HEX[band.recommendation],
+            }}
+          />
+        ))}
+        <CartesianGrid
+          vertical={false}
+          strokeDasharray='3 3'
+          className='stroke-border'
+        />
         <XAxis
           dataKey='label'
           stroke='#888888'
@@ -45,44 +69,67 @@ export function HazardIndexChart({ points }: { points: HazardIndexPoint[] }) {
           tickLine={false}
           axisLine={false}
           interval='preserveStartEnd'
+          minTickGap={16}
         />
         <YAxis
           domain={[0, 10]}
+          ticks={[0, GO_BELOW, CAUTION_BELOW, 10]}
           stroke='#888888'
           fontSize={11}
           tickLine={false}
           axisLine={false}
         />
         <Tooltip
+          cursor={{ stroke: '#888888', strokeDasharray: '3 3' }}
           content={({ active, payload, label }) => {
             if (!active || !payload?.length) return null
+            const score = Number(payload[0].value)
             return (
-              <div className='rounded-md border bg-background px-3 py-2 text-xs shadow-sm'>
+              <div className='space-y-1 rounded-md border bg-background px-3 py-2 text-xs shadow-sm'>
                 <p className='font-medium'>{label}</p>
-                <p className='text-muted-foreground'>
-                  Hazard index {Number(payload[0].value).toFixed(1)}/10
-                </p>
+                <div className='flex items-center gap-2'>
+                  <span className='tabular-nums'>
+                    Hazard index {score.toFixed(1)}
+                  </span>
+                  <RecommendationBadge
+                    recommendation={recommendationFromScore(score)}
+                    className='px-1.5 py-0 text-[10px]'
+                  />
+                </div>
               </div>
             )
-          }}
-        />
-        <ReferenceLine
-          y={6.5}
-          stroke='#dc2626'
-          strokeDasharray='4 4'
-          label={{
-            value: 'NO-GO 6.5',
-            position: 'insideTopRight',
-            fontSize: 10,
           }}
         />
         <Area
           type='monotone'
           dataKey='score'
           stroke='currentColor'
-          className='text-primary'
-          fill='url(#hazardFill)'
+          className='text-foreground'
+          fill='currentColor'
+          fillOpacity={0.06}
           strokeWidth={2}
+          dot={(props) => {
+            const { cx, cy, payload, index } = props as {
+              cx: number
+              cy: number
+              index: number
+              payload: { score: number }
+            }
+            return (
+              <circle
+                key={index}
+                cx={cx}
+                cy={cy}
+                r={3.5}
+                fill={
+                  RECOMMENDATION_HEX[recommendationFromScore(payload.score)]
+                }
+                className='stroke-background'
+                strokeWidth={1.5}
+              />
+            )
+          }}
+          activeDot={{ r: 5 }}
         />
       </AreaChart>
     </ResponsiveContainer>

@@ -1,9 +1,7 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { ChevronRight, Zap } from 'lucide-react'
-import { SEVERITY_TEXT, severityFromScore } from '@/lib/planit'
-import { cn } from '@/lib/utils'
+import { DOMAIN_ICON } from '@/lib/planit'
 import type { SiteBundle } from '@/hooks/use-planit'
-import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -13,128 +11,92 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { RecommendationBadge } from '@/components/planit/risk-badge'
+import { ScoreBar } from '@/components/planit/score-bar'
 
-export function RiskRankedTable({
-  items,
-  limit,
-  compact = false,
-}: {
-  items: SiteBundle[]
-  limit?: number
-  compact?: boolean
-}) {
-  const rows = items.slice(0, limit ?? items.length)
+export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
+  const navigate = useNavigate()
 
   return (
     <div className='overflow-x-auto'>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className='w-10 text-center'>#</TableHead>
+            <TableHead className='w-12 text-center'>Rank</TableHead>
             <TableHead>Site</TableHead>
-            <TableHead className='w-[190px]'>Hazard index</TableHead>
+            <TableHead className='w-[170px]'>Hazard index</TableHead>
             <TableHead className='w-[110px]'>Call</TableHead>
-            {!compact ? (
-              <TableHead className='hidden md:table-cell'>Top driver</TableHead>
-            ) : null}
+            <TableHead className='hidden lg:table-cell'>Top driver</TableHead>
             <TableHead className='w-10' />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((bundle, index) => {
-            const severity = severityFromScore(bundle.risk.score)
+          {items.map((bundle, index) => {
             const driver = bundle.risk.reasons[0]
+            const DriverIcon = driver ? DOMAIN_ICON[driver.domain] : undefined
             return (
               <TableRow
                 key={bundle.site.id}
                 className='cursor-pointer'
-                data-state={
-                  bundle.risk.recommendation === 'NO-GO'
-                    ? 'selected'
-                    : undefined
+                onClick={() =>
+                  navigate({
+                    to: '/sites/$siteId',
+                    params: { siteId: bundle.site.id },
+                  })
                 }
               >
                 <TableCell className='text-center text-sm text-muted-foreground tabular-nums'>
                   {index + 1}
                 </TableCell>
-                <TableCell>
+                <TableCell className='max-w-72'>
                   <Link
                     to='/sites/$siteId'
                     params={{ siteId: bundle.site.id }}
-                    className='group block min-w-0'
+                    className='flex items-center gap-1.5 font-medium hover:underline'
+                    onClick={(event) => event.stopPropagation()}
                   >
-                    <span className='flex items-center gap-1.5 font-medium group-hover:text-primary'>
-                      {bundle.site.name}
-                      {bundle.conditions.lightningActive ? (
-                        <Zap className='size-3.5 fill-violet-500 text-violet-500' />
-                      ) : null}
-                    </span>
-                    <span className='block truncate text-xs text-muted-foreground'>
-                      {bundle.site.county} County, {bundle.site.state} ·{' '}
-                      {bundle.site.plantType}
-                    </span>
+                    <span className='truncate'>{bundle.site.name}</span>
+                    {bundle.conditions.lightningActive ? (
+                      <Zap
+                        className='size-3.5 shrink-0 fill-violet-500 text-violet-500'
+                        aria-label='Lightning stop-work active'
+                      />
+                    ) : null}
                   </Link>
+                  <span className='block truncate text-xs text-muted-foreground'>
+                    {bundle.site.county} County, {bundle.site.state} ·{' '}
+                    {bundle.site.plantType}
+                  </span>
                 </TableCell>
                 <TableCell>
-                  <div className='flex items-center gap-2'>
-                    <span
-                      className={cn(
-                        'w-8 text-sm font-semibold tabular-nums',
-                        SEVERITY_TEXT[severity]
-                      )}
-                    >
-                      {bundle.risk.score.toFixed(1)}
-                    </span>
-                    <span className='h-1.5 w-full max-w-24 overflow-hidden rounded-full bg-muted'>
-                      <span
-                        className={cn(
-                          'block h-full rounded-full',
-                          bundle.risk.score >= 6.5
-                            ? 'bg-red-600'
-                            : bundle.risk.score >= 3.5
-                              ? 'bg-amber-500'
-                              : 'bg-emerald-500'
-                        )}
-                        style={{ width: `${bundle.risk.score * 10}%` }}
-                      />
-                    </span>
-                  </div>
+                  <ScoreBar score={bundle.risk.score} />
                 </TableCell>
                 <TableCell>
                   <RecommendationBadge
                     recommendation={bundle.risk.recommendation}
                   />
                 </TableCell>
-                {!compact ? (
-                  <TableCell className='hidden max-w-64 md:table-cell'>
-                    <span className='block truncate text-xs text-muted-foreground'>
-                      {driver?.label ?? '—'} ·{' '}
-                      {Math.round((driver?.contribution ?? 0) * 100)}% of score
+                <TableCell className='hidden lg:table-cell'>
+                  {driver && DriverIcon ? (
+                    <span className='flex items-center gap-2 text-xs text-muted-foreground'>
+                      <DriverIcon className='size-3.5 shrink-0' />
+                      <span className='truncate'>
+                        <span className='text-foreground'>{driver.label}</span>{' '}
+                        · {Math.round(driver.contribution * 100)}% of score
+                      </span>
                     </span>
-                  </TableCell>
-                ) : null}
+                  ) : (
+                    <span className='text-xs text-muted-foreground'>—</span>
+                  )}
+                </TableCell>
                 <TableCell>
-                  <Button
-                    asChild
-                    variant='ghost'
-                    size='icon'
-                    className='size-7'
-                  >
-                    <Link
-                      to='/sites/$siteId'
-                      params={{ siteId: bundle.site.id }}
-                      aria-label={`Open ${bundle.site.name}`}
-                    >
-                      <ChevronRight className='size-4' />
-                    </Link>
-                  </Button>
+                  <ChevronRight className='size-4 text-muted-foreground' />
                 </TableCell>
               </TableRow>
             )
           })}
         </TableBody>
       </Table>
-      {rows.length === 0 ? (
+      {items.length === 0 ? (
         <div className='p-6 text-center text-sm text-muted-foreground'>
           No sites match this filter.
         </div>

@@ -2,14 +2,12 @@ import { Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import {
   type AlertSeverity,
   type Recommendation,
-  type SeverityLevel,
   type Trend,
 } from '@/api/types'
 import {
+  ALERT_SEVERITY_LABEL,
   RECOMMENDATION_BADGE,
   SEVERITY_ALERT_BADGE,
-  SEVERITY_BADGE,
-  SEVERITY_LABEL,
   trendLabel,
 } from '@/lib/planit'
 import { cn } from '@/lib/utils'
@@ -37,23 +35,6 @@ export function RecommendationBadge({
   )
 }
 
-export function SeverityBadge({
-  severity,
-  className,
-}: {
-  severity: SeverityLevel
-  className?: string
-}) {
-  return (
-    <Badge
-      variant='outline'
-      className={cn(SEVERITY_BADGE[severity], 'font-medium', className)}
-    >
-      {SEVERITY_LABEL[severity]}
-    </Badge>
-  )
-}
-
 export function AlertSeverityBadge({
   severity,
   className,
@@ -66,7 +47,7 @@ export function AlertSeverityBadge({
       variant='outline'
       className={cn(SEVERITY_ALERT_BADGE[severity], 'font-medium', className)}
     >
-      {severity}
+      {ALERT_SEVERITY_LABEL[severity]}
     </Badge>
   )
 }

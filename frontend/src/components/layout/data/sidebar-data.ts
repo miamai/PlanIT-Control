@@ -1,5 +1,5 @@
 import {
-  Bot,
+  CalendarClock,
   FileWarning,
   LayoutDashboard,
   MapPinned,
@@ -49,9 +49,9 @@ export const sidebarData: SidebarData = {
           icon: Siren,
         },
         {
-          title: 'Shift Briefing',
+          title: 'Briefing',
           url: '/briefing',
-          icon: Bot,
+          icon: CalendarClock,
         },
         {
           title: 'Hazard Reports',

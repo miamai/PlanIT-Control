@@ -1,92 +1,118 @@
-import { type Recommendation, type SeverityLevel } from '@/api/types'
-import { SEVERITY_TEXT, severityFromScore } from '@/lib/planit'
+import { type Recommendation } from '@/api/types'
+import {
+  RECOMMENDATION_HEX,
+  RISK_BANDS,
+  recommendationFromScore,
+} from '@/lib/planit'
 import { cn } from '@/lib/utils'
 import { RecommendationBadge } from './risk-badge'
 
 const RADIUS = 80
-const ARC_LENGTH = Math.PI * RADIUS
-const ARC_PATH = `M ${100 - RADIUS} 100 A ${RADIUS} ${RADIUS} 0 0 1 ${100 + RADIUS} 100`
+const STROKE = 14
+const GAP = 0.012
 
+/** Point on the upper semicircle for a 0..1 fraction (0 = left, 1 = right). */
+function pointAt(fraction: number): [number, number] {
+  const angle = Math.PI * (1 - fraction)
+  return [100 + RADIUS * Math.cos(angle), 100 - RADIUS * Math.sin(angle)]
+}
+
+function arc(from: number, to: number): string {
+  const [x1, y1] = pointAt(from)
+  const [x2, y2] = pointAt(to)
+  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${RADIUS} ${RADIUS} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`
+}
+
+/**
+ * 0-10 hazard index dial. The track is split into the GO / CAUTION / NO-GO
+ * bands so the reading is obvious at a glance; the filled part shows the score.
+ */
 export function HazardGauge({
   score,
   recommendation,
   size = 'default',
+  showLabel = true,
   className,
 }: {
   score: number
   recommendation?: Recommendation
   size?: 'default' | 'sm'
+  showLabel?: boolean
   className?: string
 }) {
-  const severity: SeverityLevel = severityFromScore(score)
-  const progress = Math.min(1, Math.max(0, score / 10))
-  const recommended =
-    recommendation ?? (score >= 6.5 ? 'NO-GO' : score >= 3.5 ? 'CAUTION' : 'GO')
+  const value = Math.min(10, Math.max(0, score))
+  const call = recommendation ?? recommendationFromScore(score)
+  const [markerX, markerY] = pointAt(value / 10)
 
   return (
     <div
       className={cn(
         'flex flex-col items-center',
-        size === 'sm' ? 'w-32' : 'w-44',
+        size === 'sm' ? 'w-28' : 'w-48',
         className
       )}
     >
-      <svg viewBox='0 0 200 118' className='w-full'>
-        <path
-          d={ARC_PATH}
-          fill='none'
-          strokeWidth={16}
-          strokeLinecap='round'
-          className='stroke-muted'
-        />
-        <path
-          d={ARC_PATH}
-          fill='none'
-          strokeWidth={16}
-          strokeLinecap='round'
-          strokeDasharray={`${ARC_LENGTH * progress} ${ARC_LENGTH}`}
-          className={cn(
-            'transition-[stroke-dasharray] duration-700 ease-out',
-            severity === 'extreme'
-              ? 'stroke-red-600'
-              : severity === 'high'
-                ? 'stroke-orange-500'
-                : severity === 'moderate'
-                  ? 'stroke-amber-500'
-                  : 'stroke-emerald-500'
-          )}
+      <svg
+        viewBox='0 0 200 112'
+        className='w-full overflow-visible'
+        role='img'
+        aria-label={`Hazard index ${score.toFixed(1)} of 10, ${call}`}
+      >
+        {RISK_BANDS.map((band) => {
+          const from = band.from / 10 + (band.from > 0 ? GAP / 2 : 0)
+          const to = band.to / 10 - (band.to < 10 ? GAP / 2 : 0)
+          const filledTo = Math.min(to, value / 10)
+          return (
+            <g key={band.recommendation}>
+              <path
+                d={arc(from, to)}
+                fill='none'
+                strokeWidth={STROKE}
+                stroke={RECOMMENDATION_HEX[band.recommendation]}
+                strokeOpacity={0.16}
+              />
+              {filledTo > from ? (
+                <path
+                  d={arc(from, filledTo)}
+                  fill='none'
+                  strokeWidth={STROKE}
+                  stroke={RECOMMENDATION_HEX[band.recommendation]}
+                />
+              ) : null}
+            </g>
+          )
+        })}
+        <circle
+          cx={markerX}
+          cy={markerY}
+          r={STROKE / 2 + 2}
+          fill={RECOMMENDATION_HEX[call]}
+          className='stroke-background'
+          strokeWidth={3}
         />
         <text
           x='100'
-          y='92'
+          y='90'
           textAnchor='middle'
           className={cn(
             'fill-foreground font-bold tabular-nums',
-            size === 'sm' ? 'text-[34px]' : 'text-[40px]'
+            size === 'sm' ? 'text-[38px]' : 'text-[42px]'
           )}
         >
           {score.toFixed(1)}
         </text>
         <text
           x='100'
-          y='110'
+          y='108'
           textAnchor='middle'
-          className='fill-muted-foreground text-[11px]'
+          className='fill-muted-foreground text-[11px] tracking-wider'
         >
-          HAZARD INDEX / 10
+          OF 10
         </text>
       </svg>
-      <div className={cn('mt-1 text-xs font-medium', SEVERITY_TEXT[severity])}>
-        {severity === 'extreme'
-          ? 'Extreme'
-          : severity === 'high'
-            ? 'High'
-            : severity === 'moderate'
-              ? 'Moderate'
-              : 'Low'}{' '}
-        exposure
-      </div>
-      <RecommendationBadge recommendation={recommended} className='mt-2' />
+      {showLabel ? (
+        <RecommendationBadge recommendation={call} className='mt-2' />
+      ) : null}
     </div>
   )
 }

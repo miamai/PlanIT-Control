@@ -1,94 +1,84 @@
+import { Link } from '@tanstack/react-router'
 import { type Alert, type Site } from '@/api/types'
 import {
-  ALERT_TYPE_BADGE,
+  ALERT_SEVERITY_ICON_BOX,
   ALERT_TYPE_ICON,
-  ALERT_TYPE_LABEL,
   relativeTime,
 } from '@/lib/planit'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
 import { LightningCountdown } from './lightning-countdown'
 import { AlertSeverityBadge } from './risk-badge'
 
+/**
+ * One alert as a compact row: severity-colored type icon, title, site, message,
+ * the live all-clear timer for lightning, and optionally the crew action.
+ */
 export function AlertItem({
   alert,
   site,
-  onSimulate,
+  showAction = false,
   className,
 }: {
   alert: Alert
   site?: Site
-  onSimulate?: () => void
+  showAction?: boolean
   className?: string
 }) {
   const Icon = ALERT_TYPE_ICON[alert.type]
-  const isLightning = alert.type === 'lightning'
 
   return (
-    <Card
-      className={cn(
-        'border-l-2',
-        alert.severity === 'critical'
-          ? 'border-l-red-600'
-          : alert.severity === 'warning'
-            ? 'border-l-amber-500'
-            : 'border-l-sky-500',
-        className
-      )}
-    >
-      <CardContent className='space-y-3 p-4'>
-        <div className='flex items-start justify-between gap-3'>
-          <div className='flex min-w-0 items-start gap-3'>
-            <span className='mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-muted'>
-              <Icon className='size-4' />
-            </span>
-            <div className='min-w-0 space-y-1'>
-              <div className='flex flex-wrap items-center gap-1.5'>
-                <Badge
-                  variant='outline'
-                  className={cn(
-                    'text-[10px] uppercase',
-                    ALERT_TYPE_BADGE[alert.type]
-                  )}
-                >
-                  {ALERT_TYPE_LABEL[alert.type]}
-                </Badge>
-                <AlertSeverityBadge severity={alert.severity} />
-              </div>
-              <p className='text-sm font-medium'>{alert.title}</p>
-              <p className='text-xs text-muted-foreground'>{alert.message}</p>
-              {site ? (
-                <p className='text-xs text-muted-foreground'>
-                  <span className='font-medium text-foreground'>
-                    {site.name}
-                  </span>
-                  {' · '}
-                  {site.county} County, {site.state}
-                </p>
-              ) : null}
-            </div>
-          </div>
-          <span className='shrink-0 text-xs text-muted-foreground'>
+    <div className={cn('flex gap-3 py-3', className)}>
+      <span
+        className={cn(
+          'flex size-8 shrink-0 items-center justify-center rounded-md',
+          ALERT_SEVERITY_ICON_BOX[alert.severity]
+        )}
+      >
+        <Icon className='size-4' />
+      </span>
+      <div className='min-w-0 flex-1 space-y-1'>
+        <div className='flex items-start justify-between gap-2'>
+          <p className='text-sm leading-tight font-medium'>{alert.title}</p>
+          <span className='shrink-0 text-[11px] whitespace-nowrap text-muted-foreground'>
             {relativeTime(alert.createdAt)}
           </span>
         </div>
-
-        <div className='rounded-md bg-muted/50 px-3 py-2'>
-          <p className='text-xs font-medium'>Recommended action</p>
-          <p className='text-xs text-muted-foreground'>{alert.action}</p>
+        <div className='flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground'>
+          <AlertSeverityBadge
+            severity={alert.severity}
+            className='px-1.5 py-0 text-[10px]'
+          />
+          {site ? (
+            <Link
+              to='/sites/$siteId'
+              params={{ siteId: site.id }}
+              className='font-medium text-foreground hover:underline'
+            >
+              {site.name}
+              <span className='font-normal text-muted-foreground'>
+                {' '}
+                · {site.state}
+              </span>
+            </Link>
+          ) : null}
         </div>
-
-        {isLightning && alert.allClearAt ? (
+        <p className='line-clamp-2 text-xs text-muted-foreground'>
+          {alert.message}
+        </p>
+        {alert.type === 'lightning' && alert.allClearAt ? (
           <LightningCountdown
             allClearAt={alert.allClearAt}
-            strikeCount={alert.strikeCount}
-            distanceMi={alert.distanceMi}
-            compact
-            onSimulate={onSimulate}
+            variant='inline'
+            className='mt-1.5 max-w-sm'
           />
         ) : null}
-      </CardContent>
-    </Card>
+        {showAction ? (
+          <p className='text-xs'>
+            <span className='font-medium'>Action: </span>
+            <span className='text-muted-foreground'>{alert.action}</span>
+          </p>
+        ) : null}
+      </div>
+    </div>
   )
 }

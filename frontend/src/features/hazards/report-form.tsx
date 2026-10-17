@@ -1,24 +1,20 @@
 import { useMemo, useRef, useState } from 'react'
-import { format } from 'date-fns'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { createHazardReport } from '@/api'
-import {
-  Camera,
-  LocateFixed,
-  Loader2,
-  MapPin,
-  Send,
-  ShieldCheck,
-} from 'lucide-react'
+import { Camera, LocateFixed, Loader2, MapPin, Send, X } from 'lucide-react'
 import { SITE_SEED } from '@/api/mock/sites-data'
 import { type AlertSeverity, type HazardReportType } from '@/api/types'
 import { useAuthStore } from '@/stores/auth-store'
-import { REPORT_TYPE_LABEL } from '@/lib/planit'
+import {
+  ALERT_SEVERITY_LABEL,
+  REPORT_TYPE_ICON,
+  REPORT_TYPE_LABEL,
+} from '@/lib/planit'
 import { toastError, toastSuccess } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -31,6 +27,9 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Main } from '@/components/layout/main'
+import { LocationPicker } from '@/components/planit/location-picker'
+import { PageHeading } from '@/components/planit/page-heading'
+import { PanelHeader } from '@/components/planit/panel-header'
 import { PlanitHeader } from '@/components/planit/planit-header'
 
 const TYPES: HazardReportType[] = [
@@ -43,23 +42,57 @@ const TYPES: HazardReportType[] = [
   'soil',
 ]
 
-const SEVERITIES: { value: AlertSeverity; label: string; tone: string }[] = [
+const SEVERITIES: {
+  value: AlertSeverity
+  hint: string
+  selected: string
+  dot: string
+}[] = [
   {
     value: 'info',
-    label: 'Info — heads up',
-    tone: 'bg-sky-500/10 text-sky-700 dark:text-sky-300',
+    hint: 'Heads up',
+    selected: 'border-sky-500 bg-sky-500/10',
+    dot: 'bg-sky-500',
   },
   {
     value: 'warning',
-    label: 'Warning — take action',
-    tone: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+    hint: 'Take action',
+    selected: 'border-amber-500 bg-amber-500/10',
+    dot: 'bg-amber-500',
   },
   {
     value: 'critical',
-    label: 'Critical — stop work',
-    tone: 'bg-red-500/10 text-red-700 dark:text-red-300',
+    hint: 'Stop work',
+    selected: 'border-red-600 bg-red-600/10',
+    dot: 'bg-red-600',
   },
 ]
+
+function milesBetween(
+  a: { lat: number; lon: number },
+  b: { lat: number; lon: number }
+): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const dLat = toRad(b.lat - a.lat)
+  const dLon = toRad(b.lon - a.lon)
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2
+  return 3958.8 * 2 * Math.asin(Math.sqrt(h))
+}
+
+function nearestSite(point: { lat: number; lon: number }) {
+  let best = SITE_SEED[0]
+  let bestDistance = Number.POSITIVE_INFINITY
+  for (const candidate of SITE_SEED) {
+    const distance = milesBetween(point, candidate)
+    if (distance < bestDistance) {
+      bestDistance = distance
+      best = candidate
+    }
+  }
+  return best
+}
 
 function useDefaultLocation(siteId?: string) {
   const site = SITE_SEED.find((s) => s.id === siteId) ?? SITE_SEED[0]
@@ -134,10 +167,12 @@ export function HazardReportForm({
     setGeoError('')
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setLocation({
+        const point = {
           lat: Number(position.coords.latitude.toFixed(5)),
           lon: Number(position.coords.longitude.toFixed(5)),
-        })
+        }
+        setLocation(point)
+        setSiteId(nearestSite(point).id)
         setLocating(false)
       },
       (error) => {
@@ -148,20 +183,13 @@ export function HazardReportForm({
     )
   }
 
-  function pickNearestSite() {
-    let best = SITE_SEED[0]
-    let bestDistance = Number.POSITIVE_INFINITY
-    for (const candidate of SITE_SEED) {
-      const distance =
-        (candidate.lat - location.lat) ** 2 +
-        (candidate.lon - location.lon) ** 2
-      if (distance < bestDistance) {
-        bestDistance = distance
-        best = candidate
-      }
-    }
-    setSiteId(best.id)
+  function chooseSite(id: string) {
+    const next = SITE_SEED.find((s) => s.id === id)
+    setSiteId(id)
+    if (next) setLocation({ lat: next.lat, lon: next.lon })
   }
+
+  const distanceToSite = milesBetween(location, site)
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -187,75 +215,83 @@ export function HazardReportForm({
 
   return (
     <>
-      <PlanitHeader active='hazards' />
+      <PlanitHeader />
       <Main>
-        <div className='mb-6 max-w-xl space-y-1'>
-          <h1 className='text-2xl font-bold tracking-tight'>Report a hazard</h1>
-          <p className='text-sm text-muted-foreground'>
-            30 seconds from the field: snap a photo, drop a pin, pick a type.
-            Every report is shared instantly with other crews and network
-            owners.
-          </p>
-        </div>
+        <PageHeading title='Report a hazard' />
 
         <form onSubmit={handleSubmit} className='grid gap-4 lg:grid-cols-3'>
-          <div className='space-y-4 lg:col-span-2'>
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='text-base'>What did you find?</CardTitle>
-              </CardHeader>
+          <div className='min-w-0 space-y-4 lg:col-span-2'>
+            <Card className='gap-5'>
+              <PanelHeader title='Hazard' />
               <CardContent className='space-y-5'>
                 <div className='space-y-2'>
-                  <Label>Hazard type</Label>
-                  <Select
-                    value={type}
-                    onValueChange={(value) =>
-                      setType(value as HazardReportType)
-                    }
+                  <Label id='hazard-type-label' className='sr-only'>
+                    Hazard type
+                  </Label>
+                  <div
+                    role='radiogroup'
+                    aria-labelledby='hazard-type-label'
+                    className='grid grid-cols-3 gap-2 sm:grid-cols-4 xl:grid-cols-7'
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TYPES.map((reportType) => (
-                        <SelectItem key={reportType} value={reportType}>
-                          {REPORT_TYPE_LABEL[reportType]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    {TYPES.map((reportType) => {
+                      const Icon = REPORT_TYPE_ICON[reportType]
+                      const active = type === reportType
+                      return (
+                        <button
+                          key={reportType}
+                          type='button'
+                          role='radio'
+                          aria-checked={active}
+                          onClick={() => setType(reportType)}
+                          className={cn(
+                            'flex flex-col items-center gap-1.5 rounded-lg border px-2 py-3 text-xs font-medium transition-colors',
+                            active
+                              ? 'border-foreground bg-accent'
+                              : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                          )}
+                        >
+                          <Icon className='size-5' />
+                          <span className='text-center leading-tight'>
+                            {REPORT_TYPE_LABEL[reportType]}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 <div className='space-y-2'>
-                  <Label>Severity</Label>
+                  <Label id='severity-label'>Severity</Label>
                   <RadioGroup
                     value={severity}
                     onValueChange={(value) =>
                       setSeverity(value as AlertSeverity)
                     }
-                    className='grid gap-2 sm:grid-cols-3'
+                    aria-labelledby='severity-label'
+                    className='grid grid-cols-3 gap-2'
                   >
                     {SEVERITIES.map((option) => (
                       <label
                         key={option.value}
                         className={cn(
-                          'flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm transition-colors',
+                          'flex cursor-pointer flex-col gap-1 rounded-lg border p-3 transition-colors sm:flex-row sm:items-center sm:gap-2',
                           severity === option.value
-                            ? 'border-primary bg-primary/5'
+                            ? option.selected
                             : 'hover:bg-muted/50'
                         )}
                       >
-                        <RadioGroupItem value={option.value} />
-                        <span
-                          className={cn(
-                            'rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase',
-                            option.tone
-                          )}
-                        >
-                          {option.value}
+                        <RadioGroupItem
+                          value={option.value}
+                          className='sr-only'
+                        />
+                        <span className='flex items-center gap-1.5 text-sm font-semibold'>
+                          <span
+                            className={cn('size-2 rounded-full', option.dot)}
+                          />
+                          {ALERT_SEVERITY_LABEL[option.value]}
                         </span>
                         <span className='text-xs text-muted-foreground'>
-                          {option.label.split('—')[1]}
+                          {option.hint}
                         </span>
                       </label>
                     ))}
@@ -268,8 +304,8 @@ export function HazardReportForm({
                     id='note'
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    placeholder='e.g. Standing water across access road, water rising fast after overnight rain.'
-                    rows={4}
+                    placeholder='e.g. Standing water across the access road, rising fast after overnight rain.'
+                    rows={3}
                   />
                 </div>
 
@@ -283,52 +319,49 @@ export function HazardReportForm({
                     className='hidden'
                     onChange={handlePhoto}
                   />
-                  <div className='flex flex-wrap items-center gap-3'>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Camera /> Take or attach photo
-                    </Button>
-                    {photoUrl ? (
-                      <div className='flex items-center gap-2'>
-                        <img
-                          src={photoUrl}
-                          alt='Hazard preview'
-                          className='size-14 rounded-md border object-cover'
-                        />
-                        <span className='max-w-[140px] truncate text-xs text-muted-foreground'>
-                          {photoName}
-                        </span>
-                        <Button
-                          type='button'
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => {
-                            setPhotoUrl(undefined)
-                            setPhotoName('')
-                          }}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    ) : (
-                      <span className='text-xs text-muted-foreground'>
-                        Optional but strongly encouraged.
+                  {photoUrl ? (
+                    <div className='flex items-center gap-3 rounded-lg border p-2'>
+                      <img
+                        src={photoUrl}
+                        alt='Hazard preview'
+                        className='size-16 rounded-md object-cover'
+                      />
+                      <span className='min-w-0 flex-1 truncate text-sm text-muted-foreground'>
+                        {photoName}
                       </span>
-                    )}
-                  </div>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='icon'
+                        aria-label='Remove photo'
+                        onClick={() => {
+                          setPhotoUrl(undefined)
+                          setPhotoName('')
+                        }}
+                      >
+                        <X />
+                      </Button>
+                    </div>
+                  ) : (
+                    <button
+                      type='button'
+                      onClick={() => fileInputRef.current?.click()}
+                      className='flex w-full flex-col items-center gap-1 rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground'
+                    >
+                      <Camera className='size-6' />
+                      <span className='font-medium text-foreground'>
+                        Add photo
+                      </span>
+                    </button>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='text-base'>Where is it?</CardTitle>
-              </CardHeader>
+            <Card className='gap-5'>
+              <PanelHeader title='Location' />
               <CardContent className='space-y-4'>
-                <div className='flex flex-wrap items-center gap-3'>
+                <div className='flex flex-wrap items-center gap-2'>
                   <Button type='button' variant='outline' onClick={locateMe}>
                     {locating ? (
                       <Loader2 className='animate-spin' />
@@ -340,24 +373,26 @@ export function HazardReportForm({
                   <Button
                     type='button'
                     variant='ghost'
-                    onClick={pickNearestSite}
+                    onClick={() => setSiteId(nearestSite(location).id)}
                   >
-                    <MapPin /> Nearest monitored site
+                    <MapPin /> Snap to nearest site
                   </Button>
-                  <span className='text-xs text-muted-foreground tabular-nums'>
+                  <span className='ms-auto text-xs text-muted-foreground tabular-nums'>
                     {location.lat.toFixed(5)}, {location.lon.toFixed(5)}
                   </span>
                 </div>
                 {geoError ? (
-                  <p className='text-xs text-red-600'>
-                    {geoError} — pin defaulted to the selected site. You can
-                    still submit.
-                  </p>
+                  <p className='text-xs text-red-600'>{geoError}</p>
                 ) : null}
+                <LocationPicker
+                  value={location}
+                  site={site}
+                  onChange={setLocation}
+                />
                 <div className='space-y-2'>
-                  <Label>Nearest site (shared with)</Label>
-                  <Select value={siteId} onValueChange={setSiteId}>
-                    <SelectTrigger>
+                  <Label>Site</Label>
+                  <Select value={siteId} onValueChange={chooseSite}>
+                    <SelectTrigger className='w-full sm:w-80'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className='max-h-72'>
@@ -368,20 +403,19 @@ export function HazardReportForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className='text-xs text-muted-foreground'>
-                    {site.utility} · {site.county} County, {site.state} ·{' '}
-                    {site.capacityMw.toLocaleString()} MW
-                  </p>
+                  {distanceToSite >= 0.1 ? (
+                    <p className='text-xs text-muted-foreground'>
+                      Pin is {distanceToSite.toFixed(1)} mi from {site.name}
+                    </p>
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <div className='space-y-4'>
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='text-base'>Filed by</CardTitle>
-              </CardHeader>
+          <div>
+            <Card className='gap-5 lg:sticky lg:top-4'>
+              <PanelHeader title='Reporter' />
               <CardContent className='space-y-4'>
                 <div className='space-y-2'>
                   <Label htmlFor='reporter'>Name / call sign</Label>
@@ -410,6 +444,7 @@ export function HazardReportForm({
                 </div>
                 <Button
                   type='submit'
+                  size='lg'
                   className='w-full'
                   disabled={createMutation.isPending}
                 >
@@ -418,14 +453,8 @@ export function HazardReportForm({
                   ) : (
                     <Send />
                   )}
-                  Share with network
+                  Submit
                 </Button>
-                <p className='flex items-start gap-2 text-xs text-muted-foreground'>
-                  <ShieldCheck className='mt-0.5 size-3.5 shrink-0' />
-                  Shared with network owners — visible to every crew on this
-                  site&apos;s utility. Last synced{' '}
-                  {format(new Date(), 'HH:mm:ss')}.
-                </p>
               </CardContent>
             </Card>
           </div>

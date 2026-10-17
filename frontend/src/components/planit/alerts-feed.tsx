@@ -5,15 +5,13 @@ import { AlertItem } from '@/components/planit/alert-item'
 export function AlertsFeed({
   alerts,
   limit,
-  onSimulate,
-  scrollable = false,
-  emptyMessage = 'No active alerts — conditions nominal across the fleet.',
+  showAction = false,
+  emptyMessage = 'No active alerts',
   className,
 }: {
   alerts: RankedAlert[]
   limit?: number
-  onSimulate?: (siteId: string) => void
-  scrollable?: boolean
+  showAction?: boolean
   emptyMessage?: string
   className?: string
 }) {
@@ -33,19 +31,14 @@ export function AlertsFeed({
   }
 
   return (
-    <div
-      className={cn(
-        'space-y-3',
-        scrollable && 'max-h-[560px] overflow-y-auto pe-1',
-        className
-      )}
-    >
+    <div className={cn('divide-y', className)}>
       {rows.map((alert) => (
         <AlertItem
           key={alert.id}
           alert={alert}
           site={alert.site}
-          onSimulate={onSimulate ? () => onSimulate(alert.site.id) : undefined}
+          showAction={showAction}
+          className='first:pt-0 last:pb-0'
         />
       ))}
     </div>

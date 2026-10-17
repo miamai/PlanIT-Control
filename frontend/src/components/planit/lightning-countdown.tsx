@@ -1,38 +1,87 @@
-import { Zap } from 'lucide-react'
+import { CheckCircle2, Zap } from 'lucide-react'
+import { ALL_CLEAR_MINUTES, LIGHTNING_RADIUS_MI } from '@/api/mock/engine'
 import { formatDuration } from '@/lib/planit'
 import { cn } from '@/lib/utils'
 import { useCountdown } from '@/hooks/use-planit'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 
-const ALL_CLEAR_SECONDS = 30 * 60
+const ALL_CLEAR_SECONDS = ALL_CLEAR_MINUTES * 60
 
+/**
+ * Lightning stop-work all-clear timer. `inline` fits inside an alert row,
+ * `ring` is the large dial used where the countdown is the main content.
+ */
 export function LightningCountdown({
   allClearAt,
   strikeCount,
   distanceMi,
-  compact = false,
-  onSimulate,
+  variant = 'ring',
+  heading,
   className,
 }: {
   allClearAt: string
   strikeCount?: number
   distanceMi?: number
-  compact?: boolean
-  onSimulate?: () => void
+  variant?: 'ring' | 'inline'
+  /** Replaces the default "Stop-work in effect" line, e.g. with the site name. */
+  heading?: React.ReactNode
   className?: string
 }) {
   const remaining = useCountdown(allClearAt)
   const cleared = remaining <= 0
-  const progress = cleared ? 1 : 1 - remaining / ALL_CLEAR_SECONDS
-  const size = compact ? 72 : 104
-  const stroke = compact ? 7 : 9
+  // Share of the 30-minute window still to run; the bar drains like a timer.
+  const remainingShare = cleared
+    ? 0
+    : Math.min(1, remaining / ALL_CLEAR_SECONDS)
+
+  if (variant === 'inline') {
+    return (
+      <div
+        className={cn(
+          'flex items-center gap-2 rounded-md border px-2 py-1.5',
+          cleared
+            ? 'border-emerald-500/30 bg-emerald-500/5'
+            : 'border-red-600/30 bg-red-600/5',
+          className
+        )}
+      >
+        {cleared ? (
+          <CheckCircle2 className='size-3.5 shrink-0 text-emerald-600' />
+        ) : (
+          <Zap className='size-3.5 shrink-0 fill-red-600 text-red-600' />
+        )}
+        <span className='text-xs whitespace-nowrap'>
+          {cleared ? (
+            'All-clear reached'
+          ) : (
+            <>
+              All-clear in{' '}
+              <span className='font-semibold tabular-nums'>
+                {formatDuration(remaining)}
+              </span>
+            </>
+          )}
+        </span>
+        <span className='h-1 min-w-10 flex-1 overflow-hidden rounded-full bg-muted'>
+          <span
+            className={cn(
+              'block h-full rounded-full transition-[width] duration-1000 ease-linear',
+              cleared ? 'bg-emerald-500' : 'bg-red-600'
+            )}
+            style={{ width: `${remainingShare * 100}%` }}
+          />
+        </span>
+      </div>
+    )
+  }
+
+  const size = 112
+  const stroke = 10
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
 
   return (
     <div className={cn('flex items-center gap-4', className)}>
-      <div className='relative' style={{ width: size, height: size }}>
+      <div className='relative shrink-0' style={{ width: size, height: size }}>
         <svg width={size} height={size} className='-rotate-90'>
           <circle
             cx={size / 2}
@@ -49,7 +98,7 @@ export function LightningCountdown({
             fill='none'
             strokeWidth={stroke}
             strokeLinecap='round'
-            strokeDasharray={`${circumference * progress} ${circumference}`}
+            strokeDasharray={`${circumference * (cleared ? 1 : remainingShare)} ${circumference}`}
             className={cn(
               'transition-[stroke-dasharray] duration-1000 ease-linear',
               cleared ? 'stroke-emerald-500' : 'stroke-red-600'
@@ -57,70 +106,37 @@ export function LightningCountdown({
           />
         </svg>
         <div className='absolute inset-0 flex flex-col items-center justify-center'>
-          <span
+          <span className='text-xl font-bold tabular-nums'>
+            {cleared ? 'Clear' : formatDuration(remaining)}
+          </span>
+          <span className='text-[10px] text-muted-foreground uppercase'>
+            {cleared ? 'resume work' : 'to all-clear'}
+          </span>
+        </div>
+      </div>
+
+      <div className='min-w-0 space-y-1'>
+        {heading ? (
+          <div className='text-sm font-semibold'>{heading}</div>
+        ) : (
+          <p
             className={cn(
-              'font-bold tabular-nums',
-              compact ? 'text-sm' : 'text-xl'
+              'text-sm font-semibold',
+              cleared ? 'text-emerald-600' : 'text-red-600 dark:text-red-400'
             )}
           >
-            {cleared ? 'CLEAR' : formatDuration(remaining)}
-          </span>
-          {!cleared ? (
-            <span className='text-[10px] text-muted-foreground'>
-              to all-clear
-            </span>
-          ) : null}
-        </div>
-      </div>
-
-      <div className='space-y-1.5'>
-        <div className='flex flex-wrap items-center gap-2'>
-          <CountdownIcon
-            className={cleared ? 'text-emerald-500' : 'text-red-600'}
-          />
-          <p className='text-sm font-medium'>
-            {cleared ? 'All-clear reached' : 'Lightning stop-work active'}
+            {cleared ? 'All-clear reached' : 'Stop-work in effect'}
           </p>
-        </div>
-        <div className='flex flex-wrap gap-1.5'>
-          {typeof strikeCount === 'number' ? (
-            <Badge variant='outline' className='text-[11px]'>
-              {strikeCount} strike{strikeCount === 1 ? '' : 's'} / 10 mi
-            </Badge>
-          ) : null}
-          {typeof distanceMi === 'number' && distanceMi > 0 ? (
-            <Badge variant='outline' className='text-[11px]'>
-              nearest {distanceMi} mi
-            </Badge>
-          ) : null}
-        </div>
-        <p className='max-w-[26ch] text-xs text-muted-foreground'>
-          Countdown resets on every new strike inside the 10 mile radius.
+        )}
+        <p className='text-xs text-muted-foreground'>
+          {typeof strikeCount === 'number'
+            ? `${strikeCount} strike${strikeCount === 1 ? '' : 's'} within ${LIGHTNING_RADIUS_MI} mi`
+            : `Strike within ${LIGHTNING_RADIUS_MI} mi`}
+          {typeof distanceMi === 'number' && distanceMi > 0
+            ? ` · nearest ${distanceMi} mi`
+            : ''}
         </p>
-        {onSimulate ? (
-          <Button
-            size='sm'
-            variant='outline'
-            className='mt-1'
-            onClick={onSimulate}
-          >
-            <Zap /> Simulate strike
-          </Button>
-        ) : null}
       </div>
     </div>
-  )
-}
-
-function CountdownIcon({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex size-4 items-center justify-center rounded-full',
-        className
-      )}
-    >
-      <span className='size-2 animate-ping rounded-full bg-current' />
-    </span>
   )
 }

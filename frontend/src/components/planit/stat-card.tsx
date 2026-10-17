@@ -1,6 +1,6 @@
 import { type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function StatCard({
   label,
@@ -9,13 +9,15 @@ export function StatCard({
   hint,
   tone = 'default',
   className,
+  children,
 }: {
   label: string
-  value: string | number
+  value: React.ReactNode
   icon?: LucideIcon
-  hint?: string
+  hint?: React.ReactNode
   tone?: 'default' | 'danger' | 'warning' | 'success'
   className?: string
+  children?: React.ReactNode
 }) {
   const toneClass =
     tone === 'danger'
@@ -27,18 +29,22 @@ export function StatCard({
           : 'text-muted-foreground'
 
   return (
-    <Card className={className}>
-      <CardContent className='flex items-start justify-between gap-3 p-4'>
-        <div className='space-y-1'>
-          <p className='text-xs font-medium text-muted-foreground'>{label}</p>
-          <p className='text-2xl font-bold tabular-nums'>{value}</p>
-          {hint ? <p className={cn('text-xs', toneClass)}>{hint}</p> : null}
-        </div>
+    <Card className={cn('gap-3', className)}>
+      <CardHeader className='flex flex-row items-center justify-between'>
+        <CardTitle className='text-sm font-medium'>{label}</CardTitle>
         {Icon ? (
-          <span className='flex size-9 items-center justify-center rounded-md bg-muted'>
-            <Icon className={cn('size-4', toneClass)} />
-          </span>
+          <Icon
+            className={cn(
+              'size-4',
+              tone === 'default' ? 'text-muted-foreground' : toneClass
+            )}
+          />
         ) : null}
+      </CardHeader>
+      <CardContent className='space-y-2'>
+        <div className='text-2xl font-bold tabular-nums'>{value}</div>
+        {hint ? <p className={cn('text-xs', toneClass)}>{hint}</p> : null}
+        {children}
       </CardContent>
     </Card>
   )

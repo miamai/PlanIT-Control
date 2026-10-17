@@ -2,15 +2,22 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { listHazardReports } from '@/api'
-import { Plus, Share2, Users } from 'lucide-react'
+import {
+  BadgeCheck,
+  Clock,
+  Database,
+  ListFilter,
+  MapPinned,
+  Plus,
+} from 'lucide-react'
 import { SITE_SEED } from '@/api/mock/sites-data'
 import { REPORT_TYPE_LABEL, relativeTime } from '@/lib/planit'
-import { cn } from '@/lib/utils'
-import { useLiveStrikes } from '@/hooks/use-planit'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Main } from '@/components/layout/main'
+import { PageHeading } from '@/components/planit/page-heading'
+import { PanelHeader } from '@/components/planit/panel-header'
 import { PlanitHeader } from '@/components/planit/planit-header'
 import { ReportList } from '@/components/planit/report-list'
 import { SiteMap } from '@/components/planit/site-map'
@@ -33,7 +40,6 @@ export function Hazards() {
     queryFn: () => listHazardReports(),
     staleTime: 15_000,
   })
-  const strikes = useLiveStrikes()
   const [type, setType] = useState<string>(ALL)
 
   const reports = useMemo(() => reportsQuery.data ?? [], [reportsQuery.data])
@@ -49,51 +55,30 @@ export function Hazards() {
     return map
   }, [reports])
 
-  const contributors = new Set(reports.map((r) => r.reportedBy)).size
+  const verified = reports.filter((r) => r.status === 'verified').length
 
   return (
     <>
-      <PlanitHeader
-        active='hazards'
-        actions={
-          <Button asChild size='sm' className='hidden sm:inline-flex'>
-            <Link to='/hazards/new' search={{ site: undefined }}>
-              <Plus /> New report
-            </Link>
-          </Button>
-        }
-      />
+      <PlanitHeader />
       <Main>
-        <div className='mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between'>
-          <div className='space-y-1'>
-            <h1 className='text-2xl font-bold tracking-tight'>
-              Shared hazard database
-            </h1>
-            <p className='text-sm text-muted-foreground'>
-              Every hazard a crew pins is instantly visible to the whole network
-              — no more tribal knowledge stuck on one truck.
-            </p>
-          </div>
-          <Button asChild size='sm' variant='outline' className='sm:hidden'>
-            <Link to='/hazards/new' search={{ site: undefined }}>
-              <Plus /> New report
-            </Link>
-          </Button>
-        </div>
+        <PageHeading
+          title='Hazard reports'
+          actions={
+            <Button asChild size='sm'>
+              <Link to='/hazards/new' search={{ site: undefined }}>
+                <Plus /> New report
+              </Link>
+            </Button>
+          }
+        />
 
         <div className='mb-4 grid gap-4 sm:grid-cols-3'>
           <StatCard
             label='Reports on file'
             value={reports.length}
-            icon={Share2}
-            hint='Shared across the network'
+            icon={Database}
           />
-          <StatCard
-            label='Contributors'
-            value={contributors}
-            icon={Users}
-            hint='Crews and supervisors reporting'
-          />
+          <StatCard label='Verified' value={verified} icon={BadgeCheck} />
           <StatCard
             label='Latest report'
             value={
@@ -101,87 +86,63 @@ export function Hazards() {
                 ? relativeTime(reports[0].createdAt).replace(' ago', '')
                 : '—'
             }
-            icon={Share2}
+            icon={Clock}
             hint={
-              reports.length ? REPORT_TYPE_LABEL[reports[0].type] : undefined
+              reports.length
+                ? `${REPORT_TYPE_LABEL[reports[0].type]} · ${SITE_SEED.find((s) => s.id === reports[0].siteId)?.name ?? ''}`
+                : undefined
             }
           />
         </div>
 
         <div className='grid gap-4 lg:grid-cols-3'>
-          <div className='space-y-4 lg:col-span-2'>
-            <Tabs value={type} onValueChange={setType}>
-              <div className='overflow-x-auto pb-2'>
-                <TabsList>
-                  <TabsTrigger value={ALL}>
-                    All
-                    <span className='ms-1 text-muted-foreground tabular-nums'>
-                      {counts[ALL]}
-                    </span>
-                  </TabsTrigger>
-                  {TYPES.map((reportType) => (
-                    <TabsTrigger key={reportType} value={reportType}>
-                      {REPORT_TYPE_LABEL[reportType]}
+          <Card className='min-w-0 gap-4 lg:col-span-2'>
+            <PanelHeader icon={ListFilter} title='All reports' />
+            <CardContent className='space-y-4'>
+              <Tabs value={type} onValueChange={setType}>
+                <div className='-mx-1 overflow-x-auto px-1 pb-1'>
+                  <TabsList>
+                    <TabsTrigger value={ALL}>
+                      All
                       <span className='ms-1 text-muted-foreground tabular-nums'>
-                        {counts[reportType] ?? 0}
+                        {counts[ALL]}
                       </span>
                     </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
-            </Tabs>
+                    {TYPES.map((reportType) => (
+                      <TabsTrigger
+                        key={reportType}
+                        value={reportType}
+                        disabled={!counts[reportType]}
+                      >
+                        {REPORT_TYPE_LABEL[reportType]}
+                        <span className='ms-1 text-muted-foreground tabular-nums'>
+                          {counts[reportType] ?? 0}
+                        </span>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
+              </Tabs>
 
-            <ReportList
-              reports={filtered}
-              isLoading={reportsQuery.isLoading}
-              showSite
-              emptyMessage='No reports of this type yet.'
-            />
-          </div>
+              <ReportList
+                reports={filtered}
+                isLoading={reportsQuery.isLoading}
+                showSite
+                emptyMessage='No reports'
+              />
+            </CardContent>
+          </Card>
 
-          <div className='space-y-4'>
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='text-base'>Report map</CardTitle>
-              </CardHeader>
+          <div>
+            <Card className='gap-4 lg:sticky lg:top-4'>
+              <PanelHeader icon={MapPinned} title='Map' />
               <CardContent>
                 <SiteMap
                   markers={SITE_SEED.map((site) => ({ site, score: 0 }))}
-                  strikes={strikes}
-                  reports={reports}
-                  height='h-[300px]'
+                  reports={filtered}
+                  siteStyle='context'
+                  height='h-[420px]'
                 />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='text-base'>Top reporters</CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-2'>
-                {Object.entries(
-                  reports.reduce<Record<string, number>>((acc, report) => {
-                    acc[report.reportedBy] = (acc[report.reportedBy] ?? 0) + 1
-                    return acc
-                  }, {})
-                )
-                  .sort((a, b) => b[1] - a[1])
-                  .slice(0, 5)
-                  .map(([name, count]) => (
-                    <div
-                      key={name}
-                      className='flex items-center justify-between text-sm'
-                    >
-                      <span className='truncate'>{name}</span>
-                      <span
-                        className={cn(
-                          'rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums'
-                        )}
-                      >
-                        {count}
-                      </span>
-                    </div>
-                  ))}
               </CardContent>
             </Card>
           </div>

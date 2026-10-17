@@ -1,5 +1,9 @@
 import { useEffect, useMemo } from 'react'
-import { type SiteConditions, computeSiteRiskBundle } from '@/api/mock/engine'
+import {
+  type SiteConditions,
+  alertSeverityRank,
+  computeSiteRiskBundle,
+} from '@/api/mock/engine'
 import { SITE_SEED } from '@/api/mock/sites-data'
 import { type Alert, type Site, type SiteRisk } from '@/api/types'
 import { useLiveStore } from '@/stores/live-store'
@@ -67,6 +71,7 @@ export interface RankedAlert extends Alert {
   site: Site
 }
 
+/** Active alerts across the fleet, most severe first, then most recent. */
 export function useActiveAlerts(): RankedAlert[] {
   const bundles = useSiteBundles()
   return useMemo(
@@ -77,6 +82,7 @@ export function useActiveAlerts(): RankedAlert[] {
         )
         .sort(
           (a, b) =>
+            alertSeverityRank(b.severity) - alertSeverityRank(a.severity) ||
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         ),
     [bundles]

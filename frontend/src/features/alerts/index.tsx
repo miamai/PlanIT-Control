@@ -1,62 +1,60 @@
 import { useMemo, useState } from 'react'
-import { RadioTower, Siren, Zap } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import {
+  BellRing,
+  Flame,
+  Gauge,
+  RadioTower,
+  Send,
+  Thermometer,
+  Waves,
+  Zap,
+} from 'lucide-react'
 import { ALERT_TYPE_LABEL } from '@/lib/planit'
-import { cn } from '@/lib/utils'
 import { useActiveAlerts, useSimulateStrike } from '@/hooks/use-planit'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Main } from '@/components/layout/main'
 import { AlertsFeed } from '@/components/planit/alerts-feed'
+import { LightningCountdown } from '@/components/planit/lightning-countdown'
+import { PageHeading } from '@/components/planit/page-heading'
+import { PanelHeader } from '@/components/planit/panel-header'
 import { PlanitHeader } from '@/components/planit/planit-header'
-import { StatCard } from '@/components/planit/stat-card'
 
 const ALL = '__all__'
-const TYPES = [
-  'lightning',
-  'heat',
-  'flood',
-  'wildfire',
-  'storm',
-  'wildlife',
+const PAGE_SIZE = 12
+// Lightning stop-work alerts get their own countdown cards above the list.
+const TYPES = ['heat', 'flood', 'wildfire', 'storm', 'wildlife'] as const
+
+const THRESHOLDS = [
+  { icon: Zap, name: 'Lightning', rule: 'Strike ≤ 10 mi · 30 min all-clear' },
+  { icon: Waves, name: 'Flood', rule: 'Gauge ≥ 95% of flood stage' },
+  {
+    icon: Thermometer,
+    name: 'Heat',
+    rule: 'HI ≥ 100°F warning · ≥ 110°F critical',
+  },
+  { icon: Flame, name: 'Smoke', rule: 'Red flag or AQI ≥ 150' },
 ] as const
 
-const RULES = [
-  {
-    icon: Zap,
-    name: 'Lightning stop-work',
-    detail:
-      'Any strike within 10 miles → stop-work alert, 30-minute all-clear countdown that resets on every new strike.',
-    tone: 'violet',
-  },
-  {
-    icon: Siren,
-    name: 'River flood watch',
-    detail:
-      'Overnight rainfall pushing a gauge above 95% of flood stage → flood-risk warning for riverside sites.',
-    tone: 'blue',
-  },
-  {
-    icon: Siren,
-    name: 'Heat threshold',
-    detail:
-      'Heat index ≥ 100°F → heat advisory; ≥ 110°F → critical alert with mandatory rest-cycle action.',
-    tone: 'orange',
-  },
-  {
-    icon: Siren,
-    name: 'Red flag & smoke',
-    detail:
-      'Red flag conditions or AQI ≥ 150 → hot-work ban and N95 mask requirement.',
-    tone: 'red',
-  },
-] as const
+const CHANNELS = [
+  { label: 'Push', scope: 'All alerts' },
+  { label: 'SMS', scope: 'Critical + lightning' },
+  { label: 'Email', scope: '18:00 briefing' },
+]
 
 export function Alerts() {
-  const alerts = useActiveAlerts()
+  const active = useActiveAlerts()
   const simulateStrike = useSimulateStrike()
   const [type, setType] = useState<string>(ALL)
+  const [showAll, setShowAll] = useState(false)
+
+  const stopWork = active.filter((a) => a.type === 'lightning' && a.allClearAt)
+  const alerts = useMemo(
+    () => active.filter((a) => !(a.type === 'lightning' && a.allClearAt)),
+    [active]
+  )
 
   const filtered = useMemo(
     () =>
@@ -71,169 +69,168 @@ export function Alerts() {
   }, [alerts])
 
   const critical = alerts.filter((a) => a.severity === 'critical').length
-  const lightning = alerts.filter((a) => a.type === 'lightning').length
+  const warning = alerts.filter((a) => a.severity === 'warning').length
+  const advisory = alerts.filter((a) => a.severity === 'info').length
+  const visible = showAll ? filtered : filtered.slice(0, PAGE_SIZE)
 
   return (
     <>
-      <PlanitHeader
-        active='alerts'
-        actions={
-          <Button
-            size='sm'
-            className='hidden sm:inline-flex'
-            onClick={() => simulateStrike()}
-          >
-            <RadioTower /> Simulate strike
-          </Button>
-        }
-      />
+      <PlanitHeader />
       <Main>
-        <div className='mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between'>
-          <div className='space-y-1'>
-            <h1 className='text-2xl font-bold tracking-tight'>Alert center</h1>
-            <p className='text-sm text-muted-foreground'>
-              Instant warnings the moment conditions turn dangerous — push and
-              SMS go out through the same engine.
-            </p>
-          </div>
-          <Button
-            size='sm'
-            variant='outline'
-            onClick={() => simulateStrike()}
-            className='sm:hidden'
-          >
-            <RadioTower /> Simulate strike
-          </Button>
-        </div>
+        <PageHeading
+          title='Alerts'
+          actions={
+            <Button
+              size='sm'
+              variant='outline'
+              onClick={() => simulateStrike()}
+            >
+              <RadioTower /> Simulate strike
+            </Button>
+          }
+        />
 
-        <div className='mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
-          <StatCard
-            label='Active alerts'
-            value={alerts.length}
-            icon={Siren}
-            hint='Across all monitored sites'
-          />
-          <StatCard
-            label='Critical'
-            value={critical}
-            icon={Siren}
-            tone={critical > 0 ? 'danger' : 'default'}
-            hint={critical > 0 ? 'Supervisor action required' : 'None open'}
-          />
-          <StatCard
-            label='Lightning stop-work'
-            value={lightning}
-            icon={Zap}
-            tone={lightning > 0 ? 'warning' : 'default'}
-            hint='10 mi radius · 30 min reset'
-          />
-          <StatCard
-            label='Delivery channels'
-            value='Push · SMS'
-            icon={RadioTower}
-            hint='Twilio SMS hook in alert engine'
-          />
-        </div>
+        {stopWork.length > 0 ? (
+          <section className='mb-4'>
+            <h2 className='mb-3 flex items-center gap-2 text-sm font-semibold'>
+              <span className='relative flex size-2'>
+                <span className='absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-75' />
+                <span className='relative inline-flex size-2 rounded-full bg-red-600' />
+              </span>
+              Stop-work in effect
+            </h2>
+            <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
+              {stopWork.map((alert) => (
+                <Card key={alert.id} className='border-red-600/30 py-4'>
+                  <CardContent className='px-4'>
+                    {alert.allClearAt ? (
+                      <LightningCountdown
+                        allClearAt={alert.allClearAt}
+                        strikeCount={alert.strikeCount}
+                        distanceMi={alert.distanceMi}
+                        heading={
+                          <Link
+                            to='/sites/$siteId'
+                            params={{ siteId: alert.site.id }}
+                            className='hover:underline'
+                          >
+                            {alert.site.name}
+                            <span className='font-normal text-muted-foreground'>
+                              {' '}
+                              · {alert.site.state}
+                            </span>
+                          </Link>
+                        }
+                      />
+                    ) : null}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <div className='grid gap-4 lg:grid-cols-3'>
-          <div className='space-y-4 lg:col-span-2'>
-            <Tabs value={type} onValueChange={setType}>
-              <div className='overflow-x-auto pb-2'>
-                <TabsList>
-                  <TabsTrigger value={ALL}>
-                    All
-                    <span className='ms-1 text-muted-foreground tabular-nums'>
-                      {counts[ALL]}
-                    </span>
-                  </TabsTrigger>
-                  {TYPES.map((alertType) => (
-                    <TabsTrigger key={alertType} value={alertType}>
-                      {ALERT_TYPE_LABEL[alertType]}
+          <Card className='min-w-0 gap-4 lg:col-span-2'>
+            <PanelHeader
+              icon={BellRing}
+              title='Active alerts'
+              aside={
+                <span className='tabular-nums'>
+                  <span className='font-medium text-red-600 dark:text-red-400'>
+                    {critical} critical
+                  </span>{' '}
+                  · {warning} warning · {advisory} advisory
+                </span>
+              }
+            />
+            <CardContent className='space-y-4'>
+              <Tabs
+                value={type}
+                onValueChange={(value) => {
+                  setType(value)
+                  setShowAll(false)
+                }}
+              >
+                <div className='-mx-1 overflow-x-auto px-1 pb-1'>
+                  <TabsList>
+                    <TabsTrigger value={ALL}>
+                      All
                       <span className='ms-1 text-muted-foreground tabular-nums'>
-                        {counts[alertType] ?? 0}
+                        {counts[ALL]}
                       </span>
                     </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
-            </Tabs>
+                    {TYPES.map((alertType) => (
+                      <TabsTrigger
+                        key={alertType}
+                        value={alertType}
+                        disabled={!counts[alertType]}
+                      >
+                        {ALERT_TYPE_LABEL[alertType]}
+                        <span className='ms-1 text-muted-foreground tabular-nums'>
+                          {counts[alertType] ?? 0}
+                        </span>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
+              </Tabs>
 
-            <AlertsFeed
-              alerts={filtered}
-              onSimulate={simulateStrike}
-              emptyMessage='No active alerts of this type right now.'
-            />
-          </div>
+              <AlertsFeed alerts={visible} />
+
+              {filtered.length > PAGE_SIZE ? (
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='w-full'
+                  onClick={() => setShowAll((value) => !value)}
+                >
+                  {showAll ? 'Show fewer' : `Show all ${filtered.length}`}
+                </Button>
+              ) : null}
+            </CardContent>
+          </Card>
 
           <div className='space-y-4'>
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='text-base'>Detection rules</CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                {RULES.map((rule) => (
-                  <div key={rule.name} className='flex gap-3'>
-                    <span
-                      className={cn(
-                        'flex size-8 shrink-0 items-center justify-center rounded-md',
-                        rule.tone === 'violet'
-                          ? 'bg-violet-500/10 text-violet-600'
-                          : rule.tone === 'blue'
-                            ? 'bg-blue-500/10 text-blue-600'
-                            : rule.tone === 'orange'
-                              ? 'bg-orange-500/10 text-orange-600'
-                              : 'bg-red-500/10 text-red-600'
-                      )}
+            <Card className='gap-4'>
+              <PanelHeader icon={Gauge} title='Thresholds' />
+              <CardContent>
+                <ul className='divide-y'>
+                  {THRESHOLDS.map((item) => (
+                    <li
+                      key={item.name}
+                      className='flex items-center gap-3 py-2.5 first:pt-0 last:pb-0'
                     >
-                      <rule.icon className='size-4' />
-                    </span>
-                    <div className='space-y-1'>
-                      <p className='text-sm font-medium'>{rule.name}</p>
-                      <p className='text-xs leading-relaxed text-muted-foreground'>
-                        {rule.detail}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                      <item.icon className='size-4 shrink-0 text-muted-foreground' />
+                      <span className='w-16 shrink-0 text-sm font-medium'>
+                        {item.name}
+                      </span>
+                      <span className='text-xs text-muted-foreground'>
+                        {item.rule}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='flex items-center justify-between text-base'>
-                  Notification channels
-                  <Badge variant='outline' className='text-[10px]'>
-                    real-time
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-3 text-sm'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>
-                    Push (web / mobile)
-                  </span>
-                  <Badge className='border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'>
-                    enabled
-                  </Badge>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>SMS (Twilio)</span>
-                  <Badge className='border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'>
-                    enabled
-                  </Badge>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>
-                    6 PM briefing email
-                  </span>
-                  <Badge className='border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'>
-                    enabled
-                  </Badge>
-                </div>
-                <p className='pt-1 text-xs leading-relaxed text-muted-foreground'>
-                  Crews that acknowledge an alert are skipped for the repeat
-                  push 5 minutes later; supervisors always get both.
-                </p>
+            <Card className='gap-4'>
+              <PanelHeader icon={Send} title='Channels' />
+              <CardContent>
+                <ul className='divide-y'>
+                  {CHANNELS.map((channel) => (
+                    <li
+                      key={channel.label}
+                      className='flex items-center justify-between gap-3 py-2.5 text-sm first:pt-0 last:pb-0'
+                    >
+                      <span className='font-medium'>{channel.label}</span>
+                      <span className='flex items-center gap-2 text-xs text-muted-foreground'>
+                        {channel.scope}
+                        <span className='size-2 rounded-full bg-emerald-500' />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           </div>
