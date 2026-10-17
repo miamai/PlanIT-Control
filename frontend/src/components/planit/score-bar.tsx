@@ -10,12 +10,9 @@ import { cn } from '@/lib/utils'
 export function ScoreBar({
   score,
   className,
-  tone = 'risk',
 }: {
   score: number
   className?: string
-  /** Use a neutral track when a nearby badge already communicates the decision. */
-  tone?: 'risk' | 'neutral'
 }) {
   const call = recommendationFromScore(score)
   return (
@@ -31,7 +28,7 @@ export function ScoreBar({
         <span
           className={cn(
             'absolute inset-y-0 left-0 rounded-full',
-            tone === 'neutral' ? 'bg-foreground/45' : RECOMMENDATION_BG[call]
+            RECOMMENDATION_BG[call]
           )}
           style={{ width: `${Math.min(100, score * 10)}%` }}
         />

@@ -72,26 +72,20 @@ export const SEVERITY_DOT: Record<SeverityLevel, string> = {
 }
 
 export const SEVERITY_TEXT: Record<SeverityLevel, string> = {
-  low: 'text-emerald-600 dark:text-emerald-400',
-  moderate: 'text-amber-600 dark:text-amber-400',
-  high: 'text-orange-600 dark:text-orange-400',
-  extreme: 'text-red-600 dark:text-red-400',
+  low: 'text-emerald-700 dark:text-emerald-300',
+  moderate: 'text-amber-700 dark:text-amber-300',
+  high: 'text-orange-700 dark:text-orange-300',
+  extreme: 'text-red-700 dark:text-red-300',
 }
 
-export const RECOMMENDATION_BADGE: Record<Recommendation, string> = {
-  GO: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-  CAUTION:
-    'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
-  'NO-GO': 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-300',
-}
-
+/** Decision text reinforces the score without adding another colored container. */
 export const RECOMMENDATION_TEXT: Record<Recommendation, string> = {
-  GO: 'text-emerald-600 dark:text-emerald-400',
-  CAUTION: 'text-amber-600 dark:text-amber-400',
-  'NO-GO': 'text-red-600 dark:text-red-400',
+  GO: 'text-emerald-700 dark:text-emerald-300',
+  CAUTION: 'text-amber-700 dark:text-amber-300',
+  'NO-GO': 'text-red-700 dark:text-red-300',
 }
 
-/** Hex colors for SVG, charts and map markers (same scale as the badges). */
+/** Hex colors for SVG, charts and map markers (same scale as the risk indicators). */
 export const RECOMMENDATION_HEX: Record<Recommendation, string> = {
   GO: '#10b981',
   CAUTION: '#f59e0b',
@@ -118,13 +112,6 @@ export const RISK_BANDS: {
   { recommendation: 'NO-GO', from: CAUTION_BELOW, to: 10 },
 ]
 
-export const SEVERITY_ALERT_BADGE: Record<AlertSeverity, string> = {
-  info: 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300',
-  warning:
-    'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
-  critical: 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-300',
-}
-
 export function recommendationFromScore(score: number): Recommendation {
   if (score >= CAUTION_BELOW) return 'NO-GO'
   if (score >= GO_BELOW) return 'CAUTION'
@@ -137,10 +124,12 @@ export const ALERT_SEVERITY_LABEL: Record<AlertSeverity, string> = {
   critical: 'Critical',
 }
 
-export const ALERT_SEVERITY_ICON_BOX: Record<AlertSeverity, string> = {
-  info: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
-  warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  critical: 'bg-red-600/10 text-red-600 dark:text-red-400',
+/** A single tinted label carries alert severity; hazard type icons stay neutral. */
+export const ALERT_SEVERITY_STYLE: Record<AlertSeverity, string> = {
+  info: 'bg-sky-500/10 text-sky-700 dark:bg-sky-400/15 dark:text-sky-300',
+  warning:
+    'bg-amber-500/10 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300',
+  critical: 'bg-red-600/10 text-red-700 dark:bg-red-400/15 dark:text-red-300',
 }
 
 export function trendLabel(trend: Trend): string {

@@ -1,10 +1,10 @@
 import { Link } from '@tanstack/react-router'
 import { Zap } from 'lucide-react'
 import type { SiteBundle } from '@/hooks/use-planit'
-import { RecommendationBadge } from '@/components/planit/risk-badge'
+import { RecommendationStatus } from '@/components/planit/risk-status'
 import { ScoreBar } from '@/components/planit/score-bar'
 
-/** Compact top-N ranking that pairs with the numbered markers on the risk map. */
+/** Ranking pairs with map markers; every viewport retains the score and decision. */
 export function PrioritySites({ items }: { items: SiteBundle[] }) {
   return (
     <ol className='divide-y'>
@@ -13,33 +13,34 @@ export function PrioritySites({ items }: { items: SiteBundle[] }) {
           <Link
             to='/sites/$siteId'
             params={{ siteId: bundle.site.id }}
-            className='-mx-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent'
+            className='-mx-2 grid grid-cols-[2rem_minmax(0,1fr)_4.5rem] items-center gap-x-3 gap-y-1 rounded-md px-2 py-2.5 transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring sm:grid-cols-[2rem_minmax(0,1fr)_6rem]'
           >
-            <span className='flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground tabular-nums'>
-              {index + 1}
+            <span className='row-span-2 flex size-8 shrink-0 items-center justify-center self-start rounded-lg bg-muted text-xs font-medium text-muted-foreground tabular-nums sm:row-span-1'>
+              {String(index + 1).padStart(2, '0')}
             </span>
-            <span className='min-w-0 flex-1'>
-              <span className='flex items-center gap-1 truncate text-sm font-medium'>
-                <span className='truncate'>{bundle.site.name}</span>
+            <span className='col-span-2 min-w-0 sm:col-span-1'>
+              <span className='flex items-start gap-1 text-sm leading-5 font-semibold'>
+                <span className='min-w-0 break-words'>{bundle.site.name}</span>
                 {bundle.conditions.lightningActive ? (
                   <Zap
-                    className='size-3.5 shrink-0 fill-violet-500 text-violet-500'
+                    className='mt-0.5 size-3.5 shrink-0 text-red-600 dark:text-red-400'
                     aria-label='Lightning stop-work active'
                   />
                 ) : null}
               </span>
-              <span className='block truncate text-xs text-muted-foreground'>
+              <span className='block text-xs leading-5 text-muted-foreground'>
                 {bundle.risk.reasons[0]?.label ?? 'No dominant driver'} ·{' '}
                 {bundle.site.state}
               </span>
             </span>
             <ScoreBar
               score={bundle.risk.score}
-              className='hidden w-28 shrink-0 sm:flex'
+              className='col-start-2 row-start-2 w-24 sm:col-start-3 sm:row-start-1'
             />
-            <RecommendationBadge
+            <RecommendationStatus
+              withDesktopLegend
               recommendation={bundle.risk.recommendation}
-              className='w-[76px] shrink-0 justify-center'
+              className='col-start-3 row-start-2 justify-end'
             />
           </Link>
         </li>

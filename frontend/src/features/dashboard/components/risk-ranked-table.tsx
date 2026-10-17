@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { RecommendationBadge } from '@/components/planit/risk-badge'
+import { RecommendationStatus } from '@/components/planit/risk-status'
 import { ScoreBar } from '@/components/planit/score-bar'
 
 export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
@@ -18,15 +18,16 @@ export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
 
   return (
     <div className='overflow-x-auto'>
-      <Table>
+      <Table className='max-sm:table-fixed'>
         <TableHeader>
           <TableRow>
-            <TableHead className='w-12 text-center'>Rank</TableHead>
+            <TableHead className='w-10 text-center sm:w-12'>Rank</TableHead>
             <TableHead>Site</TableHead>
-            <TableHead className='w-[170px]'>Hazard index</TableHead>
-            <TableHead className='w-[110px]'>Call</TableHead>
+            <TableHead className='w-28 whitespace-normal sm:w-[170px]'>
+              Hazard index
+            </TableHead>
             <TableHead className='hidden lg:table-cell'>Top driver</TableHead>
-            <TableHead className='w-10' />
+            <TableHead className='hidden w-10 sm:table-cell' />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -57,7 +58,7 @@ export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
                     <span className='truncate'>{bundle.site.name}</span>
                     {bundle.conditions.lightningActive ? (
                       <Zap
-                        className='size-3.5 shrink-0 fill-violet-500 text-violet-500'
+                        className='size-3.5 shrink-0 text-red-600 dark:text-red-400'
                         aria-label='Lightning stop-work active'
                       />
                     ) : null}
@@ -68,11 +69,11 @@ export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
                   </span>
                 </TableCell>
                 <TableCell>
-                  <ScoreBar score={bundle.risk.score} />
-                </TableCell>
-                <TableCell>
-                  <RecommendationBadge
+                  <ScoreBar score={bundle.risk.score} className='max-sm:w-24' />
+                  <RecommendationStatus
+                    withDesktopLegend
                     recommendation={bundle.risk.recommendation}
+                    className='mt-1'
                   />
                 </TableCell>
                 <TableCell className='hidden lg:table-cell'>
@@ -88,7 +89,7 @@ export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
                     <span className='text-xs text-muted-foreground'>—</span>
                   )}
                 </TableCell>
-                <TableCell>
+                <TableCell className='hidden sm:table-cell'>
                   <ChevronRight className='size-4 text-muted-foreground' />
                 </TableCell>
               </TableRow>

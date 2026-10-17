@@ -26,6 +26,7 @@ import { CardActions } from '@/components/planit/card-actions'
 import { PageHeading } from '@/components/planit/page-heading'
 import { PanelHeader } from '@/components/planit/panel-header'
 import { PlanitHeader } from '@/components/planit/planit-header'
+import { RiskLegend } from '@/components/planit/risk-status'
 import { SiteMap } from '@/components/planit/site-map'
 import { BriefingPreview } from './components/briefing-preview'
 import { PrioritySites } from './components/priority-sites'
@@ -86,7 +87,7 @@ export function Dashboard() {
             10
         ) / 10,
     }
-  }, [bundles, alerts, now])
+  }, [bundles, alerts])
 
   return (
     <>
@@ -146,7 +147,8 @@ export function Dashboard() {
               title={`Top ${TOP_N} by hazard index`}
               aside={<CardActions to='/sites' />}
             />
-            <CardContent>
+            <CardContent className='space-y-3'>
+              <RiskLegend desktopOnly className='border-b pb-3' />
               <PrioritySites items={ranked.slice(0, TOP_N)} />
             </CardContent>
           </Card>

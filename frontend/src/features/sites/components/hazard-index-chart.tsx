@@ -18,7 +18,7 @@ import {
   RISK_BANDS,
   recommendationFromScore,
 } from '@/lib/planit'
-import { RecommendationBadge } from '@/components/planit/risk-badge'
+import { RecommendationStatus } from '@/components/planit/risk-status'
 
 /** 14-day hazard index over the GO / CAUTION / NO-GO bands. */
 export function HazardIndexChart({ points }: { points: HazardIndexPoint[] }) {
@@ -91,9 +91,9 @@ export function HazardIndexChart({ points }: { points: HazardIndexPoint[] }) {
                   <span className='tabular-nums'>
                     Hazard index {score.toFixed(1)}
                   </span>
-                  <RecommendationBadge
+                  <RecommendationStatus
                     recommendation={recommendationFromScore(score)}
-                    className='px-1.5 py-0 text-[10px]'
+                    className='text-xs'
                   />
                 </div>
               </div>

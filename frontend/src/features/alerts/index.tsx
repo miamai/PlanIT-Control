@@ -131,20 +131,21 @@ export function Alerts() {
         ) : null}
 
         <div className='grid gap-4 lg:grid-cols-3'>
-          <Card className='min-w-0 gap-4 lg:col-span-2'>
+          <Card className='min-w-0 gap-4 py-4 shadow-none lg:col-span-2'>
             <PanelHeader
               icon={BellRing}
               title='Active alerts'
+              className='flex-wrap gap-y-2 px-4'
               aside={
                 <span className='tabular-nums'>
-                  <span className='font-medium text-red-600 dark:text-red-400'>
+                  <span className='font-medium text-foreground'>
                     {critical} critical
                   </span>{' '}
                   · {warning} warning · {advisory} advisory
                 </span>
               }
             />
-            <CardContent className='space-y-4'>
+            <CardContent className='space-y-4 px-4'>
               <Tabs
                 value={type}
                 onValueChange={(value) => {

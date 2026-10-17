@@ -5,7 +5,7 @@ import {
   recommendationFromScore,
 } from '@/lib/planit'
 import { cn } from '@/lib/utils'
-import { RecommendationBadge } from './risk-badge'
+import { RecommendationStatus } from './risk-status'
 
 const RADIUS = 80
 const STROKE = 14
@@ -111,7 +111,7 @@ export function HazardGauge({
         </text>
       </svg>
       {showLabel ? (
-        <RecommendationBadge recommendation={call} className='mt-2' />
+        <RecommendationStatus recommendation={call} className='mt-2' />
       ) : null}
     </div>
   )

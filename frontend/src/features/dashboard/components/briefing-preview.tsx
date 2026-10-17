@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CardActions } from '@/components/planit/card-actions'
 import { PanelHeader } from '@/components/planit/panel-header'
-import { RecommendationBadge } from '@/components/planit/risk-badge'
+import { RecommendationStatus } from '@/components/planit/risk-status'
 
 export function BriefingPreview({
   briefing,
@@ -56,9 +56,9 @@ export function BriefingPreview({
                     <span className='text-xs text-muted-foreground tabular-nums'>
                       {site.score.toFixed(1)}
                     </span>
-                    <RecommendationBadge
+                    <RecommendationStatus
                       recommendation={site.recommendation}
-                      className='w-[76px] justify-center'
+                      className='w-[72px] justify-end'
                     />
                   </Link>
                 </li>

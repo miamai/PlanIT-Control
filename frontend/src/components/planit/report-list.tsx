@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { AlertSeverityBadge } from './risk-badge'
+import { AlertSeverityStatus } from './risk-status'
 
 export function ReportList({
   reports,
@@ -91,9 +91,9 @@ export function ReportList({
                   <span className='text-sm font-semibold'>
                     {REPORT_TYPE_LABEL[report.type]}
                   </span>
-                  <AlertSeverityBadge
+                  <AlertSeverityStatus
                     severity={report.severity}
-                    className='px-1.5 py-0.5 text-xs leading-4'
+                    className='leading-4'
                   />
                   {report.status === 'verified' ? (
                     <Badge

@@ -6,11 +6,7 @@ import { Camera, LocateFixed, Loader2, MapPin, Send, X } from 'lucide-react'
 import { SITE_SEED } from '@/api/mock/sites-data'
 import { type AlertSeverity, type HazardReportType } from '@/api/types'
 import { useAuthStore } from '@/stores/auth-store'
-import {
-  ALERT_SEVERITY_LABEL,
-  REPORT_TYPE_ICON,
-  REPORT_TYPE_LABEL,
-} from '@/lib/planit'
+import { REPORT_TYPE_ICON, REPORT_TYPE_LABEL } from '@/lib/planit'
 import { toastError, toastSuccess } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -31,6 +27,7 @@ import { LocationPicker } from '@/components/planit/location-picker'
 import { PageHeading } from '@/components/planit/page-heading'
 import { PanelHeader } from '@/components/planit/panel-header'
 import { PlanitHeader } from '@/components/planit/planit-header'
+import { AlertSeverityStatus } from '@/components/planit/risk-status'
 
 const TYPES: HazardReportType[] = [
   'lightning',
@@ -45,26 +42,18 @@ const TYPES: HazardReportType[] = [
 const SEVERITIES: {
   value: AlertSeverity
   hint: string
-  selected: string
-  dot: string
 }[] = [
   {
     value: 'info',
     hint: 'Heads up',
-    selected: 'border-sky-500 bg-sky-500/10',
-    dot: 'bg-sky-500',
   },
   {
     value: 'warning',
     hint: 'Take action',
-    selected: 'border-amber-500 bg-amber-500/10',
-    dot: 'bg-amber-500',
   },
   {
     value: 'critical',
     hint: 'Stop work',
-    selected: 'border-red-600 bg-red-600/10',
-    dot: 'bg-red-600',
   },
 ]
 
@@ -268,15 +257,15 @@ export function HazardReportForm({
                       setSeverity(value as AlertSeverity)
                     }
                     aria-labelledby='severity-label'
-                    className='grid grid-cols-3 gap-2'
+                    className='grid grid-cols-1 gap-2 min-[400px]:grid-cols-3'
                   >
                     {SEVERITIES.map((option) => (
                       <label
                         key={option.value}
                         className={cn(
-                          'flex cursor-pointer flex-col gap-1 rounded-lg border p-3 transition-colors sm:flex-row sm:items-center sm:gap-2',
+                          'flex cursor-pointer flex-wrap items-center gap-2 rounded-lg border p-3 transition-colors focus-within:ring-2 focus-within:ring-ring/50',
                           severity === option.value
-                            ? option.selected
+                            ? 'border-foreground/50 bg-muted ring-1 ring-foreground/15'
                             : 'hover:bg-muted/50'
                         )}
                       >
@@ -284,12 +273,7 @@ export function HazardReportForm({
                           value={option.value}
                           className='sr-only'
                         />
-                        <span className='flex items-center gap-1.5 text-sm font-semibold'>
-                          <span
-                            className={cn('size-2 rounded-full', option.dot)}
-                          />
-                          {ALERT_SEVERITY_LABEL[option.value]}
-                        </span>
+                        <AlertSeverityStatus severity={option.value} />
                         <span className='text-xs text-muted-foreground'>
                           {option.hint}
                         </span>

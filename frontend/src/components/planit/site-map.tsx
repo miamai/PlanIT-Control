@@ -19,14 +19,13 @@ import {
 } from '@/api/types'
 import {
   ALERT_SEVERITY_LABEL,
-  CAUTION_BELOW,
-  GO_BELOW,
   RECOMMENDATION_HEX,
   REPORT_TYPE_LABEL,
   recommendationFromScore,
 } from '@/lib/planit'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/context/theme-provider'
+import { RiskLegend } from './risk-status'
 
 export interface SiteMarker {
   site: Site
@@ -348,24 +347,7 @@ export function SiteMap({
           {siteStyle === 'risk' && showRiskLegend ? (
             <>
               <p className='mb-1 font-medium'>Hazard index</p>
-              <ul className='space-y-0.5'>
-                <li className='flex items-center gap-1.5'>
-                  <LegendDot color={RECOMMENDATION_HEX.GO} /> GO
-                  <span className='text-muted-foreground'>&lt; {GO_BELOW}</span>
-                </li>
-                <li className='flex items-center gap-1.5'>
-                  <LegendDot color={RECOMMENDATION_HEX.CAUTION} /> CAUTION
-                  <span className='text-muted-foreground'>
-                    {GO_BELOW}–{CAUTION_BELOW}
-                  </span>
-                </li>
-                <li className='flex items-center gap-1.5'>
-                  <LegendDot color={RECOMMENDATION_HEX['NO-GO']} /> NO-GO
-                  <span className='text-muted-foreground'>
-                    ≥ {CAUTION_BELOW}
-                  </span>
-                </li>
-              </ul>
+              <RiskLegend className='flex-col items-start gap-y-0.5' />
             </>
           ) : null}
           {siteStyle === 'context' ? (

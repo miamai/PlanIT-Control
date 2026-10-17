@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { MapPinned, Search, Table2, TriangleAlert } from 'lucide-react'
 import { SITE_SEED } from '@/api/mock/sites-data'
-import { RECOMMENDATION_BG, RECOMMENDATION_TEXT } from '@/lib/planit'
 import { cn } from '@/lib/utils'
 import { useSiteBundles } from '@/hooks/use-planit'
 import { Button } from '@/components/ui/button'
@@ -19,6 +18,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Main } from '@/components/layout/main'
 import { PageHeading } from '@/components/planit/page-heading'
 import { PlanitHeader } from '@/components/planit/planit-header'
+import {
+  RecommendationStatus,
+  RiskLegend,
+} from '@/components/planit/risk-status'
 import { SiteMap } from '@/components/planit/site-map'
 import { RiskRankedTable } from '@/features/dashboard/components/risk-ranked-table'
 
@@ -99,17 +102,7 @@ export function Sites() {
                     : 'hover:bg-accent'
                 )}
               >
-                <span
-                  className={cn('size-2 rounded-full', RECOMMENDATION_BG[call])}
-                />
-                <span
-                  className={cn(
-                    'text-xs font-semibold tracking-wide',
-                    RECOMMENDATION_TEXT[call]
-                  )}
-                >
-                  {call}
-                </span>
+                <RecommendationStatus recommendation={call} />
                 <span className='font-medium tabular-nums'>{counts[call]}</span>
               </button>
             ))}
@@ -152,6 +145,7 @@ export function Sites() {
           <TabsContent value='list'>
             <Card className='py-2'>
               <CardContent className='px-2'>
+                <RiskLegend desktopOnly className='px-3 pt-2 pb-4' />
                 <RiskRankedTable items={filtered} />
               </CardContent>
             </Card>

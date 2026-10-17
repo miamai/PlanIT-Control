@@ -29,7 +29,6 @@ import {
   RISK_BANDS,
   recommendationFromScore,
 } from '@/lib/planit'
-import { cn } from '@/lib/utils'
 import { useSiteBundles } from '@/hooks/use-planit'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -38,7 +37,10 @@ import { Main } from '@/components/layout/main'
 import { PageHeading } from '@/components/planit/page-heading'
 import { PanelHeader } from '@/components/planit/panel-header'
 import { PlanitHeader } from '@/components/planit/planit-header'
-import { RecommendationBadge } from '@/components/planit/risk-badge'
+import {
+  RecommendationStatus,
+  RiskLegend,
+} from '@/components/planit/risk-status'
 import { ScoreBar } from '@/components/planit/score-bar'
 
 const WATCH_ICON: Record<string, typeof Zap> = {
@@ -178,7 +180,8 @@ export function BriefingPage() {
                     }
                     className='flex-wrap gap-y-2 px-4'
                   />
-                  <CardContent className='px-4'>
+                  <CardContent className='space-y-4 px-4'>
+                    <RiskLegend desktopOnly className='border-b pb-3' />
                     <ol className='divide-y'>
                       {[...briefing.sites]
                         .sort((a, b) => b.score - a.score)
@@ -215,12 +218,12 @@ export function BriefingPage() {
                                 <div className='col-start-2 flex items-center gap-3 sm:col-start-3 sm:row-start-1'>
                                   <ScoreBar
                                     score={entry.score}
-                                    tone='neutral'
                                     className='w-24 shrink-0'
                                   />
-                                  <RecommendationBadge
+                                  <RecommendationStatus
+                                    withDesktopLegend
                                     recommendation={entry.recommendation}
-                                    className='w-[82px] justify-center py-0.5 text-[11px]'
+                                    className='w-[72px] justify-end'
                                   />
                                 </div>
                               </div>
@@ -355,12 +358,7 @@ export function BriefingPage() {
                             {entry.score.toFixed(1)}
                           </span>
                           {Math.abs(delta) >= 0.05 ? (
-                            <DeltaIcon
-                              className={cn(
-                                'size-3.5',
-                                delta > 0 ? 'text-red-600' : 'text-emerald-600'
-                              )}
-                            />
+                            <DeltaIcon className='size-3.5 text-muted-foreground' />
                           ) : null}
                         </span>
                       </div>
@@ -410,8 +408,9 @@ export function BriefingPage() {
                         </span>
                         <span className='text-xs text-muted-foreground'>
                           {noGo > 0 ? (
-                            <span className='font-medium text-red-600 dark:text-red-400'>
-                              {noGo} NO-GO
+                            <span className='inline-flex items-baseline gap-1'>
+                              {noGo}{' '}
+                              <RecommendationStatus recommendation='NO-GO' />
                             </span>
                           ) : (
                             'No stand-downs'
