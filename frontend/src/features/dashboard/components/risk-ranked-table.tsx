@@ -1,6 +1,4 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ChevronRight, Zap } from 'lucide-react'
-import { DOMAIN_ICON } from '@/lib/planit'
 import type { SiteBundle } from '@/hooks/use-planit'
 import {
   Table,
@@ -10,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { RiskDriverIcon } from '@/components/planit/risk-driver-icon'
 import { RecommendationStatus } from '@/components/planit/risk-status'
 import { ScoreBar } from '@/components/planit/score-bar'
 
@@ -18,26 +17,30 @@ export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
 
   return (
     <div className='overflow-x-auto'>
-      <Table className='max-sm:table-fixed'>
+      <Table className='table-fixed'>
         <TableHeader>
           <TableRow>
-            <TableHead className='w-10 text-center sm:w-12'>Rank</TableHead>
-            <TableHead>Site</TableHead>
-            <TableHead className='w-28 whitespace-normal sm:w-[170px]'>
+            <TableHead className='w-10 text-center text-xs sm:w-14'>
+              Rank
+            </TableHead>
+            <TableHead className='sm:px-4'>Site</TableHead>
+            <TableHead className='w-28 whitespace-normal sm:w-[180px] sm:px-4 sm:text-center lg:w-auto'>
               Hazard index
             </TableHead>
-            <TableHead className='hidden lg:table-cell'>Top driver</TableHead>
-            <TableHead className='hidden w-10 sm:table-cell' />
+            <TableHead className='hidden px-4 lg:table-cell'>
+              <span className='ms-auto block w-[180px] max-w-full'>
+                Top driver
+              </span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.map((bundle, index) => {
             const driver = bundle.risk.reasons[0]
-            const DriverIcon = driver ? DOMAIN_ICON[driver.domain] : undefined
             return (
               <TableRow
                 key={bundle.site.id}
-                className='cursor-pointer'
+                className='group cursor-pointer'
                 onClick={() =>
                   navigate({
                     to: '/sites/$siteId',
@@ -48,28 +51,27 @@ export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
                 <TableCell className='text-center text-sm text-muted-foreground tabular-nums'>
                   {index + 1}
                 </TableCell>
-                <TableCell className='max-w-72'>
+                <TableCell className='sm:px-4'>
                   <Link
                     to='/sites/$siteId'
                     params={{ siteId: bundle.site.id }}
-                    className='flex items-center gap-1.5 font-medium hover:underline'
+                    className='flex min-w-0 items-center gap-1.5 rounded-sm leading-5 font-medium group-hover:underline focus-visible:outline-2 focus-visible:outline-ring'
+                    title={bundle.site.name}
                     onClick={(event) => event.stopPropagation()}
                   >
                     <span className='truncate'>{bundle.site.name}</span>
-                    {bundle.conditions.lightningActive ? (
-                      <Zap
-                        className='size-3.5 shrink-0 text-red-600 dark:text-red-400'
-                        aria-label='Lightning stop-work active'
-                      />
-                    ) : null}
+                    <RiskDriverIcon driver={driver} />
                   </Link>
-                  <span className='block truncate text-xs text-muted-foreground'>
+                  <span className='block truncate text-xs leading-5 text-muted-foreground'>
                     {bundle.site.county} County, {bundle.site.state} ·{' '}
                     {bundle.site.plantType}
                   </span>
                 </TableCell>
-                <TableCell>
-                  <ScoreBar score={bundle.risk.score} className='max-sm:w-24' />
+                <TableCell className='sm:px-4'>
+                  <ScoreBar
+                    score={bundle.risk.score}
+                    className='max-sm:w-24 sm:mx-auto sm:w-[148px]'
+                  />
                   <RecommendationStatus
                     withDesktopLegend
                     recommendation={bundle.risk.recommendation}
@@ -77,21 +79,21 @@ export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
                     className='mt-1'
                   />
                 </TableCell>
-                <TableCell className='hidden lg:table-cell'>
-                  {driver && DriverIcon ? (
-                    <span className='flex items-center gap-2 text-xs text-muted-foreground'>
-                      <DriverIcon className='size-3.5 shrink-0' />
-                      <span className='truncate'>
-                        <span className='text-foreground'>{driver.label}</span>{' '}
-                        · {Math.round(driver.contribution * 100)}% of score
+                <TableCell className='hidden px-4 lg:table-cell'>
+                  {driver ? (
+                    <span className='ms-auto block w-[180px] max-w-full'>
+                      <span className='block truncate text-sm leading-5'>
+                        {driver.label}
+                      </span>
+                      <span className='block text-xs leading-5 text-muted-foreground'>
+                        {Math.round(driver.contribution * 100)}% of score
                       </span>
                     </span>
                   ) : (
-                    <span className='text-xs text-muted-foreground'>—</span>
+                    <span className='ms-auto block w-[180px] max-w-full text-xs text-muted-foreground'>
+                      —
+                    </span>
                   )}
-                </TableCell>
-                <TableCell className='hidden sm:table-cell'>
-                  <ChevronRight className='size-4 text-muted-foreground' />
                 </TableCell>
               </TableRow>
             )

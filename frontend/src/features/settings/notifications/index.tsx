@@ -5,7 +5,7 @@ export function SettingsNotifications() {
   return (
     <ContentSection
       title='Notifications'
-      desc='Configure how you receive notifications.'
+      desc='Control optional in-app banners and view delivery availability.'
     >
       <NotificationsForm />
     </ContentSection>

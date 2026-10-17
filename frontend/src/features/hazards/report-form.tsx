@@ -4,16 +4,12 @@ import { useNavigate } from '@tanstack/react-router'
 import { createHazardReport } from '@/api'
 import { LocateFixed, Loader2, MapPin, Send } from 'lucide-react'
 import { type HazardReportType, type Site } from '@/api/types'
-import {
-  displayName,
-  hasRole,
-  ROLE_LABEL,
-  useAuthStore,
-} from '@/stores/auth-store'
+import { hasRole, useAuthStore } from '@/stores/auth-store'
 import { REPORT_TYPE_ICON, REPORT_TYPE_LABEL } from '@/lib/planit'
 import { toastError, toastSuccess } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { planitKeys, useSites } from '@/hooks/use-planit'
+import { useProfile } from '@/hooks/use-profile'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -109,6 +105,7 @@ function ReportFormFields({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const authUser = useAuthStore((state) => state.auth.user)
+  const profile = useProfile()
 
   const [siteId, setSiteId] = useState(
     sites.some((s) => s.id === defaultSiteId) ? defaultSiteId! : sites[0].id
@@ -323,14 +320,11 @@ function ReportFormFields({
           <PanelHeader title='Reporter' />
           <CardContent className='space-y-4'>
             <p className='text-sm'>
-              Reporting as{' '}
-              <span className='font-medium'>{displayName(authUser)}</span>
-              {authUser ? (
-                <span className='text-muted-foreground'>
-                  {' '}
-                  · {ROLE_LABEL[authUser.role]}
-                </span>
-              ) : null}
+              Reporting as <span className='font-medium'>{profile.name}</span>
+              <span className='text-muted-foreground'>
+                {' '}
+                · {profile.roleLabel}
+              </span>
             </p>
             <Button
               type='submit'

@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import { displayName, ROLE_LABEL, useAuthStore } from '@/stores/auth-store'
 import useDialogState from '@/hooks/use-dialog-state'
+import { useProfile } from '@/hooks/use-profile'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,26 +10,22 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SignOutDialog } from '@/components/sign-out-dialog'
 
 export function ProfileDropdown() {
   const [open, setOpen] = useDialogState()
-  const user = useAuthStore((state) => state.auth.user)
-  const name = displayName(user)
-  const roleLabel = user ? ROLE_LABEL[user.role] : ''
-  const initials = name.slice(0, 2).toUpperCase()
+  const { username, name, initials, roleLabel } = useProfile()
 
   return (
     <>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
+            aria-label='Open account menu'
             variant='ghost'
             className='relative h-8 w-8 rounded-full'
-            aria-label={`Account menu for ${name}`}
           >
             <Avatar className='h-8 w-8'>
               <AvatarFallback>{initials}</AvatarFallback>
@@ -42,25 +38,28 @@ export function ProfileDropdown() {
               <p className='text-sm leading-none font-medium'>{name}</p>
               <p className='text-xs leading-none text-muted-foreground'>
                 {roleLabel}
-                {user && user.display_name ? ` · ${user.username}` : ''}
+                {username && username !== name ? ` · ${username}` : ''}
               </p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild>
-              <Link to='/settings'>
-                Settings
-                <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-              </Link>
+              <Link to='/settings'>Profile</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to='/settings/account'>Account</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to='/settings/appearance'>Appearance</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to='/settings/notifications'>Notifications</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant='destructive' onClick={() => setOpen(true)}>
             Sign out
-            <DropdownMenuShortcut className='text-current'>
-              ⇧⌘Q
-            </DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

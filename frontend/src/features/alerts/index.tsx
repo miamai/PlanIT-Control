@@ -5,15 +5,18 @@ import {
   Flame,
   Gauge,
   Layers,
+  Send,
   Thermometer,
   Waves,
   Zap,
 } from 'lucide-react'
+import { DELIVERY_CHANNELS } from '@/lib/notification-channels'
 import {
   ALERT_TYPE_LABEL,
   ALL_CLEAR_MINUTES,
   LIGHTNING_RADIUS_MI,
 } from '@/lib/planit'
+import { cn } from '@/lib/utils'
 import { useActiveAlerts } from '@/hooks/use-planit'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -227,6 +230,34 @@ export function Alerts() {
                       </span>
                       <span className='text-xs text-muted-foreground'>
                         {item.rule}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className='gap-4'>
+              <PanelHeader icon={Send} title='Channels' />
+              <CardContent>
+                <ul className='divide-y'>
+                  {DELIVERY_CHANNELS.map((channel) => (
+                    <li
+                      key={channel.label}
+                      className='flex items-center justify-between gap-3 py-2.5 text-sm first:pt-0 last:pb-0'
+                    >
+                      <span className='font-medium'>{channel.label}</span>
+                      <span className='flex items-center gap-2 text-xs text-muted-foreground'>
+                        {channel.available ? 'Available' : 'Not connected'}
+                        <span
+                          aria-hidden
+                          className={cn(
+                            'size-2 shrink-0 rounded-full',
+                            channel.available
+                              ? 'bg-emerald-500'
+                              : 'bg-muted-foreground/35'
+                          )}
+                        />
                       </span>
                     </li>
                   ))}

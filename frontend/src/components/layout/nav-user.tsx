@@ -1,13 +1,7 @@
 import { Link } from '@tanstack/react-router'
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-} from 'lucide-react'
-import { displayName, ROLE_LABEL, useAuthStore } from '@/stores/auth-store'
+import { BadgeCheck, Bell, ChevronsUpDown, LogOut, UserCog } from 'lucide-react'
 import useDialogState from '@/hooks/use-dialog-state'
+import { useProfile } from '@/hooks/use-profile'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -29,17 +23,9 @@ import { SignOutDialog } from '@/components/sign-out-dialog'
 export function NavUser() {
   const { isMobile } = useSidebar()
   const [open, setOpen] = useDialogState()
-  const authUser = useAuthStore((state) => state.auth.user)
-  const user = {
-    name: displayName(authUser),
-    email: authUser ? ROLE_LABEL[authUser.role] : '',
-  }
-  const initials = user.name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
+  const profile = useProfile()
+  const user = { name: profile.name, email: profile.roleLabel }
+  const initials = profile.initials
 
   return (
     <>
@@ -92,8 +78,8 @@ export function NavUser() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to='/settings'>
-                    <CreditCard />
-                    Billing
+                    <UserCog />
+                    Profile
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
