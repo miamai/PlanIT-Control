@@ -18,7 +18,7 @@ export function useProfile() {
     username ? state.profiles[username.toLowerCase()] : undefined
   )
   const name = profile?.name ?? displayName(user)
-  const role: UserRole = user?.role ?? 'crew'
+  const role: UserRole = user?.role ?? 'user'
   const initials = name
     .split(/\s+/)
     .map((part) => part[0])

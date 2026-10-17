@@ -134,7 +134,7 @@ function ReportFormFields({
         `${REPORT_TYPE_LABEL[report.type]} report sent to the network.`
       )
       navigate({
-        to: hasRole(authUser, 'supervisor') ? '/hazards' : '/sites/$siteId',
+        to: hasRole(authUser, 'admin') ? '/hazards' : '/sites/$siteId',
         params: { siteId: report.siteId },
       })
     },

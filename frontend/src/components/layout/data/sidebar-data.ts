@@ -5,7 +5,9 @@ import {
   MapPinned,
   Settings,
   Siren,
+  Users,
 } from 'lucide-react'
+import { hasRole, type AuthUser } from '@/stores/auth-store'
 import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
@@ -51,4 +53,18 @@ export const sidebarData: SidebarData = {
       ],
     },
   ],
+}
+
+export function getNavGroups(user: AuthUser | null): SidebarData['navGroups'] {
+  return [
+    ...sidebarData.navGroups,
+    ...(hasRole(user, 'admin')
+      ? [
+          {
+            title: 'Administration',
+            items: [{ title: 'Users', url: '/admin/users', icon: Users }],
+          },
+        ]
+      : []),
+  ]
 }

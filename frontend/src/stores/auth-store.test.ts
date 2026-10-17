@@ -9,7 +9,7 @@ const sampleUser: AuthUser = {
   id: '00000000-0000-0000-0000-000000000001',
   username: 'dana',
   display_name: 'Dana Reyes',
-  role: 'supervisor',
+  role: 'user',
   status: 'active',
   created_at: '2026-10-17T00:00:00Z',
   updated_at: '2026-10-17T00:00:00Z',
@@ -60,12 +60,12 @@ describe('useAuthStore', () => {
     expect(useAuthStore.getState().auth.expiresAt).toBe(0)
   })
 
-  it('ranks roles admin > supervisor > crew', async () => {
+  it('ranks roles admin > user', async () => {
     const { hasRole } = await importAuthStore()
 
-    expect(hasRole(sampleUser, 'crew')).toBe(true)
-    expect(hasRole(sampleUser, 'supervisor')).toBe(true)
+    expect(hasRole(sampleUser, 'user')).toBe(true)
+    expect(hasRole({ ...sampleUser, role: 'admin' }, 'admin')).toBe(true)
     expect(hasRole(sampleUser, 'admin')).toBe(false)
-    expect(hasRole(null, 'crew')).toBe(false)
+    expect(hasRole(null, 'user')).toBe(false)
   })
 })

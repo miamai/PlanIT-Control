@@ -36,7 +36,7 @@ async def test_site_list_contract_and_jwt_auth() -> None:
         user = UserAccount(
             username="tester",
             password_hash=hash_password("testing-password"),
-            role=UserRole.CREW,
+            role=UserRole.USER,
             status=UserStatus.ACTIVE,
         )
         session.add(user)
@@ -94,7 +94,7 @@ async def _seed_site_with_history(factory):
         user = UserAccount(
             username="history-tester",
             password_hash=hash_password("testing-password"),
-            role=UserRole.CREW,
+            role=UserRole.USER,
             status=UserStatus.ACTIVE,
         )
         session.add_all([site, user])
@@ -237,7 +237,7 @@ async def test_risk_rankings_use_each_sites_latest_score() -> None:
         user = UserAccount(
             username="ranking-tester",
             password_hash=hash_password("testing-password"),
-            role=UserRole.CREW,
+            role=UserRole.USER,
             status=UserStatus.ACTIVE,
         )
         session.add_all([*sites, user])

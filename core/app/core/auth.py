@@ -23,7 +23,7 @@ class Principal:
     claims: dict
 
 
-ROLE_LEVEL = {"crew": 1, "supervisor": 2, "admin": 3}
+ROLE_LEVEL = {"user": 1, "admin": 2}
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
@@ -65,6 +65,5 @@ def require_role(required: str):
 
 
 AuthenticatedPrincipal = Annotated[Principal, Depends(get_principal)]
-CrewPrincipal = Annotated[Principal, Depends(require_role("crew"))]
-SupervisorPrincipal = Annotated[Principal, Depends(require_role("supervisor"))]
+UserPrincipal = Annotated[Principal, Depends(require_role("user"))]
 AdminPrincipal = Annotated[Principal, Depends(require_role("admin"))]

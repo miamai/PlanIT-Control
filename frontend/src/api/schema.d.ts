@@ -1112,7 +1112,7 @@ export interface components {
          * UserRole
          * @enum {string}
          */
-        UserRole: "crew" | "supervisor" | "admin";
+        UserRole: "user" | "admin";
         /**
          * UserStatus
          * @enum {string}

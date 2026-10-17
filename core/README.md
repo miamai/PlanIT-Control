@@ -161,9 +161,9 @@ bytes.
 
 Roles are:
 
-- `crew`: operational reads and report submission.
-- `supervisor`: crew access, report review, and alert acknowledgement/resolution.
-- `admin`: supervisor access, ingestion, system status, and EIA refresh.
+- `user`: operational reads and hazard report submission.
+- `admin`: user access, report review, alert acknowledgement/resolution, user management,
+  ingestion, system status, and EIA refresh.
 
 Admins manage all roles through `/api/admin/users`; the last active admin cannot
 be disabled, demoted, or deleted, and an admin cannot self-delete. Password

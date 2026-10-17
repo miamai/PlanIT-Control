@@ -146,3 +146,11 @@ export async function unwrapData<T>(
 ): Promise<T> {
   return (await unwrap(request)).data
 }
+
+/** Successful DELETE endpoints may intentionally return no response body. */
+export async function unwrapEmpty(
+  request: Promise<Result<unknown>>
+): Promise<void> {
+  const { error, response } = await request
+  if (!response.ok) throw toApiError(response, error)
+}

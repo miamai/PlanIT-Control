@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import AdminPrincipal, CrewPrincipal, SupervisorPrincipal
+from app.core.auth import AdminPrincipal, UserPrincipal
 from app.core.config import Settings, get_settings
 from app.core.database import SessionFactory, database_health, get_session
 from app.models.entities import (
@@ -90,7 +90,7 @@ async def system_status(
 
 @router.get("/api/sites", response_model=Envelope[list[SiteRead]], tags=["sites"])
 async def list_sites(
-    _: CrewPrincipal,
+    _: UserPrincipal,
     session: DbSession,
     state: str | None = None,
     county: str | None = None,
@@ -115,7 +115,7 @@ async def list_sites(
 
 
 @router.get("/api/sites/{site_id}", response_model=Envelope[SiteRead], tags=["sites"])
-async def get_site(site_id: uuid.UUID, _: CrewPrincipal, session: DbSession) -> Envelope[SiteRead]:
+async def get_site(site_id: uuid.UUID, _: UserPrincipal, session: DbSession) -> Envelope[SiteRead]:
     site = await session.get(Site, site_id)
     if not site:
         raise HTTPException(status_code=404, detail="Site not found")
@@ -129,7 +129,7 @@ async def get_site(site_id: uuid.UUID, _: CrewPrincipal, session: DbSession) -> 
 )
 async def site_hazards(
     site_id: uuid.UUID,
-    _: CrewPrincipal,
+    _: UserPrincipal,
     session: DbSession,
     hazard_type: HazardType | None = None,
     since: datetime | None = None,
@@ -198,7 +198,7 @@ async def _alerts_query(
 )
 async def site_alerts(
     site_id: uuid.UUID,
-    _: CrewPrincipal,
+    _: UserPrincipal,
     session: DbSession,
     hazard_type: HazardType | None = None,
     severity: str | None = None,
@@ -211,7 +211,7 @@ async def site_alerts(
 
 @router.get("/api/alerts", response_model=Envelope[list[AlertRead]], tags=["alerts"])
 async def all_alerts(
-    _: CrewPrincipal,
+    _: UserPrincipal,
     session: DbSession,
     site_id: uuid.UUID | None = None,
     hazard_type: HazardType | None = None,
@@ -227,7 +227,7 @@ async def all_alerts(
 async def update_alert(
     alert_id: uuid.UUID,
     body: AlertUpdate,
-    principal: SupervisorPrincipal,
+    principal: AdminPrincipal,
     session: DbSession,
 ) -> Envelope[AlertRead]:
     alert = await session.get(Alert, alert_id, with_for_update=True)
@@ -266,7 +266,7 @@ async def update_alert(
 )
 async def create_report(
     body: CrewReportCreate,
-    principal: CrewPrincipal,
+    principal: UserPrincipal,
     session: DbSession,
     settings: Settings = Depends(get_settings),
 ) -> Envelope[CrewReportRead]:
@@ -336,7 +336,7 @@ async def create_report(
 
 @router.get("/api/reports", response_model=Envelope[list[CrewReportRead]], tags=["reports"])
 async def list_reports(
-    _: SupervisorPrincipal,
+    _: AdminPrincipal,
     session: DbSession,
     site_id: uuid.UUID | None = None,
     limit: int = Query(100, ge=1, le=500),
@@ -371,7 +371,7 @@ async def _latest_risk(session: AsyncSession, site_id: uuid.UUID) -> RiskScore |
 
 @router.get("/api/sites/{site_id}/risk", response_model=Envelope[RiskResult], tags=["risk"])
 async def site_risk(
-    site_id: uuid.UUID, _: CrewPrincipal, session: DbSession
+    site_id: uuid.UUID, _: UserPrincipal, session: DbSession
 ) -> Envelope[RiskResult]:
     site = await session.get(Site, site_id)
     if not site:
@@ -392,7 +392,7 @@ async def site_risk(
 )
 async def site_risk_history(
     site_id: uuid.UUID,
-    _: CrewPrincipal,
+    _: UserPrincipal,
     session: DbSession,
     days: int = Query(14, ge=1, le=90),
 ) -> Envelope[list[RiskRead]]:
@@ -413,7 +413,7 @@ async def site_risk_history(
 
 
 @router.get("/api/risk/rankings", response_model=Envelope[list[RiskRanking]], tags=["risk"])
-async def risk_rankings(_: CrewPrincipal, session: DbSession) -> Envelope[list[RiskRanking]]:
+async def risk_rankings(_: UserPrincipal, session: DbSession) -> Envelope[list[RiskRanking]]:
     sites = (await session.scalars(select(Site))).all()
     # One query for every site's latest score instead of one query per site.
     newest_first = (
@@ -509,7 +509,7 @@ def _risk_status(site: Site, score: RiskScore | None) -> str:
     tags=["briefings"],
 )
 async def briefings(
-    site_id: uuid.UUID, _: CrewPrincipal, session: DbSession
+    site_id: uuid.UUID, _: UserPrincipal, session: DbSession
 ) -> Envelope[list[BriefingRead]]:
     rows = (
         await session.scalars(
@@ -523,7 +523,7 @@ async def briefings(
 
 @router.get("/api/briefings", response_model=Envelope[list[BriefingRead]], tags=["briefings"])
 async def fleet_briefings(
-    _: CrewPrincipal,
+    _: UserPrincipal,
     session: DbSession,
     briefing_date: date | None = None,
     since: date | None = None,
@@ -535,9 +535,7 @@ async def fleet_briefings(
         filters.append(SafetyBriefing.briefing_date == briefing_date)
     if since:
         filters.append(SafetyBriefing.briefing_date >= since)
-    total = await session.scalar(
-        select(func.count()).select_from(SafetyBriefing).where(*filters)
-    )
+    total = await session.scalar(select(func.count()).select_from(SafetyBriefing).where(*filters))
     rows = (
         await session.scalars(
             select(SafetyBriefing)
@@ -611,7 +609,7 @@ async def import_cached_eia_sites(_: AdminPrincipal, session: DbSession) -> dict
 
 @router.get("/api/stream", tags=["events"])
 async def stream_events(
-    _: CrewPrincipal,
+    _: UserPrincipal,
     request: Request,
     last_event_id: Annotated[int | None, Header(alias="Last-Event-ID")] = None,
 ) -> StreamingResponse:

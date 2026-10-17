@@ -13,7 +13,7 @@ export function RecentReports({
 }: {
   reports: HazardReport[] | undefined
   isLoading: boolean
-  /** Crew users cannot read reports; the API restricts them to supervisors. */
+  /** Users cannot read reports; the API restricts them to admins. */
   canView?: boolean
   limit?: number
 }) {
@@ -30,9 +30,7 @@ export function RecentReports({
           isLoading={isLoading}
           showSite
           compact
-          emptyMessage={
-            canView ? 'No reports this week' : 'Visible to supervisors'
-          }
+          emptyMessage={canView ? 'No reports this week' : 'Visible to admins'}
         />
       </CardContent>
     </Card>

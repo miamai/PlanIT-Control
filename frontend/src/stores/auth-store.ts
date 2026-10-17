@@ -50,8 +50,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
 }))
 
 export const ROLE_LABEL: Record<UserRole, string> = {
-  crew: 'Crew',
-  supervisor: 'Supervisor',
+  user: 'User',
   admin: 'Admin',
 }
 
@@ -59,9 +58,9 @@ export function displayName(user: AuthUser | null): string {
   return user?.display_name || user?.username || 'Signed out'
 }
 
-const ROLE_RANK: Record<UserRole, number> = { crew: 0, supervisor: 1, admin: 2 }
+const ROLE_RANK: Record<UserRole, number> = { user: 0, admin: 1 }
 
-/** True when the user has at least the given role (admin > supervisor > crew). */
+/** True when the user has at least the given role (admin > user). */
 export function hasRole(user: AuthUser | null, minimum: UserRole): boolean {
   return !!user && ROLE_RANK[user.role] >= ROLE_RANK[minimum]
 }

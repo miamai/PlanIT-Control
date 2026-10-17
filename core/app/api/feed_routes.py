@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import CrewPrincipal
+from app.core.auth import UserPrincipal
 from app.core.database import get_session
 from app.models.entities import HazardObservation, HazardType, ProviderRun, Site
 from app.schemas.domain import (
@@ -105,7 +105,7 @@ async def _feed(
 
 def feed_endpoint(name: str):
     async def endpoint(
-        _: CrewPrincipal,
+        _: UserPrincipal,
         session: DbSession,
         state: Annotated[list[str] | None, Query()] = None,
         since: datetime | None = None,

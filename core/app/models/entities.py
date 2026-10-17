@@ -62,8 +62,7 @@ class QualityStatus(enum.StrEnum):
 
 
 class UserRole(enum.StrEnum):
-    CREW = "crew"
-    SUPERVISOR = "supervisor"
+    USER = "user"
     ADMIN = "admin"
 
 
@@ -79,7 +78,9 @@ class UserAccount(Base):
     username: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     display_name: Mapped[str | None] = mapped_column(String(120))
     password_hash: Mapped[str] = mapped_column(String(255))
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole, native_enum=False), index=True)
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole, native_enum=False, create_constraint=True, validate_strings=True), index=True
+    )
     status: Mapped[UserStatus] = mapped_column(Enum(UserStatus, native_enum=False), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

@@ -12,7 +12,7 @@ const ALL_CLEAR_SECONDS = ALL_CLEAR_MINUTES * 60
 /**
  * Lightning stop-work all-clear timer. Reaching zero means the site is
  * all-clear *eligible*: the backend never authorizes work to resume on its own,
- * so a supervisor still has to clear it. `inline` fits inside an alert row,
+ * so an admin still has to clear it. `inline` fits inside an alert row,
  * `ring` is the large dial used where the countdown is the main content.
  */
 export function LightningCountdown({
@@ -56,7 +56,7 @@ export function LightningCountdown({
         )}
         <span className='text-xs whitespace-nowrap'>
           {cleared ? (
-            'All-clear eligible · supervisor sign-off required'
+            'All-clear eligible · admin sign-off required'
           ) : (
             <>
               All-clear in{' '}
@@ -131,7 +131,7 @@ export function LightningCountdown({
             )}
           >
             {cleared
-              ? 'All-clear eligible · supervisor sign-off required'
+              ? 'All-clear eligible · admin sign-off required'
               : 'Stop-work in effect'}
           </p>
         )}

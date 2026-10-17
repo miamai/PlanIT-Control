@@ -23,8 +23,8 @@ describe('local preferences persistence', () => {
       name: 'Field Crew',
       bio: 'Transmission crew',
     })
-    preferences.getState().saveProfile('supervisor@example.com', {
-      name: 'Site Supervisor',
+    preferences.getState().saveProfile('admin@example.com', {
+      name: 'Site Admin',
       bio: '',
     })
     vi.resetModules()
@@ -32,8 +32,8 @@ describe('local preferences persistence', () => {
     expect(restored.getState().profiles['crew@example.com'].name).toBe(
       'Field Crew'
     )
-    expect(restored.getState().profiles['supervisor@example.com'].name).toBe(
-      'Site Supervisor'
+    expect(restored.getState().profiles['admin@example.com'].name).toBe(
+      'Site Admin'
     )
   })
 
