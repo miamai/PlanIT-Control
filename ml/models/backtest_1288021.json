@@ -1,0 +1,277 @@
+{
+  "event": {
+    "EVENT_ID": 1288021,
+    "site_id": "EIA-50118",
+    "hazard": "flood",
+    "event_type": "Flash Flood",
+    "start": "2025-07-05T00:00:00",
+    "end": "2025-07-05T00:00:00",
+    "damage_usd": 25000000.0,
+    "state": "TEXAS",
+    "place": "WILLIAMSON"
+  },
+  "narrative": "There was extensive flooding along the San Gabriel River across the county. In Georgetown two apartment complexes were evacuated. Flood waters knocked trees and damaged light poles in San Gabriel Park. Flooding at College St. and W. L. Walden Dr. prompted evacuations of the Georgetown Animal Shelter, VFW Post, Masonic Lodge, Holly Street Village, and the San Gabriel Crisis Center. The S. Austin Ave. bridge was closed. Two RV parks downstream flooded and damaged or destroyed 30 or more RVs many of which were described as unsalvageable. The city of Georgetown removed over 3500 cubic feet of debris for along the river. Across the county there were ten water rescues saving 27 people. Most of the rescues were from homes. Twenty-nine roads were closed around the county. At least six roads had damage to pavement. At least 54 structures were damaged or destroyed. The Emergency Manager estimated the cost of damage to public property and infrastructure at $25 million.",
+  "site": {
+    "site_id": "EIA-50118",
+    "name": "Hal C Weaver Power Plant",
+    "state": "TX"
+  },
+  "note": "Scores use reanalysis weather for each day (perfect-forecast backtest).",
+  "days": [
+    {
+      "date": "2025-06-28",
+      "hazard_index": 2.1,
+      "sub_scores": {
+        "heat": 0.4,
+        "convective": 0.6,
+        "flood": 0.0,
+        "wildfire": 0.1,
+        "wildlife": 1.2
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-06-29",
+      "hazard_index": 5.1,
+      "sub_scores": {
+        "heat": 0.9,
+        "convective": 3.8,
+        "flood": 0.1,
+        "wildfire": 0.1,
+        "wildlife": 1.2
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-06-30",
+      "hazard_index": 6.0,
+      "sub_scores": {
+        "heat": 0.2,
+        "convective": 5.3,
+        "flood": 0.1,
+        "wildfire": 0.1,
+        "wildlife": 1.2
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-01",
+      "hazard_index": 1.4,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.1,
+        "flood": 0.0,
+        "wildfire": 0.1,
+        "wildlife": 1.2
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-02",
+      "hazard_index": 5.5,
+      "sub_scores": {
+        "heat": 0.2,
+        "convective": 4.5,
+        "flood": 0.4,
+        "wildfire": 0.1,
+        "wildlife": 1.2
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-03",
+      "hazard_index": 7.3,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 5.9,
+        "flood": 2.5,
+        "wildfire": 0.1,
+        "wildlife": 1.1
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 1,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-04",
+      "hazard_index": 7.7,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 4.5,
+        "flood": 5.4,
+        "wildfire": 0.0,
+        "wildlife": 0.9
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 1,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-05",
+      "hazard_index": 9.5,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 3.8,
+        "flood": 9.1,
+        "wildfire": 0.0,
+        "wildlife": 0.7
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 1,
+        "flood": 1,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-06",
+      "hazard_index": 5.2,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 3.8,
+        "flood": 1.2,
+        "wildfire": 0.0,
+        "wildlife": 1.1
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 1,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-07",
+      "hazard_index": 4.3,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 2.7,
+        "flood": 1.1,
+        "wildfire": 0.0,
+        "wildlife": 1.1
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-08",
+      "hazard_index": 4.6,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 3.8,
+        "flood": 0.1,
+        "wildfire": 0.0,
+        "wildlife": 1.1
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-09",
+      "hazard_index": 6.1,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 4.5,
+        "flood": 2.1,
+        "wildfire": 0.0,
+        "wildlife": 0.9
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-10",
+      "hazard_index": 1.6,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.4,
+        "flood": 0.1,
+        "wildfire": 0.0,
+        "wildlife": 1.1
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-11",
+      "hazard_index": 3.3,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 2.3,
+        "flood": 0.1,
+        "wildfire": 0.0,
+        "wildlife": 1.2
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-07-12",
+      "hazard_index": 3.4,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 2.6,
+        "flood": 0.1,
+        "wildfire": 0.0,
+        "wildlife": 1.0
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    }
+  ]
+}

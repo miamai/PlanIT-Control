@@ -1,0 +1,23 @@
+[project]
+name = "planit-ml"
+version = "0.1.0"
+description = "Hazard models behind the PlanIT 0-10 hazard index"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "requests-cache>=1.2",
+    "lightgbm>=4.5",
+    "scikit-learn>=1.5",
+    "shap>=0.46",
+    "timezonefinder>=6.5",
+    "dataretrieval>=1.0",
+    "openpyxl>=3.1",
+    "matplotlib>=3.9",
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "mlx-lm>=0.32 ; platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
+
+[tool.uv]
+package = false
