@@ -70,6 +70,19 @@ class MLRisk(BaseModel):
             raise ValueError("sub-scores must be finite and between 0 and 10")
         return values
 
+    def contributing_factors(self) -> dict[str, Any]:
+        """The stored `RiskScore.contributing_factors` for this prediction."""
+        return {
+            "recommendation": self.recommendation,
+            "sub_scores": self.sub_scores,
+            "reasons": self.reasons,
+            "work_plan": self.work_plan,
+            "overrides": self.overrides,
+            "ml_site_id": self.site_id,
+            "coverage": "supported",
+            "prediction_date": self.date.isoformat(),
+        }
+
 
 class MLBriefing(BaseModel):
     risk: MLRisk
@@ -126,14 +139,30 @@ class MLClient:
             "POST", "/briefing", params={"backend": self.backend}, json=payload
         )
         result = MLBriefing.model_validate(raw)
-        risk = result.risk
-        if risk.mock:
-            raise ValueError("ML service returned a mock prediction")
-        if risk.site_id != site.ml_site_id or risk.date != prediction_date:
-            raise ValueError("ML response site/date does not match the request")
-        if risk.model_version != site.ml_model_version:
-            raise ValueError("ML response model version does not match the site catalog")
+        _check_risk(site, prediction_date, result.risk)
         return result
+
+    async def score(self, site: Site, prediction_date: date) -> MLRisk:
+        """Hazard index only, no briefing. The service accepts dates up to ~2 weeks back."""
+        if not site.ml_site_id or not site.ml_model_version:
+            raise ValueError("Site does not have ML coverage")
+        raw = await self._request(
+            "POST",
+            "/score",
+            json={"site_id": site.ml_site_id, "date": prediction_date.isoformat()},
+        )
+        risk = MLRisk.model_validate(raw)
+        _check_risk(site, prediction_date, risk)
+        return risk
+
+
+def _check_risk(site: Site, prediction_date: date, risk: MLRisk) -> None:
+    if risk.mock:
+        raise ValueError("ML service returned a mock prediction")
+    if risk.site_id != site.ml_site_id or risk.date != prediction_date:
+        raise ValueError("ML response site/date does not match the request")
+    if risk.model_version != site.ml_model_version:
+        raise ValueError("ML response model version does not match the site catalog")
 
 
 def _severity_action(severity: str) -> str:

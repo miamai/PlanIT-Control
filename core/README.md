@@ -78,6 +78,27 @@ The sync is additive and does not delete existing sites. Core sends reports sinc
 briefing (24 hours for the first run), without reporter identity. All reports contribute to aggregate
 counts. Wildlife is handled as one category without species filters or weights; animal metadata is
 not forwarded to ML or used in briefing generation.
+
+### Backfilling recent history
+
+The worker only records forward: one next-day score per evening and one station reading per poll.
+To fill the 14-day hazard index chart and the 24-hour weather chart right away, with the ML
+service running:
+
+```bash
+uv run planit-backfill                   # every ML-covered site
+uv run planit-backfill <site-uuid>       # one site
+uv run planit-backfill --days 7 --weather-hours 72 --skip-weather
+```
+
+Each of the last `--days` site-local days (today included, at most 14) that has no score from the
+current model version is scored through the ML service's `/score` and stored with
+`score_source=ml_backfill` and `contributing_factors.backfilled=true`. These are model output for
+a past date computed from observed weather, not forecasts made in advance, and no alerts or crew
+reports are sent with them. They appear in `/risk/history` only; the current score and rankings
+ignore them. Weather backfill stores one nearest-station NWS reading per hour (at most a week back,
+which is what NWS keeps) without evaluating alert rules. Both parts skip data already stored, so
+the command is safe to rerun.
 The ML container alone receives `GEMINI_API_KEY`: copy `ml/.env.example` to the ignored `ml/.env`
 and inject the key there (or through an equivalent deployment secret). Leave it unset to use the
 deterministic template. Core's API and worker explicitly clear this variable, and no paid Gemini call

@@ -12,6 +12,7 @@ import {
   buildTimeline,
   hazardFromReportType,
   toAlert,
+  toHazardIndexPoint,
   toHazardReport,
   toSite,
   toSiteRisk,
@@ -366,6 +367,19 @@ describe('briefings', () => {
     expect(buildBriefingHistory(rows.slice(2))).toEqual([
       { shiftDate: '2026-10-17', sites: 1, fallback: 1, withAlerts: 1 },
     ])
+  })
+})
+
+describe('toHazardIndexPoint', () => {
+  it('marks only backfilled scores as backfilled', () => {
+    expect(toHazardIndexPoint(risk())).toEqual({
+      date: risk().prediction_date,
+      score: 7.2,
+      backfilled: false,
+    })
+    expect(
+      toHazardIndexPoint(risk({ score_source: 'ml_backfill' })).backfilled
+    ).toBe(true)
   })
 })
 

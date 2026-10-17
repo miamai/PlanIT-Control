@@ -162,7 +162,15 @@ export function SiteDetail({ siteId }: { siteId: string }) {
               <CardContent>
                 {history ? (
                   history.length > 0 ? (
-                    <HazardIndexChart points={history} />
+                    <>
+                      <HazardIndexChart points={history} />
+                      {history.some((point) => point.backfilled) ? (
+                        <p className='mt-2 text-[11px] text-muted-foreground'>
+                          Hollow points are backfilled: scored later from
+                          observed weather, not forecast in advance.
+                        </p>
+                      ) : null}
+                    </>
                   ) : (
                     <div className='rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground'>
                       {site.mlSupported

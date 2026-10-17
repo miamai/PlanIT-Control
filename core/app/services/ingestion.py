@@ -25,8 +25,11 @@ from app.services.rules import evaluate_observation
 
 
 async def store_observations(
-    session: AsyncSession, observations: list[NormalizedObservation]
+    session: AsyncSession,
+    observations: list[NormalizedObservation],
+    evaluate_rules: bool = True,
 ) -> int:
+    """Insert new observations. Pass `evaluate_rules=False` for past data that must not alert."""
     written = 0
     for item in observations:
         if item.source == "usgs" and item.metadata.get("station_id"):
@@ -80,6 +83,8 @@ async def store_observations(
         observation_id = await session.scalar(statement)
         if observation_id:
             written += 1
+            if not evaluate_rules:
+                continue
             observation = await session.scalar(
                 select(HazardObservation).where(HazardObservation.id == observation_id)
             )

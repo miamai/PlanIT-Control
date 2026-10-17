@@ -159,16 +159,7 @@ async def _persist_ml_result(
             RiskScore.model_version == result.risk.model_version,
         )
     )
-    factors = {
-        "recommendation": result.risk.recommendation,
-        "sub_scores": result.risk.sub_scores,
-        "reasons": result.risk.reasons,
-        "work_plan": result.risk.work_plan,
-        "overrides": result.risk.overrides,
-        "ml_site_id": result.risk.site_id,
-        "coverage": "supported",
-        "prediction_date": prediction_date.isoformat(),
-    }
+    factors = result.risk.contributing_factors()
     if risk is None:
         risk = RiskScore(
             site_id=site.id,

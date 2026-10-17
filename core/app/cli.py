@@ -8,9 +8,20 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
+import httpx
+from sqlalchemy import select
+
 from app.core.config import get_settings
 from app.core.database import SessionFactory
+from app.models.entities import Site
+from app.providers.weather import NWSWeatherProvider
 from app.services.auth import initialize_admin as run_initialize_admin
+from app.services.backfill import (
+    MAX_SCORE_DAYS,
+    MAX_WEATHER_HOURS,
+    backfill_risk_scores,
+    backfill_weather,
+)
 from app.services.briefing import generate_due_briefings
 from app.services.database_check import inspect_database
 from app.services.eia import (
@@ -132,3 +143,85 @@ def generate_ml_briefing() -> None:
     args = parser.parse_args()
     now = args.now if args.now.tzinfo else args.now.replace(tzinfo=UTC)
     raise SystemExit(asyncio.run(_generate_ml(args.site_id, now)))
+
+
+async def _backfill(
+    site_id: uuid.UUID | None, days: int, weather_hours: int, scores: bool, weather: bool
+) -> int:
+    settings = get_settings()
+    now = datetime.now(UTC)
+    failed: list[str] = []
+    async with SessionFactory() as session:
+        query = (
+            select(Site).where(Site.id == site_id)
+            if site_id
+            else select(Site).where(Site.ml_site_id.is_not(None))
+        )
+        sites = list((await session.scalars(query.order_by(Site.name))).all())
+        if not sites:
+            print("No matching sites. Run planit-ml-sync-sites first, or pass a site id.")
+            return 1
+        if scores:
+            client = MLClient(settings)
+            stored = skipped = 0
+            for number, site in enumerate(sites, start=1):
+                if not site.ml_supported:
+                    print(f"[{number}/{len(sites)}] {site.name}: not covered by the model, skipped")
+                    continue
+                result = await backfill_risk_scores(session, client, [site], days, now)
+                stored, skipped = stored + result.stored, skipped + result.skipped
+                failed += result.failed
+                print(
+                    f"[{number}/{len(sites)}] {site.name}: {result.stored} scored, "
+                    f"{result.skipped} already stored, {len(result.failed)} failed"
+                )
+            print(f"Hazard index: {stored} backfilled day(s) stored, {skipped} already stored.")
+        if weather:
+            async with httpx.AsyncClient(timeout=settings.request_timeout_seconds) as http:
+                provider = NWSWeatherProvider(http, settings.nws_user_agent)
+                stored = 0
+                for number, site in enumerate(sites, start=1):
+                    result = await backfill_weather(session, provider, [site], weather_hours, now)
+                    stored += result.stored
+                    failed += result.failed
+                    print(f"[{number}/{len(sites)}] {site.name}: {result.stored} weather rows")
+            print(
+                f"Weather: {stored} station reading row(s) stored for the last {weather_hours} h."
+            )
+    for line in failed:
+        print(f"Failed: {line}")
+    return 1 if failed else 0
+
+
+def backfill() -> None:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Fill recent history: score past days through the ML service (stored as "
+            "backfilled) and store past NWS station readings. Defaults to every ML-covered site."
+        )
+    )
+    parser.add_argument("site_id", type=uuid.UUID, nargs="?", help="Only this site")
+    parser.add_argument(
+        "--days", type=int, default=MAX_SCORE_DAYS, help="Days of hazard index, today included"
+    )
+    parser.add_argument(
+        "--weather-hours", type=int, default=24, help="Hours of station readings to fetch"
+    )
+    parser.add_argument("--skip-scores", action="store_true")
+    parser.add_argument("--skip-weather", action="store_true")
+    args = parser.parse_args()
+    if not 1 <= args.days <= MAX_SCORE_DAYS:
+        parser.error(f"--days must be between 1 and {MAX_SCORE_DAYS}")
+    if not 1 <= args.weather_hours <= MAX_WEATHER_HOURS:
+        parser.error(f"--weather-hours must be between 1 and {MAX_WEATHER_HOURS}")
+    raise SystemExit(
+        asyncio.run(
+            _backfill(
+                args.site_id,
+                args.days,
+                args.weather_hours,
+                scores=not args.skip_scores,
+                weather=not args.skip_weather,
+            )
+        )
+    )
