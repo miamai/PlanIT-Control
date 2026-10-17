@@ -4,13 +4,13 @@
 
 | metric | Qwen3-4B-Instruct-2507-4bit | Qwen3.5-4B-MLX-4bit |
 |---|---|---|
-| pass_first_try | 0.919 | 0.984 |
-| pass_after_retry | 0.968 | 1.0 |
-| template_fallback_rate | 0.032 | 0.0 |
-| seconds_per_briefing_median | 6.63 | 6.23 |
-| tokens_per_second | 19.7 | 19.0 |
+| pass_first_try | 0.968 | 0.968 |
+| pass_after_retry | 1.0 | 1.0 |
+| template_fallback_rate | 0.0 | 0.0 |
+| seconds_per_briefing_median | 6.35 | 6.58 |
+| tokens_per_second | 20.4 | 20.3 |
 | peak_gpu_memory_gb | 2.91 | 3.26 |
-| load_seconds | 4.7 | 3.7 |
-| words_median | 83 | 86 |
+| load_seconds | 4.8 | 3.2 |
+| words_median | 89 | 101 |
 | pass_with_alert | 1.0 | 1.0 |
-| first-try problems | number 0.16 (1), number 66 (1), number 88 (1), number 44 (1), number 0.103 (1) | leaves out (1) |
+| first-try problems | number 66 (2) | number 7.7 (1), number 9.1 (1) |

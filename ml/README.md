@@ -108,7 +108,39 @@ The response says which writer produced the text (`source`) and what the checker
 The local model needs Apple Silicon; on Linux (e.g. Vultr) `mlx-lm` isn't installed and `/briefing`
 uses Gemini or the template. For the 6 PM run, call `/briefing` per site.
 
-**Bake-off results pending** (`pipeline/16_briefing_bakeoff.py`; summary in `models/briefing_bakeoff.md`).
+### Choosing the local model (`pipeline/16_briefing_bakeoff.py`)
+
+Shortlist from current Apple-MLX builds on Hugging Face, sized for a 16 GB Mac (~3 GB at 4-bit) with
+permissive licenses: **Qwen3-4B-Instruct-2507** (best published instruction-following with thinking
+off) vs **Qwen3.5-4B** (March 2026, vision-language). Both wrote briefings for the same 62 real 2025
+site-days (go / caution / no-go, the two backtest storm days, 9 with a live lightning alert, 11 with a
+crew wildlife report), greedy decoding, thinking off, graded by the checker. Head-to-head
+(`models/briefing_bakeoff.md`):
+
+| | Qwen3-4B-Instruct-2507 | **Qwen3.5-4B (chosen)** |
+|---|---|---|
+| Passes checker, first try / after one retry | 96.8% / 100% | 96.8% / 100% |
+| Mentions the live alert / invents one | 9 of 9 / 0 of 53 | 9 of 9 / 0 of 53 |
+| Drafts with style problems (copied fact labels, run-ons) | 44 of 62 | **8 of 62** |
+| Seconds per briefing (median) / peak memory | 6.4 s / 2.9 GB | 6.6 s / 3.3 GB |
+| Reads photos | no | yes |
+
+Equally faithful, so prose quality and photo reading decided it. Reading the drafts (not just the pass
+rate) mattered: round 1 passed 97-100%, yet both models left the live alert out of 6 of 9 alert briefings
+and invented reasons for the no-go. The fixes, each re-measured: the checker now requires the alert, a
+"Why this decision" fact tells the model the real cause, situation-specific instructions are only added
+when they apply (a blanket "mention the alert" rule made a model invent alerts on quiet days), and
+drafts that copy fact labels are sent back.
+
+Final configuration, Qwen3.5-4B on the same 62 days (`models/briefing_bakeoff_final.md`): 84% pass the
+checker on the first try (13 drafts copied a fact label and were sent back), **100% after one retry, 0
+template fallbacks, 0 drafts with style problems**, every alert mentioned and none invented, 6.6 s and
+3.3 GB per briefing.
+
+Known gaps (seen by reading drafts, not yet fixed): the model sometimes spells numbers out ("fifteen
+percent"), which the number check doesn't see; and once it inverted "the hazard index alone would give
+go" into "would not have triggered a go". The checker can't judge meaning, so the fact sheet should be
+worded to leave less room for that.
 
 ## Sites and labels (v2)
 

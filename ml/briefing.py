@@ -27,7 +27,9 @@ from typing import Callable
 
 import requests
 
-LOCAL_MODEL = os.environ.get("BRIEFING_MODEL", "mlx-community/Qwen3-4B-Instruct-2507-4bit")
+# Picked by pipeline/16_briefing_bakeoff.py: as faithful as Qwen3-4B-Instruct-2507, far cleaner prose,
+# and it can also read photos.
+LOCAL_MODEL = os.environ.get("BRIEFING_MODEL", "mlx-community/Qwen3.5-4B-MLX-4bit")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
 
 HAZARD_NAMES = {
@@ -227,6 +229,10 @@ def check_briefing(draft: str, f: Facts) -> list[str]:
         problems.append("leaves out the live alert that sets the decision")
     if not f.alerts and re.search(r"\balerts?\b", low_draft):
         problems.append("mentions an alert, but there is none")
+    for label in ("Why this decision:", "Main concerns:", "Scores out of 10:", "Recommended actions:",
+                  "Work plan (local time):", "Live alerts:", "Reasons:"):
+        if label.lower() in low_draft:
+            problems.append(f"copies the fact label '{label}' instead of writing sentences")
 
     if f.concerns:
         main_words = {"heat": ["heat"], "convective": ["thunder", "lightning", "storm"], "flood": ["flood"],
@@ -305,7 +311,9 @@ def _user_prompt(f: Facts, feedback: list[str] | None = None) -> str:
     extra = []
     if f.alerts:
         extra.append("Say that the live alert sets the decision, right after the decision.")
-    if not f.concerns:
+        if not f.concerns:
+            extra.append("Apart from the alert, no hazard stands out.")
+    elif not f.concerns:
         extra.append("There is no main concern: say conditions look good.")
     msg = f"Facts:\n{f.text}\n\nWrite the briefing." + ("\n" + " ".join(extra) if extra else "")
     if feedback:

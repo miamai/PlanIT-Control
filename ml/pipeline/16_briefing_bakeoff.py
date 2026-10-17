@@ -134,6 +134,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=60)
     ap.add_argument("--models", nargs="*", default=CANDIDATES)
+    ap.add_argument("--tag", default="", help="suffix for the output files, e.g. _final")
     args = ap.parse_args()
 
     m = HazardModels()
@@ -148,7 +149,7 @@ def main() -> None:
             print(f"  {repo} failed: {type(e).__name__}: {e}")
             results.append({"model": repo, "error": f"{type(e).__name__}: {e}"[:300]})
 
-    (MODELS / "briefing_bakeoff.json").write_text(json.dumps(results, indent=1, default=str))
+    (MODELS / f"briefing_bakeoff{args.tag}.json").write_text(json.dumps(results, indent=1, default=str))
     keys = ["pass_first_try", "pass_after_retry", "template_fallback_rate", "seconds_per_briefing_median",
             "tokens_per_second", "peak_gpu_memory_gb", "load_seconds", "words_median", "pass_with_alert"]
     lines = ["# Briefing model bake-off", "",
@@ -161,7 +162,7 @@ def main() -> None:
         lines.append(f"| {k} | " + " | ".join(str(r.get(k, r.get("error", "")))[:60] for r in results) + " |")
     lines.append("| first-try problems | " + " | ".join(
         ", ".join(f"{k} ({v})" for k, v in r.get("first_try_problem_types", {}).items()) or "none" for r in results) + " |")
-    (MODELS / "briefing_bakeoff.md").write_text("\n".join(lines) + "\n")
+    (MODELS / f"briefing_bakeoff{args.tag}.md").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
 
 
