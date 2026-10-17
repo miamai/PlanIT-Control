@@ -29,11 +29,13 @@ function LiveIndicator() {
       </span>
       <span className='font-medium text-foreground'>Live</span>
       {age !== undefined ? (
-        <span className='hidden tabular-nums md:inline'>
+        <span className='hidden tabular-nums @min-[640px]/planit-header:inline'>
           last strike {formatDuration(age)} ago
         </span>
       ) : (
-        <span className='hidden md:inline'>feed idle</span>
+        <span className='hidden @min-[640px]/planit-header:inline'>
+          feed idle
+        </span>
       )}
     </span>
   )
@@ -42,12 +44,12 @@ function LiveIndicator() {
 /** App bar: live-feed status on the left, search and account on the right. */
 export function PlanitHeader() {
   return (
-    <Header>
+    <Header className='@container/planit-header'>
       <LiveIndicator />
       <div className='ms-auto flex items-center gap-2'>
         <Search
           aria-label='Search'
-          className='max-sm:size-8 max-sm:flex-none max-sm:p-0 max-sm:[&>span]:sr-only'
+          className='@max-[640px]/planit-header:size-8 @max-[640px]/planit-header:flex-none @max-[640px]/planit-header:p-0 @max-[640px]/planit-header:[&>kbd]:hidden @max-[640px]/planit-header:[&>span]:sr-only'
         />
         <ThemeSwitch />
         <ConfigDrawer />

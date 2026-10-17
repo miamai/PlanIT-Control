@@ -10,7 +10,9 @@ import {
   Waves,
   Zap,
 } from 'lucide-react'
+import { DELIVERY_CHANNELS } from '@/lib/notification-channels'
 import { ALERT_TYPE_LABEL } from '@/lib/planit'
+import { cn } from '@/lib/utils'
 import { useActiveAlerts, useSimulateStrike } from '@/hooks/use-planit'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -37,12 +39,6 @@ const THRESHOLDS = [
   },
   { icon: Flame, name: 'Smoke', rule: 'Red flag or AQI ≥ 150' },
 ] as const
-
-const CHANNELS = [
-  { label: 'Push', scope: 'All alerts' },
-  { label: 'SMS', scope: 'Critical + lightning' },
-  { label: 'Email', scope: '18:00 briefing' },
-]
 
 export function Alerts() {
   const active = useActiveAlerts()
@@ -219,15 +215,23 @@ export function Alerts() {
               <PanelHeader icon={Send} title='Channels' />
               <CardContent>
                 <ul className='divide-y'>
-                  {CHANNELS.map((channel) => (
+                  {DELIVERY_CHANNELS.map((channel) => (
                     <li
                       key={channel.label}
                       className='flex items-center justify-between gap-3 py-2.5 text-sm first:pt-0 last:pb-0'
                     >
                       <span className='font-medium'>{channel.label}</span>
                       <span className='flex items-center gap-2 text-xs text-muted-foreground'>
-                        {channel.scope}
-                        <span className='size-2 rounded-full bg-emerald-500' />
+                        {channel.available ? 'Available' : 'Not connected'}
+                        <span
+                          aria-hidden
+                          className={cn(
+                            'size-2 shrink-0 rounded-full',
+                            channel.available
+                              ? 'bg-emerald-500'
+                              : 'bg-muted-foreground/35'
+                          )}
+                        />
                       </span>
                     </li>
                   ))}

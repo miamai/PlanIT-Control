@@ -1,4 +1,5 @@
 import { useLayout } from '@/context/layout-provider'
+import { useProfile } from '@/hooks/use-profile'
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +15,7 @@ import { TeamSwitcher } from './team-switcher'
 
 export function AppSidebar() {
   const { collapsible, variant } = useLayout()
+  const profile = useProfile()
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
       <SidebarHeader>
@@ -29,7 +31,13 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sidebarData.user} />
+        <NavUser
+          user={{
+            ...sidebarData.user,
+            name: profile.name,
+            email: profile.email,
+          }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

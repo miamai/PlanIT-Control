@@ -3,11 +3,9 @@ import {
   FileWarning,
   LayoutDashboard,
   MapPinned,
-  Palette,
   RadioTower,
   Settings,
   Siren,
-  UserCog,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -66,18 +64,7 @@ export const sidebarData: SidebarData = {
         {
           title: 'Settings',
           icon: Settings,
-          items: [
-            {
-              title: 'Profile',
-              url: '/settings',
-              icon: UserCog,
-            },
-            {
-              title: 'Appearance',
-              url: '/settings/appearance',
-              icon: Palette,
-            },
-          ],
+          url: '/settings',
         },
       ],
     },
