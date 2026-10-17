@@ -1,0 +1,294 @@
+{
+  "event": {
+    "EVENT_ID": 1249939,
+    "site_id": "EIA-3559",
+    "hazard": "flood",
+    "event_type": "Flash Flood",
+    "start": "2025-03-27T00:00:00",
+    "end": "2025-03-28T00:00:00",
+    "damage_usd": 105000000.0,
+    "state": "TEXAS",
+    "place": "CAMERON"
+  },
+  "narrative": "Some of the heaviest rainfall associated with the historic rainfall of March 26-28 fell in Harlingen.  In total, nearly 19 inches was measured by trusted sources, with radar estimates up to 20.5 inches.  During the peak of the multiple bands from early evening through just after midnight on the 28th, estimated rainfall rates were at least 3 per hour for at least 3 hours, including at Harlingen/Valley International Airport, where 5 fell in just 90 minutes before the power went out due to lightning strikes.||Hundreds, if not a thousand, structures had flood damage ranging from affected to destroyed. Damage details will be available for this part of Cameron County, which stretches from Harlingen through Rio Hondo and southwest to San Benito, at a later date in 2025.  Harder hit areas reported up to 4 feet of water, including the IH-2 and IH-69E frontage roads in these areas. For several areas, this event ranked as a 1/100 to 1/200 annual return frequency probability event, with perhaps up to a 1/500 event in a few spots. High water would continue in several hours for a few more days, though rapid runoff allowed for relatively quick recovery.||As of July 1, a preliminary estimate of $105 million was derived from Public Assistance (PA) and Individual Assistance (IA) reports, based on applying two-thirds of the values from the number of structures that were impacted with varying levels of damage in Cameron County. The damage was applied to this entry, since much was triggered by the rainfall and rainfall rates in these areas at these times. Full damage statistics will be available by the end of 2025 or start of 2026.",
+  "site": {
+    "site_id": "EIA-3559",
+    "name": "Silas Ray",
+    "state": "TX"
+  },
+  "note": "Scores use reanalysis weather for each day (perfect-forecast backtest).",
+  "days": [
+    {
+      "date": "2025-03-20",
+      "hazard_index": 0.8,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.0,
+        "flood": 0.0,
+        "wildfire": 0.2,
+        "wildlife": 0.6
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-03-21",
+      "hazard_index": 1.0,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.0,
+        "flood": 0.0,
+        "wildfire": 0.2,
+        "wildlife": 0.8
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-03-22",
+      "hazard_index": 1.0,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.0,
+        "flood": 0.0,
+        "wildfire": 0.2,
+        "wildlife": 0.8
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-03-23",
+      "hazard_index": 1.0,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.0,
+        "flood": 0.0,
+        "wildfire": 0.1,
+        "wildlife": 0.9
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-03-24",
+      "hazard_index": 1.3,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.0,
+        "flood": 0.0,
+        "wildfire": 0.1,
+        "wildlife": 1.1
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-03-25",
+      "hazard_index": 1.3,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.0,
+        "flood": 0.0,
+        "wildfire": 0.2,
+        "wildlife": 1.1
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-03-26",
+      "hazard_index": 1.4,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.6,
+        "flood": 0.1,
+        "wildfire": 0.1,
+        "wildlife": 0.8
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-03-27",
+      "hazard_index": 2.3,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 1.0,
+        "flood": 0.7,
+        "wildfire": 0.1,
+        "wildlife": 0.8
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 1,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-03-28",
+      "hazard_index": 1.2,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.2,
+        "flood": 0.1,
+        "wildfire": 0.1,
+        "wildlife": 0.8
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 1,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-03-29",
+      "hazard_index": 1.2,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.0,
+        "flood": 0.1,
+        "wildfire": 0.1,
+        "wildlife": 1.0
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 1,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-03-30",
+      "hazard_index": 1.2,
+      "sub_scores": {
+        "heat": 0.1,
+        "convective": 0.0,
+        "flood": 0.0,
+        "wildfire": 0.1,
+        "wildlife": 1.1
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 1,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-03-31",
+      "hazard_index": 1.4,
+      "sub_scores": {
+        "heat": 0.1,
+        "convective": 0.0,
+        "flood": 0.0,
+        "wildfire": 0.1,
+        "wildlife": 1.1
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-04-01",
+      "hazard_index": 1.3,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.0,
+        "flood": 0.1,
+        "wildfire": 0.1,
+        "wildlife": 1.1
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-04-02",
+      "hazard_index": 1.4,
+      "sub_scores": {
+        "heat": 0.1,
+        "convective": 0.0,
+        "flood": 0.1,
+        "wildfire": 0.1,
+        "wildlife": 1.2
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-04-03",
+      "hazard_index": 1.4,
+      "sub_scores": {
+        "heat": 0.0,
+        "convective": 0.0,
+        "flood": 0.0,
+        "wildfire": 0.1,
+        "wildlife": 1.3
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    },
+    {
+      "date": "2025-04-04",
+      "hazard_index": 1.5,
+      "sub_scores": {
+        "heat": 0.1,
+        "convective": 0.0,
+        "flood": 0.0,
+        "wildfire": 0.1,
+        "wildlife": 1.3
+      },
+      "labels": {
+        "heat": 0,
+        "convective": 0,
+        "flood": 0,
+        "wildfire": 0
+      }
+    }
+  ]
+}
