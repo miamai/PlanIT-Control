@@ -131,9 +131,13 @@ export function Hazards() {
         </div>
 
         <div className='grid gap-4 lg:grid-cols-3'>
-          <Card className='min-w-0 gap-4 lg:col-span-2'>
-            <PanelHeader icon={ListFilter} title='All reports' />
-            <CardContent className='space-y-4'>
+          <Card className='min-w-0 gap-4 py-4 shadow-none lg:col-span-2'>
+            <PanelHeader
+              icon={ListFilter}
+              title='All reports'
+              className='px-4'
+            />
+            <CardContent className='space-y-4 px-4'>
               <Tabs value={type} onValueChange={setType}>
                 <div className='-mx-1 overflow-x-auto px-1 pb-1'>
                   <TabsList>

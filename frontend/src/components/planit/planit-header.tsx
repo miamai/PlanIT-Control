@@ -45,7 +45,10 @@ export function PlanitHeader() {
     <Header>
       <LiveIndicator />
       <div className='ms-auto flex items-center gap-2'>
-        <Search />
+        <Search
+          aria-label='Search'
+          className='max-sm:size-8 max-sm:flex-none max-sm:p-0 max-sm:[&>span]:sr-only'
+        />
         <ThemeSwitch />
         <ConfigDrawer />
         <ProfileDropdown />

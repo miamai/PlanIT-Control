@@ -6,7 +6,8 @@ import { getBriefing, listBriefings } from '@/api'
 import {
   ArrowRight,
   CalendarDays,
-  CircleCheck,
+  ChevronDown,
+  Clock3,
   Eye,
   Flame,
   History,
@@ -144,6 +145,7 @@ export function BriefingPage() {
                   <PanelHeader
                     icon={CalendarDays}
                     title={format(parseISO(briefing.shiftDate), 'EEEE, MMMM d')}
+                    className='flex-col items-start gap-3 sm:flex-row sm:items-center'
                     aside={
                       <>
                         <Badge variant='outline' className='gap-1'>
@@ -167,68 +169,122 @@ export function BriefingPage() {
                   </CardContent>
                 </Card>
 
-                <Card className='gap-4'>
-                  <PanelHeader icon={Radar} title='Flagged sites' />
-                  <CardContent>
+                <Card className='gap-4 py-4 shadow-none'>
+                  <PanelHeader
+                    icon={Radar}
+                    title='Flagged sites'
+                    aside={
+                      <span>Forecast risk · {briefing.sites.length} sites</span>
+                    }
+                    className='flex-wrap gap-y-2 px-4'
+                  />
+                  <CardContent className='px-4'>
                     <ol className='divide-y'>
-                      {briefing.sites.map((entry, index) => {
-                        const site = SITE_SEED.find(
-                          (s) => s.id === entry.siteId
-                        )
-                        return (
-                          <li
-                            key={entry.siteId}
-                            className='flex gap-3 py-4 first:pt-0 last:pb-0'
-                          >
-                            <span className='flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground tabular-nums'>
-                              {index + 1}
-                            </span>
-                            <div className='min-w-0 flex-1 space-y-2'>
-                              <div className='flex flex-wrap items-start justify-between gap-x-4 gap-y-2'>
-                                <div className='min-w-0'>
-                                  <Link
-                                    to='/sites/$siteId'
-                                    params={{ siteId: entry.siteId }}
-                                    className='font-medium hover:underline'
-                                  >
-                                    {site?.name ?? entry.siteId}
-                                  </Link>
+                      {[...briefing.sites]
+                        .sort((a, b) => b.score - a.score)
+                        .map((entry, index) => {
+                          const site = SITE_SEED.find(
+                            (s) => s.id === entry.siteId
+                          )
+                          const [primaryAction, ...otherActions] = entry.actions
+                          return (
+                            <li
+                              key={entry.siteId}
+                              className='space-y-3 py-5 first:pt-0 last:pb-0'
+                            >
+                              <div className='grid grid-cols-[2rem_minmax(0,1fr)] items-center gap-x-3 gap-y-2 sm:grid-cols-[2rem_minmax(0,1fr)_auto]'>
+                                <span className='flex size-8 shrink-0 items-center justify-center self-start rounded-lg bg-muted text-xs font-medium text-muted-foreground tabular-nums'>
+                                  {String(index + 1).padStart(2, '0')}
+                                </span>
+                                <div className='min-w-0 space-y-0.5'>
+                                  <h3 className='text-sm leading-5 font-semibold'>
+                                    <Link
+                                      to='/sites/$siteId'
+                                      params={{ siteId: entry.siteId }}
+                                      className='rounded-sm break-words hover:underline focus-visible:outline-2 focus-visible:outline-ring'
+                                    >
+                                      {site?.name ?? entry.siteId}
+                                    </Link>
+                                  </h3>
                                   {site ? (
-                                    <span className='text-sm text-muted-foreground'>
-                                      {' '}
-                                      · {site.county} County, {site.state}
-                                    </span>
+                                    <p className='text-xs leading-5 text-muted-foreground'>
+                                      {site.county} County, {site.state}
+                                    </p>
                                   ) : null}
-                                  <p className='text-xs text-muted-foreground'>
-                                    {entry.headline}
-                                  </p>
                                 </div>
-                                <div className='flex items-center gap-2'>
+                                <div className='col-start-2 flex items-center gap-3 sm:col-start-3 sm:row-start-1'>
                                   <ScoreBar
                                     score={entry.score}
-                                    className='w-28'
+                                    tone='neutral'
+                                    className='w-24 shrink-0'
                                   />
                                   <RecommendationBadge
                                     recommendation={entry.recommendation}
-                                    className='w-[76px] justify-center'
+                                    className='w-[82px] justify-center py-0.5 text-[11px]'
                                   />
                                 </div>
                               </div>
-                              <ul className='space-y-1'>
-                                {entry.actions.map((action) => (
-                                  <li
-                                    key={action}
-                                    className='flex items-start gap-2 text-sm'
-                                  >
-                                    <CircleCheck className='mt-0.5 size-3.5 shrink-0 text-muted-foreground' />
-                                    {action}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </li>
-                        )
-                      })}
+                              <div className='space-y-2 sm:ps-11'>
+                                <div className='flex items-start gap-2'>
+                                  <Radar
+                                    className='mt-0.5 size-4 shrink-0 text-muted-foreground'
+                                    aria-hidden
+                                  />
+                                  <p className='text-sm leading-relaxed break-words text-muted-foreground'>
+                                    {entry.headline}
+                                  </p>
+                                </div>
+                                {primaryAction ? (
+                                  <div className='flex items-start gap-2'>
+                                    <Clock3
+                                      className='mt-0.5 size-4 shrink-0 text-muted-foreground'
+                                      aria-hidden
+                                    />
+                                    <p className='text-sm leading-relaxed break-words'>
+                                      <span className='sr-only'>
+                                        Primary safety action:{' '}
+                                      </span>
+                                      {primaryAction}
+                                    </p>
+                                  </div>
+                                ) : null}
+                                {otherActions.length > 0 ? (
+                                  <details className='group ps-6'>
+                                    <summary className='flex min-h-9 w-fit cursor-pointer list-none items-center gap-1.5 rounded-sm text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring max-sm:min-h-11 [&::-webkit-details-marker]:hidden'>
+                                      <ChevronDown
+                                        className='size-3.5 transition-transform group-open:rotate-180'
+                                        aria-hidden
+                                      />
+                                      <span className='group-open:hidden'>
+                                        {otherActions.length} more safety{' '}
+                                        {otherActions.length === 1
+                                          ? 'action'
+                                          : 'actions'}
+                                      </span>
+                                      <span className='hidden group-open:inline'>
+                                        Hide additional actions
+                                      </span>
+                                      <span className='sr-only'>
+                                        {' '}
+                                        for {site?.name ?? entry.siteId}
+                                      </span>
+                                    </summary>
+                                    <ul className='list-disc space-y-2 ps-4 pt-1 pb-1 text-sm leading-relaxed marker:text-muted-foreground'>
+                                      {otherActions.map((action) => (
+                                        <li
+                                          key={action}
+                                          className='ps-1 break-words'
+                                        >
+                                          {action}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </details>
+                                ) : null}
+                              </div>
+                            </li>
+                          )
+                        })}
                     </ol>
                   </CardContent>
                 </Card>

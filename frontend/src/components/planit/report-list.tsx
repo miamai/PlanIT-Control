@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { confirmHazardReport } from '@/api'
 import { BadgeCheck, MapPin } from 'lucide-react'
 import { SITE_SEED } from '@/api/mock/sites-data'
@@ -28,6 +29,7 @@ export function ReportList({
 }) {
   const [confirming, setConfirming] = useState<string | null>(null)
   const [confirmedIds, setConfirmedIds] = useState<string[]>([])
+  const [confirmError, setConfirmError] = useState<string | null>(null)
 
   if (isLoading) {
     return (
@@ -53,11 +55,18 @@ export function ReportList({
 
   async function handleConfirm(report: HazardReport) {
     setConfirming(report.id)
-    await confirmHazardReport(report.id)
-    setConfirmedIds((prev) =>
-      prev.includes(report.id) ? prev : [...prev, report.id]
-    )
-    setConfirming(null)
+    setConfirmError(null)
+    try {
+      const updated = await confirmHazardReport(report.id)
+      if (!updated) throw new Error('Report not found')
+      setConfirmedIds((prev) =>
+        prev.includes(report.id) ? prev : [...prev, report.id]
+      )
+    } catch {
+      setConfirmError(report.id)
+    } finally {
+      setConfirming(null)
+    }
   }
 
   return (
@@ -67,37 +76,54 @@ export function ReportList({
         const Icon = REPORT_TYPE_ICON[report.type]
         const confirmed = confirmedIds.includes(report.id)
         return (
-          <li key={report.id} className='flex gap-3 py-3 first:pt-0 last:pb-0'>
-            <span className='flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground'>
-              <Icon className='size-4' />
+          <li key={report.id} className='flex gap-3 py-4 first:pt-0 last:pb-0'>
+            <span
+              className={cn(
+                'flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground',
+                compact && 'size-8'
+              )}
+            >
+              <Icon className='size-4' aria-hidden />
             </span>
-            <div className='min-w-0 flex-1 space-y-1'>
-              <div className='flex items-start justify-between gap-2'>
-                <div className='flex flex-wrap items-center gap-1.5'>
-                  <span className='text-sm font-medium'>
+            <div className='min-w-0 flex-1 space-y-2'>
+              <div className='flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 max-sm:flex-col max-sm:items-start'>
+                <div className='flex flex-wrap items-center gap-2'>
+                  <span className='text-sm font-semibold'>
                     {REPORT_TYPE_LABEL[report.type]}
                   </span>
                   <AlertSeverityBadge
                     severity={report.severity}
-                    className='px-1.5 py-0 text-[10px]'
+                    className='px-1.5 py-0.5 text-xs leading-4'
                   />
                   {report.status === 'verified' ? (
                     <Badge
                       variant='outline'
-                      className='gap-1 px-1.5 py-0 text-[10px] text-muted-foreground'
+                      className='gap-1 px-1.5 py-0.5 text-xs leading-4 text-muted-foreground'
                     >
                       <BadgeCheck className='size-3' /> Verified
                     </Badge>
                   ) : null}
+                  {report.status === 'dismissed' ? (
+                    <Badge
+                      variant='outline'
+                      className='text-xs text-muted-foreground'
+                    >
+                      Dismissed
+                    </Badge>
+                  ) : null}
                 </div>
-                <span className='shrink-0 text-[11px] whitespace-nowrap text-muted-foreground'>
+                <time
+                  dateTime={report.createdAt}
+                  title={new Date(report.createdAt).toLocaleString('en-US')}
+                  className='shrink-0 text-xs whitespace-nowrap text-muted-foreground'
+                >
                   {relativeTime(report.createdAt)}
-                </span>
+                </time>
               </div>
               <div className='flex gap-3'>
                 <p
                   className={cn(
-                    'min-w-0 flex-1 text-sm text-muted-foreground',
+                    'min-w-0 flex-1 text-sm leading-relaxed break-words text-foreground',
                     compact && 'line-clamp-2'
                   )}
                 >
@@ -106,41 +132,61 @@ export function ReportList({
                 {report.photoUrl && !compact ? (
                   <img
                     src={report.photoUrl}
-                    alt='Hazard photo'
+                    alt={`${REPORT_TYPE_LABEL[report.type]} reported by ${report.reportedBy}`}
                     className='size-14 shrink-0 rounded-md border object-cover'
                   />
                 ) : null}
               </div>
-              <div className='flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground'>
-                <span className='font-medium text-foreground'>
-                  {report.reportedBy}
-                </span>
-                {!compact ? (
-                  <span className='capitalize'>{report.reporterRole}</span>
-                ) : null}
-                {showSite && site ? (
-                  <span className='inline-flex items-center gap-1'>
-                    <MapPin className='size-3' />
-                    {site.name} ({site.state})
+              <div className='flex flex-wrap items-center justify-between gap-x-3 gap-y-2'>
+                <div className='flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-5 text-muted-foreground'>
+                  <span className='font-medium text-foreground'>
+                    {report.reportedBy}
                   </span>
-                ) : null}
-                {compact ? (
-                  <span>· {report.confirmations} confirmed</span>
+                  {!compact ? (
+                    <>
+                      <span aria-hidden>·</span>
+                      <span className='capitalize'>{report.reporterRole}</span>
+                    </>
+                  ) : null}
+                  {showSite && site ? (
+                    <Link
+                      to='/sites/$siteId'
+                      params={{ siteId: site.id }}
+                      className='inline-flex min-w-0 items-center gap-1 rounded-sm hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring'
+                    >
+                      <MapPin className='size-3 shrink-0' aria-hidden />
+                      {site.name} ({site.state})
+                    </Link>
+                  ) : null}
+                  {compact ? (
+                    <span>· {report.confirmations} confirmed</span>
+                  ) : null}
+                </div>
+                {!compact ? (
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='h-8 text-xs shadow-none max-sm:h-11'
+                    disabled={confirming !== null || confirmed}
+                    aria-label={`${confirmed ? 'Confirmed' : 'Confirm hazard still present'}: ${REPORT_TYPE_LABEL[report.type]} at ${site?.name ?? report.siteId}`}
+                    onClick={() => handleConfirm(report)}
+                  >
+                    <BadgeCheck className='size-3.5' />{' '}
+                    {confirmed
+                      ? 'Confirmed'
+                      : confirming === report.id
+                        ? 'Confirming…'
+                        : 'Still there'}
+                    <span className='ms-1 text-muted-foreground tabular-nums'>
+                      {report.confirmations + (confirmed ? 1 : 0)}
+                    </span>
+                  </Button>
                 ) : null}
               </div>
-              {!compact ? (
-                <Button
-                  variant='outline'
-                  size='sm'
-                  className='mt-1 h-7 text-xs'
-                  disabled={confirming === report.id || confirmed}
-                  onClick={() => handleConfirm(report)}
-                >
-                  <BadgeCheck /> {confirmed ? 'Confirmed' : 'Still there'}
-                  <span className='ms-1 text-muted-foreground tabular-nums'>
-                    {report.confirmations + (confirmed ? 1 : 0)}
-                  </span>
-                </Button>
+              {confirmError === report.id ? (
+                <p role='alert' className='text-xs text-destructive'>
+                  Could not confirm this report. Please try again.
+                </p>
               ) : null}
             </div>
           </li>

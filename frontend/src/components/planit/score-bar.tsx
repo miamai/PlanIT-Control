@@ -10,13 +10,20 @@ import { cn } from '@/lib/utils'
 export function ScoreBar({
   score,
   className,
+  tone = 'risk',
 }: {
   score: number
   className?: string
+  /** Use a neutral track when a nearby badge already communicates the decision. */
+  tone?: 'risk' | 'neutral'
 }) {
   const call = recommendationFromScore(score)
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <div
+      className={cn('flex items-center gap-2', className)}
+      role='img'
+      aria-label={`Hazard index ${score.toFixed(1)} out of 10`}
+    >
       <span className='w-7 text-sm font-semibold text-foreground tabular-nums'>
         {score.toFixed(1)}
       </span>
@@ -24,7 +31,7 @@ export function ScoreBar({
         <span
           className={cn(
             'absolute inset-y-0 left-0 rounded-full',
-            RECOMMENDATION_BG[call]
+            tone === 'neutral' ? 'bg-foreground/45' : RECOMMENDATION_BG[call]
           )}
           style={{ width: `${Math.min(100, score * 10)}%` }}
         />
