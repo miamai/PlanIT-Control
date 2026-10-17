@@ -209,8 +209,111 @@ def osha_heat_site_days(sites: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
+# NWS warnings (IEM VTEC archive) and ASOS thunder
+# ---------------------------------------------------------------------------
+
+# (phenomena, significance) -> hazard. Watches and most advisories are left out: they cover
+# "possible", not "happening". Extreme Heat Warning (XH) replaced Excessive Heat (EH) in 2025.
+WARNING_HAZARDS = {
+    ("HT", "Y"): "heat", ("EH", "W"): "heat", ("XH", "W"): "heat",
+    ("SV", "W"): "convective", ("TO", "W"): "convective",
+    ("FF", "W"): "flood", ("FA", "W"): "flood", ("FL", "W"): "flood", ("CF", "W"): "flood",
+    ("FW", "W"): "wildfire",
+}
+
+
+def warnings_site_days(sites: pd.DataFrame) -> pd.DataFrame:
+    """warn_{hazard} flags per site-day from the IEM archive (14_iem_warnings.py)."""
+    out = []
+    for s in sites.itertuples():
+        path = RAW / "iem_warnings" / f"{s.site_id}.parquet"
+        if not path.exists():
+            continue
+        w = pd.read_parquet(path)
+        w["hazard"] = [WARNING_HAZARDS.get((p, g)) for p, g in zip(w["phenomena"], w["significance"])]
+        w = w.dropna(subset=["hazard", "issue"])
+        if w.empty:
+            continue
+        w["expire"] = w["expire"].where(w["expire"] >= w["issue"], w["issue"])
+        b = w["issue"].dt.tz_convert(s.timezone).dt.tz_localize(None).dt.normalize()
+        e = w["expire"].dt.tz_convert(s.timezone).dt.tz_localize(None).dt.normalize()
+        e = e.where(e - b <= pd.Timedelta(days=MAX_EVENT_DAYS - 1), b + pd.Timedelta(days=MAX_EVENT_DAYS - 1))
+        n = ((e - b).dt.days + 1).to_numpy()
+        rep = w.loc[w.index.repeat(n), ["hazard"]].copy()
+        day_n = np.concatenate([np.arange(k) for k in n])
+        rep["date"] = np.repeat(b.to_numpy(), n) + pd.to_timedelta(day_n, unit="D")
+        # Long flood warnings (river stays in flood for weeks): same onset rule as Storm Events.
+        rep.loc[(rep["hazard"] == "flood") & (day_n >= FLOOD_ONSET_DAYS), "hazard"] = "flood_ongoing"
+        out.append(rep.assign(site_id=s.site_id))
+    if not out:
+        return pd.DataFrame(columns=["site_id", "date"])
+    w = pd.concat(out, ignore_index=True).assign(v=1)
+    w = w.pivot_table(index=["site_id", "date"], columns="hazard", values="v", aggfunc="max", fill_value=0)
+    w.columns = [f"warn_{c}" for c in w.columns]
+    return w.reset_index()
+
+
+def thunder_site_days(sites: pd.DataFrame) -> pd.DataFrame:
+    """Hours with thunder (TS/VCTS) at the site's ASOS station per local day (15_asos_thunder.py)."""
+    out = []
+    if "asos_station" not in sites:
+        return pd.DataFrame(columns=["site_id", "date", "thunder_hours"])
+    for s in sites.dropna(subset=["asos_station"]).itertuples():
+        path = RAW / "asos" / f"{s.asos_station}.csv"
+        if not path.exists():
+            continue
+        a = pd.read_csv(path, usecols=["valid", "wxcodes"], dtype=str)
+        a = a[a["wxcodes"].fillna("").str.contains("TS")]
+        if a.empty:
+            continue
+        t = pd.to_datetime(a["valid"], utc=True).dt.tz_convert(s.timezone).dt.tz_localize(None)
+        hours = t.dt.floor("h").drop_duplicates()
+        counts = hours.dt.normalize().value_counts().rename("thunder_hours").rename_axis("date").reset_index()
+        out.append(counts.assign(site_id=s.site_id))
+    if not out:
+        return pd.DataFrame(columns=["site_id", "date", "thunder_hours"])
+    return pd.concat(out, ignore_index=True)
+
+
+# ---------------------------------------------------------------------------
 # Assemble
 # ---------------------------------------------------------------------------
+
+# A thunder day needs at least this many hours with thunder reported at the ASOS station. With any
+# thunder (median 2 h) convective fired on ~12% of days and the index said no-go on 45% of Gulf
+# summer days; 3+ hours keeps sustained storms and cuts that to 16% (see README).
+THUNDER_MIN_HOURS = 3
+
+# Which sources make up each hazard's 0/1 label: something observed near the site (Storm Events,
+# OSHA, FIRMS, ASOS thunder) OR an NWS warning covering it. See README for the comparison.
+LABEL_SOURCES = {
+    "heat": ["se_heat", "osha", "warn_heat"],
+    "convective": ["se_convective", "warn_convective", "thunder"],
+    "flood": ["se_flood", "warn_flood"],
+    "wildfire": ["se_wildfire", "firms", "warn_wildfire"],
+}
+
+
+def source_flags(lab: pd.DataFrame) -> dict[str, pd.Series]:
+    """Each label source as a 0/1 series over the label table's rows."""
+    col = lambda c: lab[c] if c in lab else pd.Series(0, index=lab.index)  # noqa: E731
+    flags = {c: col(c) > 0 for c in ["se_heat", "se_convective", "se_flood", "se_wildfire", "se_flood_ongoing",
+                                      "warn_heat", "warn_convective", "warn_flood", "warn_flood_ongoing",
+                                      "warn_wildfire"]}
+    flags["osha"] = col("osha_heat_count") > 0
+    flags["firms"] = col("firms_count") >= FIRMS_MIN_DETECTIONS
+    flags["thunder"] = col("thunder_hours") >= THUNDER_MIN_HOURS
+    return flags
+
+
+def combine_labels(lab: pd.DataFrame, sources: dict[str, list[str]] = LABEL_SOURCES) -> pd.DataFrame:
+    f = source_flags(lab)
+    for h, srcs in sources.items():
+        lab[h] = np.logical_or.reduce([f[s_] for s_ in srcs]).astype(int)
+    ongoing = f["se_flood_ongoing"] | (f["warn_flood_ongoing"] if "warn_flood" in sources["flood"] else False)
+    lab["flood_ongoing"] = (ongoing & (lab["flood"] == 0)).astype(int)
+    return lab
+
 
 def build_labels(sites: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     se = load_storm_events()
@@ -226,18 +329,10 @@ def build_labels(sites: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     lab.columns = [f"se_{c}" for c in lab.columns]
     lab = lab.reset_index()
 
-    firms = firms_site_days(sites)
-    osha = osha_heat_site_days(sites)
-    lab = lab.merge(firms, on=["site_id", "date"], how="outer").merge(osha, on=["site_id", "date"], how="outer")
+    for extra in (firms_site_days(sites), osha_heat_site_days(sites), warnings_site_days(sites),
+                  thunder_site_days(sites)):
+        extra["date"] = pd.to_datetime(extra["date"])
+        lab = lab.merge(extra, on=["site_id", "date"], how="outer")
     lab = lab.fillna(0)
-
-    for h in [*EVENT_TYPES, "flood_ongoing"]:
-        if f"se_{h}" not in lab:
-            lab[f"se_{h}"] = 0
-    lab["heat"] = ((lab["se_heat"] > 0) | (lab["osha_heat_count"] > 0)).astype(int)
-    lab["convective"] = (lab["se_convective"] > 0).astype(int)
-    lab["flood"] = (lab["se_flood"] > 0).astype(int)
-    lab["flood_ongoing"] = ((lab["se_flood_ongoing"] > 0) & (lab["flood"] == 0)).astype(int)
-    lab["wildfire"] = ((lab["se_wildfire"] > 0) | (lab["firms_count"] >= FIRMS_MIN_DETECTIONS)).astype(int)
     lab["date"] = pd.to_datetime(lab["date"])
-    return lab, days
+    return combine_labels(lab), days

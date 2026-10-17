@@ -1,4 +1,7 @@
-"""Row 1: pick 50 power-plant sites from EIA-860M spread across hazard regions.
+"""Row 1: pick 200 power-plant sites from EIA-860M spread across hazard regions.
+
+The first four regions are the plan's hazard regions. The last three widen coverage. Farthest-point
+sampling is prefix-stable, so raising a quota keeps every site picked before (and its downloads).
 
 Output: data/processed/sites.parquet
 """
@@ -29,7 +32,9 @@ MISSISSIPPI = [
 ]
 
 # Region -> number of sites. Order matters: a plant goes to the first region that claims it.
-QUOTAS = {"gulf_fl": 14, "mississippi": 12, "west": 12, "plains": 12}
+# (v1 used 14/12/12/12 for the first four regions only.)
+QUOTAS = {"gulf_fl": 35, "mississippi": 25, "west": 35, "plains": 35,
+          "southeast": 25, "ohio_valley": 20, "mountain_west": 25}
 
 
 def latest_eia_file() -> Path:
@@ -99,7 +104,11 @@ def assign_region(p: pd.DataFrame) -> pd.Series:
     miss = (river_km < 25) & st.isin(["MN", "WI", "IA", "IL", "MO", "KY", "TN", "AR", "MS", "LA"])
     west = st.isin(["CA", "AZ"])
     plains = st.isin(["OK", "KS", "NE", "SD", "ND"]) | ((st == "TX") & (lat > 32) & (lon < -97))
-    region = np.select([gulf, miss, west, plains], ["gulf_fl", "mississippi", "west", "plains"], "")
+    southeast = st.isin(["GA", "SC", "NC", "TN", "VA", "AL", "MS"])
+    ohio = st.isin(["OH", "IN", "KY", "WV", "PA"])
+    mountain = st.isin(["NV", "UT", "NM", "CO", "OR", "WA", "ID", "MT", "WY"])
+    region = np.select([gulf, miss, west, plains, southeast, ohio, mountain],
+                       ["gulf_fl", "mississippi", "west", "plains", "southeast", "ohio_valley", "mountain_west"], "")
     return pd.Series(region, index=p.index)
 
 

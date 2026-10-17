@@ -39,7 +39,8 @@ OPEN_METEO_UNITS = {
     "precipitation_unit": "inch",
 }
 
-REGIONS = {"gulf_fl": 0, "mississippi": 1, "west": 2, "plains": 3}
+REGIONS = {"gulf_fl": 0, "mississippi": 1, "west": 2, "plains": 3, "southeast": 4, "ohio_valley": 5,
+           "mountain_west": 6}
 
 HOT_DAY_HI_F = 95.0      # heat index that counts toward a hot-day streak
 RAIN_DAY_IN = 0.1        # "days since rain" threshold
@@ -56,11 +57,12 @@ FEATURES: dict[str, list[str]] = {
         "rh_mean", "heat_climo",
     ],
     # The archive never reports thunderstorm weather codes (95-99), so ts_hours is always 0 in
-    # training. These proxies come from the same hourly variables instead.
+    # training. These proxies come from the same hourly variables instead. No site-history feature:
+    # the label includes ASOS thunder, which only some sites have, so a per-site rate would mostly
+    # encode "has a station"; the model is trained on station sites and scores every site by weather.
     "convective": [
         "precip_max_hr", "heavy_rain_hours", "precip_afternoon", "precip_day", "gust_max",
         "gust_factor_max", "temp_drop_1h_max", "td_max", "hi_max", "t_max", "doy_sin", "doy_cos", "region",
-        "convective_climo",
     ],
     "flood": [
         "precip_day", "rain_72h", "rain_7d", "rain_14d", "api", "precip_max_hr", "precip_day_lag1",
@@ -403,3 +405,63 @@ def all_feature_names() -> list[str]:
     for cols in FEATURES.values():
         seen += [c for c in cols if c not in seen]
     return seen
+
+
+# ---------------------------------------------------------------------------
+# Hourly features (safe-work-window model)
+# ---------------------------------------------------------------------------
+
+# Hourly thunder model inputs. Neighbouring hours are fine: a forecast gives the whole day at once.
+# weather_code is left out on purpose: the archive never reports thunder codes but the forecast does.
+HOURLY_FEATURES = [
+    "precip", "precip_lag1", "precip_lead1", "precip_3h", "gust", "gust_factor", "temp", "dewpoint", "rh",
+    "vpd", "temp_change_1h", "srad", "soil0", "hour_sin", "hour_cos", "doy_sin", "doy_cos", "region",
+    "day_precip_max_hr", "day_precip_total", "day_td_max", "day_t_max", "day_gust_max",
+]
+
+# OSHA heat index risk bands (°F) for outdoor work.
+HEAT_BANDS = [(91, "lower"), (103, "moderate"), (115, "high"), (float("inf"), "very high")]
+
+
+def heat_band(hi: float) -> str:
+    for upper, name in HEAT_BANDS:
+        if hi < upper:
+            return name
+    return "very high"
+
+
+def hourly_features(hourly: pd.DataFrame, site: Mapping) -> pd.DataFrame:
+    """One row per UTC hour with local date/hour, heat index and HOURLY_FEATURES."""
+    h = hourly.sort_values("time").reset_index(drop=True)
+    t_local = pd.to_datetime(h["time"], utc=True).dt.tz_convert(_get(site, "timezone"))
+    out = pd.DataFrame({"time": pd.to_datetime(h["time"], utc=True)})
+    out["local_date"] = t_local.dt.tz_localize(None).dt.normalize()
+    out["local_hour"] = t_local.dt.hour
+    p = h["precipitation"]
+    out["precip"] = p
+    out["precip_lag1"] = p.shift(1)
+    out["precip_lead1"] = p.shift(-1)
+    out["precip_3h"] = p.rolling(3, center=True, min_periods=1).sum()
+    out["gust"] = h["wind_gusts_10m"]
+    out["gust_factor"] = h["wind_gusts_10m"] - h["wind_speed_10m"]
+    out["temp"] = h["temperature_2m"]
+    out["dewpoint"] = dewpoint_f(h["temperature_2m"], h["relative_humidity_2m"])
+    out["rh"] = h["relative_humidity_2m"]
+    out["vpd"] = h["vapour_pressure_deficit"]
+    out["temp_change_1h"] = h["temperature_2m"].diff()
+    out["srad"] = h["shortwave_radiation"]
+    out["soil0"] = h["soil_moisture_0_to_7cm"]
+    out["heat_index"] = heat_index_f(h["temperature_2m"], h["relative_humidity_2m"])
+    out["hour_sin"] = np.sin(2 * np.pi * out["local_hour"] / 24)
+    out["hour_cos"] = np.cos(2 * np.pi * out["local_hour"] / 24)
+    doy = out["local_date"].dt.dayofyear
+    out["doy_sin"] = np.sin(2 * np.pi * doy / 365.25)
+    out["doy_cos"] = np.cos(2 * np.pi * doy / 365.25)
+    out["region"] = REGIONS.get(_get(site, "region", ""), -1)
+    g = out.groupby("local_date")
+    out["day_precip_max_hr"] = g["precip"].transform("max")
+    out["day_precip_total"] = g["precip"].transform("sum")
+    out["day_td_max"] = g["dewpoint"].transform("max")
+    out["day_t_max"] = g["temp"].transform("max")
+    out["day_gust_max"] = g["gust"].transform("max")
+    return out

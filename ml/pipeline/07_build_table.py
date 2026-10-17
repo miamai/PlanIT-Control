@@ -1,6 +1,7 @@
 """Phase 2: daily features + labels -> train.parquet.
 
-Reads whatever weather is on disk, so it can be run on a partial download for testing.
+Uses every site whose seven years of weather are all on disk, so it can be re-run as the
+weather download progresses; sites still downloading are skipped.
 Enrichment (FEMA columns in sites.parquet, raw/gauges, raw/tides) is used when present.
 
 Outputs:
@@ -21,7 +22,7 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from common import HAZARDS, MODELS, PROCESSED, RAW, TRAIN_YEARS  # noqa: E402
+from common import HAZARDS, MODELS, PROCESSED, RAW, TRAIN_YEARS, YEARS  # noqa: E402
 from features import (  # noqa: E402
     BASELINE_VARS, add_baseline_features, add_gauge_features, add_history_features,
     add_site_features, add_tide_features, climatology_rates, compute_baselines, daily_from_hourly,
@@ -59,6 +60,8 @@ def add_climatology(train: pd.DataFrame) -> pd.DataFrame:
         learn = train[train["year"].isin(TRAIN_YEARS)]
         if h == "flood":
             learn = learn[learn["flood_ongoing"] == 0]
+        if h == "convective":
+            learn = learn[learn["has_thunder_obs"] == 1]
         overall = learn[h].mean()
         full = climatology_rates(learn, h)
         tables.append(full)
@@ -74,15 +77,15 @@ def add_climatology(train: pd.DataFrame) -> pd.DataFrame:
 
 def main() -> None:
     sites = pd.read_parquet(PROCESSED / "sites.parquet")
+    complete = [all((RAW / "weather" / f"{sid}_{y}.parquet").exists() for y in YEARS) for sid in sites["site_id"]]
+    print(f"{sum(complete)}/{len(sites)} sites have all {len(YEARS)} years of weather")
+    sites = sites[complete].reset_index(drop=True)
     sites.to_parquet(MODELS / "sites.parquet", index=False)
 
     # Pass 1: hourly -> daily with history features.
     daily: dict[str, pd.DataFrame] = {}
     for s in sites.itertuples():
         w = load_weather(s.site_id)
-        if w is None:
-            print(f"  no weather yet for {s.site_id}; skipping")
-            continue
         daily[s.site_id] = add_history_features(daily_from_hourly(w, s.timezone))
     print(f"{len(daily)}/{len(sites)} sites with weather")
 
@@ -116,6 +119,9 @@ def main() -> None:
     label_cols = [*HAZARDS, "flood_ongoing"]
     train = feats.merge(labels[["site_id", "date", *label_cols]], on=["site_id", "date"], how="left")
     train[label_cols] = train[label_cols].fillna(0).astype(int)
+    # Convective labels include ASOS thunder; sites without a station would look storm-free.
+    with_station = set(sites.loc[sites.get("asos_station", pd.Series(index=sites.index)).notna(), "site_id"])
+    train["has_thunder_obs"] = train["site_id"].isin(with_station).astype(int)
     train = add_climatology(train)
     train.to_parquet(PROCESSED / "train.parquet", index=False)
 

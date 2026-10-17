@@ -13,6 +13,8 @@ import hashlib
 import json
 import math
 import pickle
+import threading
+import time
 from datetime import date as Date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -21,17 +23,30 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 import requests
+import requests_cache
 
-from common import HAZARDS, MODELS, UA
+from common import HAZARDS, MODELS, RAW, UA
 from features import (
-    FEATURES, FORECAST_SOIL_VARS, HOURLY_VARS, OPEN_METEO_UNITS, REASON_TEXT, build_features,
-    harmonize_forecast,
+    FEATURES, FORECAST_SOIL_VARS, HOURLY_FEATURES, HOURLY_VARS, OPEN_METEO_UNITS, REASON_TEXT, build_features,
+    harmonize_forecast, heat_band, hourly_features,
 )
 
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 NWPS = "https://api.water.noaa.gov/nwps/v1/gauges"
 COOPS = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
 PAST_DAYS = 45  # covers 30-day rain, the 14-day API spin-up and streaks
+
+# Live forecast, gauge and tide calls are cached for an hour, so repeated /score calls for a site
+# (a demo, a page refresh) don't spend Open-Meteo quota, which the training download shares. If a
+# provider errors (e.g. 429), the last cached response is served even if it is older than that.
+LIVE_CACHE_SECONDS = 3600
+_live = requests_cache.CachedSession(str(RAW / "live_cache"), backend="sqlite",
+                                     expire_after=LIVE_CACHE_SECONDS, allowable_codes=(200,),
+                                     stale_if_error=True)
+_live.headers["User-Agent"] = UA
+# One forecast request at a time: simultaneous requests for a site then hit the cache instead of
+# bursting Open-Meteo (which answered a burst of six with a 429).
+_forecast_lock = threading.Lock()
 
 # 0-3 go, 4-6 caution, 7-10 no-go, applied to the index rounded to a whole number.
 GO_BELOW = 3.5
@@ -96,6 +111,12 @@ class HazardModels:
         self.sites = pd.read_parquet(model_dir / "sites.parquet").set_index("site_id")
         wl = model_dir / "wildlife_sightings.parquet"
         self.sightings = pd.read_parquet(wl) if wl.exists() else pd.DataFrame(columns=["site_id", "group", "month", "count"])
+        self.thunder = None
+        if (model_dir / "thunder_hourly.txt").exists() and "hourly_thunder" in self.meta:
+            self.thunder = lgb.Booster(model_file=str(model_dir / "thunder_hourly.txt"))
+            with open(model_dir / "thunder_hourly_calibrator.pkl", "rb") as f:
+                self.thunder_calibrator = pickle.load(f)
+            self.thunder_threshold = self.meta["hourly_thunder"]["test_2025"]["at_threshold"]["threshold"]
 
     @property
     def version(self) -> str:
@@ -245,10 +266,15 @@ class HazardModels:
 
 def fetch_forecast(lat: float, lon: float, forecast_days: int) -> pd.DataFrame:
     hourly = [v for v in HOURLY_VARS if not v.startswith("soil_moisture")] + FORECAST_SOIL_VARS
-    r = requests.get(FORECAST_URL, params={
+    params = {
         "latitude": lat, "longitude": lon, "hourly": ",".join(hourly), "timezone": "GMT",
         "past_days": PAST_DAYS, "forecast_days": forecast_days, **OPEN_METEO_UNITS,
-    }, timeout=60, headers={"User-Agent": UA})
+    }
+    with _forecast_lock:
+        r = _live.get(FORECAST_URL, params=params, timeout=60)
+        if r.status_code == 429:
+            time.sleep(2)
+            r = _live.get(FORECAST_URL, params=params, timeout=60)
     r.raise_for_status()
     df = pd.DataFrame(r.json()["hourly"])
     df["time"] = pd.to_datetime(df.pop("time"), utc=True)
@@ -261,7 +287,7 @@ def fetch_gauge(site: dict, tz: str) -> pd.DataFrame | None:
     if not lid or pd.isna(lid):
         return None
     try:
-        r = requests.get(f"{NWPS}/{lid}/stageflow", timeout=30, headers={"User-Agent": UA})
+        r = _live.get(f"{NWPS}/{lid}/stageflow", timeout=30)
         r.raise_for_status()
         d = r.json()
     except (requests.RequestException, ValueError):
@@ -284,7 +310,7 @@ def fetch_tide(site: dict, start: Date, end: Date) -> pd.DataFrame | None:
     if not station or pd.isna(station):
         return None
     try:
-        r = requests.get(COOPS, params={
+        r = _live.get(COOPS, params={
             "product": "predictions", "interval": "hilo", "station": station, "datum": "MHHW",
             "units": "english", "time_zone": "lst_ldt", "format": "json", "application": "PlanIT",
             "begin_date": start.strftime("%Y%m%d"), "end_date": end.strftime("%Y%m%d"),
@@ -315,6 +341,66 @@ def get_models() -> HazardModels:
     return _MODELS
 
 
+WORK_HOURS_START, WORK_HOURS_END = 5, 20  # hours shown in the work plan (local, 5 AM to 8 PM)
+
+
+def _clock(h: int) -> str:
+    return f"{(h - 1) % 12 + 1} {'AM' if h < 12 else 'PM'}"
+
+
+def _spans(hours: list[int]) -> list[tuple[int, int]]:
+    """Consecutive hours -> (start, end) with end exclusive."""
+    spans: list[tuple[int, int]] = []
+    for h in sorted(hours):
+        if spans and h == spans[-1][1]:
+            spans[-1] = (spans[-1][0], h + 1)
+        else:
+            spans.append((h, h + 1))
+    return spans
+
+
+def work_plan(m: HazardModels, site: dict, hourly: pd.DataFrame, day: Date) -> dict | None:
+    """Hour-by-hour heat band (OSHA heat index) and thunder chance (hourly model) -> work windows."""
+    if m.thunder is None:
+        return None
+    hf = hourly_features(hourly, site)
+    hf = hf[(hf["local_date"] == pd.Timestamp(day)) & hf["local_hour"].between(WORK_HOURS_START, WORK_HOURS_END - 1)]
+    if hf.empty:
+        return None
+    p = m.thunder_calibrator.predict(m.thunder.predict(hf[HOURLY_FEATURES].astype(float)))
+    thr = m.thunder_threshold
+    hours = []
+    for (_, r), pt in zip(hf.iterrows(), p):
+        band = heat_band(r["heat_index"])
+        if band in ("high", "very high") or pt >= thr:
+            status = "avoid"
+        elif band == "moderate" or pt >= thr / 2:
+            status = "caution"
+        else:
+            status = "ok"
+        hours.append({"hour": int(r["local_hour"]), "time": _clock(int(r["local_hour"])),
+                      "heat_index": round(float(r["heat_index"])), "heat_band": band,
+                      "p_thunder": round(float(pt), 2), "status": status})
+    by = {h["hour"]: h for h in hours}
+    heat_hours = [h["hour"] for h in hours if h["heat_band"] in ("high", "very high")]
+    storm_hours = [h["hour"] for h in hours if h["p_thunder"] >= thr]
+    avoid = []
+    for a, b in _spans(heat_hours):
+        peak = max(by[h]["heat_index"] for h in range(a, b))
+        avoid.append({"start": _clock(a), "end": _clock(b), "why": "heat",
+                      "text": f"Heat index 103°F or higher from {_clock(a)} to {_clock(b)} (peak {peak}°F)"})
+    for a, b in _spans(storm_hours):
+        peak = max(by[h]["p_thunder"] for h in range(a, b))
+        avoid.append({"start": _clock(a), "end": _clock(b), "why": "thunder",
+                      "text": f"Thunder likely from {_clock(a)} to {_clock(b)} (peak {round(100 * peak)}% chance per hour)"})
+    windows = [{"start": _clock(a), "end": _clock(b), "hours": b - a,
+                "text": f"{_clock(a)} to {_clock(b)}"}
+               for a, b in _spans([h["hour"] for h in hours if h["status"] != "avoid"]) if b - a >= 2]
+    return {"hours": hours, "work_windows": windows, "avoid": avoid,
+            "thunder_threshold": thr, "note": "Heat bands follow OSHA heat index guidance; thunder chance is "
+                                              "the hourly model's calibrated probability."}
+
+
 def score_site(site_id: str, day: Date | None = None, alerts: list[dict] | None = None,
                crew_reports: list[dict] | None = None) -> dict:
     m = get_models()
@@ -337,7 +423,11 @@ def score_site(site_id: str, day: Date | None = None, alerts: list[dict] | None 
                            m.climatology[m.climatology["site_id"] == site_id])
     # With only PAST_DAYS of history, "no rain in the window" is a lower bound, not unknown.
     feats["days_since_rain"] = feats["days_since_rain"].fillna(float(PAST_DAYS))
-    return m.risk_json(site, feats, day, alerts, crew_reports)
+    out = m.risk_json(site, feats, day, alerts, crew_reports)
+    plan = work_plan(m, site, hourly, day)
+    if plan:
+        out["work_plan"] = plan
+    return out
 
 
 def mock_score(site_id: str, day: Date | None = None) -> dict:

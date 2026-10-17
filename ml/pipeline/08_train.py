@@ -36,12 +36,15 @@ from features import CATEGORICAL, FEATURES  # noqa: E402
 
 MODEL_VERSION = "v1"
 LABEL_NOTES = {
-    "heat": "Storm Events Heat/Excessive Heat (zone -> county) or OSHA outdoor heat injury within 25 mi",
-    "convective": "Storm Events Thunderstorm Wind/Hail/Lightning within 25 mi (county match if no lat/lon)",
-    "flood": "Storm Events Flash Flood/Coastal Flood, or the first 3 days of a Flood event, within 25 mi; "
-             "later days of long floods excluded",
-    "wildfire": "Storm Events Wildfire, or >= 3 FIRMS VIIRS vegetation-fire detections within 25 km "
-                "(static hot spots and detections within 1 km of the site removed)",
+    "heat": "Storm Events Heat/Excessive Heat (zone -> county), OSHA outdoor heat injury within 25 mi, "
+            "or NWS Heat Advisory / Excessive or Extreme Heat Warning at the site",
+    "convective": "Storm Events Thunderstorm Wind/Hail/Lightning within 25 mi, NWS Severe Thunderstorm or "
+                  "Tornado Warning at the site, or 3+ hours of thunder at the nearest ASOS station (40 km); "
+                  "trained and evaluated on sites that have a station",
+    "flood": "Storm Events Flash Flood/Coastal Flood or first 3 days of a Flood event within 25 mi, or NWS "
+             "Flash Flood/Flood/Coastal Flood Warning at the site (first 3 days); later days of long floods excluded",
+    "wildfire": "Storm Events Wildfire, >= 3 FIRMS VIIRS vegetation-fire detections within 25 km "
+                "(static hot spots and detections within 1 km of the site removed), or NWS Red Flag Warning",
 }
 PARAMS = {
     "objective": "binary",
@@ -98,6 +101,9 @@ def train_hazard(df: pd.DataFrame, hazard: str) -> dict:
         # Later days of multi-week river floods: not predictable from local weather, so neither
         # positive nor negative. Gauges and live alerts cover them.
         df = df[df["flood_ongoing"] == 0]
+    if hazard == "convective":
+        # The label includes ASOS thunder; train and evaluate only where a station reports it.
+        df = df[df["has_thunder_obs"] == 1]
     tr = df[df["year"].isin(TRAIN_YEARS)]
     fit, es = tr[tr["year"] < max(TRAIN_YEARS)], tr[tr["year"] == max(TRAIN_YEARS)]
     cal = df[df["year"] == CALIB_YEAR]

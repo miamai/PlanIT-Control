@@ -24,6 +24,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from common import PROCESSED, RAW, haversine_km, session  # noqa: E402
@@ -39,15 +40,23 @@ OUT = RAW / "gauges"
 
 
 def get(s, url: str, params: dict | None = None):
-    """GET with backoff: NWPS returns 429 when hit quickly."""
-    for attempt in range(6):
-        r = s.get(url, params=params, timeout=60)
+    """GET with backoff: NWPS returns 429 when hit quickly, sometimes for several minutes."""
+    for attempt in range(12):
+        try:
+            r = s.get(url, params=params, timeout=60)
+        except requests.ConnectionError as e:
+            print(f"    NWPS connection dropped ({e.__class__.__name__}); retrying in 30s", flush=True)
+            time.sleep(30)
+            continue
         if r.status_code != 429:
             r.raise_for_status()
             if not getattr(r, "from_cache", False):
-                time.sleep(1.0)
+                time.sleep(2.0)
             return r
-        time.sleep(10 * (attempt + 1))
+        retry_after = r.headers.get("Retry-After", "")
+        wait = max(float(retry_after) if retry_after.isdigit() else 0.0, 30.0 * (attempt + 1))
+        print(f"    NWPS rate limit; sleeping {wait:.0f}s", flush=True)
+        time.sleep(wait)
     r.raise_for_status()
 
 
