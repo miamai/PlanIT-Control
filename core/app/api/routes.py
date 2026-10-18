@@ -665,8 +665,14 @@ async def import_cached_eia_sites(_: AdminPrincipal, session: DbSession) -> dict
 async def stream_events(
     _: UserPrincipal,
     request: Request,
+    session: DbSession,
     last_event_id: Annotated[int | None, Header(alias="Last-Event-ID")] = None,
 ) -> StreamingResponse:
+    # The request session (shared with the auth lookup) would otherwise stay idle
+    # in a transaction for the life of the stream, holding a pooled connection and
+    # a lock on user_accounts that blocks migrations. Each poll opens its own.
+    await session.close()
+
     async def events():
         cursor = last_event_id or 0
         while not await request.is_disconnected():
