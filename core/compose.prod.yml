@@ -1,0 +1,12 @@
+services:
+  ml:
+    image: ${IMAGE_REPO:?set IMAGE_REPO}/ml:${IMAGE_TAG:-latest}
+
+  bootstrap:
+    image: ${IMAGE_REPO:?set IMAGE_REPO}/core:${IMAGE_TAG:-latest}
+
+  api:
+    image: ${IMAGE_REPO:?set IMAGE_REPO}/core:${IMAGE_TAG:-latest}
+
+  worker:
+    image: ${IMAGE_REPO:?set IMAGE_REPO}/core:${IMAGE_TAG:-latest}
