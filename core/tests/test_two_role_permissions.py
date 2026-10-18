@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-
 import jwt
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -11,11 +9,7 @@ from app.core.config import get_settings
 from app.core.database import get_session
 from app.main import app
 from app.models.entities import (
-    Alert,
-    AlertStatus,
     Base,
-    HazardType,
-    Severity,
     Site,
     UserAccount,
     UserRole,
@@ -57,22 +51,10 @@ async def test_user_and_admin_permissions_and_legacy_token_claims() -> None:
         )
         session.add_all([site, regular, administrator])
         await session.flush()
-        alert = Alert(
-            site_id=site.id,
-            hazard_type=HazardType.HEAT,
-            severity=Severity.HIGH,
-            status=AlertStatus.ACTIVE,
-            title="Test heat",
-            message="Test",
-            recommended_action="Test action",
-            triggered_at=datetime.now(UTC),
-            details={},
-        )
-        session.add(alert)
         user_token, _, _, _ = await issue_token_pair(session, regular, settings)
         admin_token, _, _, _ = await issue_token_pair(session, administrator, settings)
         await session.commit()
-        site_id, alert_id = str(site.id), str(alert.id)
+        site_id = str(site.id)
 
     async def override_session():
         async with factory() as session:
@@ -98,33 +80,8 @@ async def test_user_and_admin_permissions_and_legacy_token_claims() -> None:
                 )
             ).status_code == 201
             assert (await client.get("/api/reports", headers=user_headers)).status_code == 403
-            assert (
-                await client.patch(
-                    f"/api/alerts/{alert_id}",
-                    headers=user_headers,
-                    json={"status": "ACKNOWLEDGED", "reason": "Test acknowledgement"},
-                )
-            ).status_code == 403
             assert (await client.get("/api/admin/users", headers=user_headers)).status_code == 403
-            assert (await client.get("/api/admin/system", headers=user_headers)).status_code == 403
-            assert (
-                await client.post("/api/admin/ingestion/weather", headers=user_headers)
-            ).status_code == 403
             assert (await client.get("/api/reports", headers=admin_headers)).status_code == 200
-            assert (
-                await client.patch(
-                    f"/api/alerts/{alert_id}",
-                    headers=admin_headers,
-                    json={"status": "ACKNOWLEDGED", "reason": "Admin reviewed"},
-                )
-            ).status_code == 200
-            assert (
-                await client.patch(
-                    f"/api/alerts/{alert_id}",
-                    headers=admin_headers,
-                    json={"status": "RESOLVED", "reason": "Admin resolved"},
-                )
-            ).status_code == 200
             for role in ("crew", "supervisor"):
                 assert (
                     await client.post(

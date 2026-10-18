@@ -32,15 +32,7 @@ def _observation_read(observation: HazardObservation, settings: Settings) -> Obs
 
 
 FEEDS = {
-    "weather": (
-        {HazardType.WEATHER, HazardType.HEAT},
-        ("weather", "weather_alerts"),
-        "stored-live",
-    ),
     "lightning": ({HazardType.LIGHTNING}, ("lightning",), "stored-fixture"),
-    "flood": ({HazardType.FLOOD}, ("usgs", "weather_alerts"), "stored-live"),
-    "wildfire": ({HazardType.WILDFIRE}, ("wildfire",), "stored-live"),
-    "soil": ({HazardType.SOIL}, ("soil",), "stored-proxy"),
 }
 
 

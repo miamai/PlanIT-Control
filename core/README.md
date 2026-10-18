@@ -108,17 +108,14 @@ deterministic template. Core's API and worker explicitly clear this variable, an
 is made by the test suite.
 
 For a due site-specific operational retry, use `planit-ml-generate <core-site-uuid>`. The command
-still enforces the site's local 6 PM cutoff. `GET /api/admin/system` reports ML health, model version,
-catalog size, and the last successful stored generation.
+still enforces the site's local 6 PM cutoff. Use `/health` for API/database readiness; ML health and
+catalog checks are performed by the Core-to-ML synchronization command.
 
 ## Frontend API contract
 
 - Interactive OpenAPI: `http://localhost:8000/docs`
 - Machine-readable runtime schema: `http://localhost:8000/openapi.json`
 - Checked-in schema: [`docs/openapi.json`](docs/openapi.json)
-- Frontend guide and endpoint examples: [`docs/frontend-api.md`](docs/frontend-api.md)
-- Axios, TanStack Query, and SSE examples:
-  [`docs/frontend-api.example.ts`](docs/frontend-api.example.ts)
 
 Regenerate the checked-in contract after changing a route or schema:
 
@@ -165,28 +162,24 @@ bytes.
 Roles are:
 
 - `user`: operational reads and hazard report submission.
-- `admin`: user access, report review, alert acknowledgement/resolution, user management,
-  ingestion, system status, and EIA refresh.
+- `admin`: user access, report review, and user management.
 
 Admins manage all roles through `/api/admin/users`; the last active admin cannot
-be disabled, demoted, or deleted, and an admin cannot self-delete. Password
-changes, disablement, role changes, and soft deletion revoke refresh sessions.
-Report submissions are limited to 30 per user per minute, and provider runs to
-one per provider per minute.
+be disabled, demoted, or deleted, and an admin cannot self-delete. Disablement,
+role changes, and soft deletion revoke refresh sessions. Report submissions are
+limited to 30 per user per minute.
 
-The frontend hazard feeds are stored-data reads and never call upstream services:
-`/api/sites/weather`, `/api/sites/lightning`, `/api/sites/flood`,
-`/api/sites/wildfire`, and `/api/sites/soil`. Filter any feed with repeated US
-state parameters, for example `?state=TX&state=LA`; omitting `state` returns all
-stored U.S. observations. Each row contains `{ "site": ..., "observation": ... }`.
+The frontend lightning feed is a stored-data read and never calls upstream services:
+`/api/sites/lightning`. Filter it with repeated US state parameters, for example
+`?state=TX&state=LA`; omitting `state` returns all stored U.S. observations.
+Each row contains `{ "site": ..., "observation": ... }`.
 
 ## Providers and safety semantics
 
 Scheduled external polling is opt-in. The default `ENABLED_PROVIDERS=[]` keeps
 local startup deterministic and avoids contacting third parties. Enable only
 configured providers using JSON, for example
-`ENABLED_PROVIDERS=["weather","weather_alerts","usgs"]`. Manual admin runs
-remain available to administrators.
+`ENABLED_PROVIDERS=["weather","weather_alerts","usgs"]`.
 
 - NWS: hourly forecasts, nearest-station observations, official point alerts,
   and NOAA-formula calculated heat index. Set an identifiable `NWS_USER_AGENT`.
@@ -270,8 +263,7 @@ INITIAL_ADMIN_PASSWORD=<secret> uv run planit-init-admin
 
 `planit-db-check` reports the sanitized host/database, TLS state, current and
 expected migration revisions, required tables, row counts, and TimescaleDB
-availability without printing credentials. The authenticated
-`GET /api/admin/system` endpoint exposes the same deployment check.
+availability without printing credentials.
 
 Tiger Data services support TimescaleDB, but this application treats standard
 PostgreSQL as the baseline. If the check reports the extension as available,

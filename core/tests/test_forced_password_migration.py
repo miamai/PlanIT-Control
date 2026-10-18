@@ -93,7 +93,6 @@ async def test_existing_admin_is_usable_after_forced_password_column_removal() -
             assert login.status_code == 200
             assert "must_change_password" not in login.json()["user"]
             headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
-            assert (await client.get("/api/auth/me", headers=headers)).status_code == 200
             assert (await client.get("/api/sites", headers=headers)).status_code == 200
     finally:
         app.dependency_overrides.clear()

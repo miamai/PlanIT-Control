@@ -37,6 +37,11 @@ async def test_initialized_admin_crud_and_state_feed() -> None:
                 initial_admin_password="test-only-initial-secret",
             ),
         )
+        administrator = await session.scalar(
+            select(UserAccount).where(UserAccount.username == "provisioned.operator")
+        )
+        assert administrator is not None
+        admin_id = str(administrator.id)
         sites = []
         for plant_id, state in ((1, "LA"), (2, "TX")):
             site = Site(
@@ -91,28 +96,17 @@ async def test_initialized_admin_crud_and_state_feed() -> None:
             assert login.status_code == 200
             initial_token = login.json()["access_token"]
             initial_headers = {"Authorization": f"Bearer {initial_token}"}
-            assert (await client.get("/api/auth/me", headers=initial_headers)).status_code == 200
             assert (await client.get("/api/sites", headers=initial_headers)).status_code == 200
 
-            changed = await client.patch(
-                "/api/auth/me/password",
-                headers=initial_headers,
-                json={
-                    "current_password": "test-only-initial-secret",
-                    "new_password": "new-secure-password",
-                },
-            )
-            assert changed.status_code == 200
             refreshed = await client.post("/api/auth/refresh")
             assert refreshed.status_code == 200
             token = refreshed.json()["access_token"]
             headers = {"Authorization": f"Bearer {token}"}
 
-            feed = await client.get("/api/sites/weather?state=LA&state=TX", headers=headers)
+            feed = await client.get("/api/sites/lightning?state=LA&state=TX", headers=headers)
             assert feed.status_code == 200
             assert feed.json()["meta"]["states"] == ["LA", "TX"]
-            assert feed.json()["meta"]["total"] == 2
-            assert set(feed.json()["data"][0]) == {"site", "observation"}
+            assert feed.json()["meta"]["total"] == 0
 
             created = await client.post(
                 "/api/admin/users",
@@ -154,7 +148,6 @@ async def test_initialized_admin_crud_and_state_feed() -> None:
             reset_headers = {"Authorization": f"Bearer {reset_login.json()['access_token']}"}
             assert (await client.get("/api/sites", headers=reset_headers)).status_code == 200
 
-            admin_id = changed.json()["user"]["id"]
             demote_last_admin = await client.patch(
                 f"/api/admin/users/{admin_id}", headers=headers, json={"role": "user"}
             )

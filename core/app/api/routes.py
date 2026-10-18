@@ -18,12 +18,10 @@ from app.core.database import SessionFactory, database_health, get_session
 from app.models.entities import (
     Alert,
     AlertStatus,
-    AlertTransition,
     CrewReport,
     EventOutbox,
     HazardObservation,
     HazardType,
-    ProviderRun,
     QualityStatus,
     RiskScore,
     SafetyBriefing,
@@ -31,7 +29,6 @@ from app.models.entities import (
 )
 from app.schemas.domain import (
     AlertRead,
-    AlertUpdate,
     BriefingRead,
     CrewReportCreate,
     CrewReportRead,
@@ -45,13 +42,9 @@ from app.schemas.domain import (
     SiteRead,
 )
 from app.services.backfill import BACKFILL_SCORE_SOURCE
-from app.services.database_check import inspect_database
 from app.services.decision import assess_decision
-from app.services.eia import import_plants, parse_cached_sites
 from app.services.events import publish_event
 from app.services.hazard_severity import assess_observation
-from app.services.ingestion import run_provider
-from app.services.ml import MLClient
 from app.services.risk import historical_features
 from app.services.rules import evaluate_observation
 from app.utils.geo import haversine_miles
@@ -79,28 +72,6 @@ async def health() -> dict:
     if not healthy:
         return JSONResponse(status_code=503, content=payload)
     return payload
-
-
-@router.get("/api/admin/system", tags=["admin"])
-async def system_status(
-    _: AdminPrincipal,
-    session: DbSession,
-    settings: Settings = Depends(get_settings),
-) -> dict:
-    data = (await inspect_database(session, settings)).to_dict()
-    if settings.ml_enabled:
-        try:
-            health = await MLClient(settings).health()
-            data["ml"] = health.model_dump()
-        except Exception:  # noqa: BLE001 - system status must remain available during ML outage
-            data["ml"] = {"ok": False, "models_ready": False}
-    else:
-        data["ml"] = {"ok": False, "enabled": False}
-    last_ml = await session.scalar(
-        select(func.max(RiskScore.generated_at)).where(RiskScore.score_source == "ml_service")
-    )
-    data["ml"]["last_successful_generation"] = last_ml.isoformat() if last_ml else None
-    return {"data": data}
 
 
 @router.get("/api/sites", response_model=Envelope[list[SiteRead]], tags=["sites"])
@@ -209,22 +180,6 @@ async def _alerts_query(
     )
 
 
-@router.get(
-    "/api/sites/{site_id}/alerts", response_model=Envelope[list[AlertRead]], tags=["alerts"]
-)
-async def site_alerts(
-    site_id: uuid.UUID,
-    _: UserPrincipal,
-    session: DbSession,
-    hazard_type: HazardType | None = None,
-    severity: str | None = None,
-    status_: AlertStatus | None = Query(None, alias="status"),
-    limit: int = Query(100, ge=1, le=500),
-    offset: int = Query(0, ge=0),
-) -> Envelope[list[AlertRead]]:
-    return await _alerts_query(session, site_id, hazard_type, severity, status_, limit, offset)
-
-
 @router.get("/api/alerts", response_model=Envelope[list[AlertRead]], tags=["alerts"])
 async def all_alerts(
     _: UserPrincipal,
@@ -237,44 +192,6 @@ async def all_alerts(
     offset: int = Query(0, ge=0),
 ) -> Envelope[list[AlertRead]]:
     return await _alerts_query(session, site_id, hazard_type, severity, status_, limit, offset)
-
-
-@router.patch("/api/alerts/{alert_id}", response_model=Envelope[AlertRead], tags=["alerts"])
-async def update_alert(
-    alert_id: uuid.UUID,
-    body: AlertUpdate,
-    principal: AdminPrincipal,
-    session: DbSession,
-) -> Envelope[AlertRead]:
-    alert = await session.get(Alert, alert_id, with_for_update=True)
-    if not alert:
-        raise HTTPException(status_code=404, detail="Alert not found")
-    if body.status == AlertStatus.ALL_CLEAR_ELIGIBLE:
-        raise HTTPException(
-            status_code=422, detail="All-clear eligibility is controlled by the server rule"
-        )
-    previous = alert.status
-    alert.status = body.status
-    alert.updated_at = datetime.now(UTC)
-    if body.status == AlertStatus.RESOLVED:
-        alert.resolved_at = alert.updated_at
-    session.add(
-        AlertTransition(
-            alert_id=alert.id,
-            from_status=previous,
-            to_status=body.status,
-            reason=f"{body.reason} (by {principal.subject})",
-        )
-    )
-    publish_event(
-        session,
-        "alert.updated",
-        {"alert_id": str(alert.id), "status": body.status.value},
-        alert.site_id,
-    )
-    await session.commit()
-    await session.refresh(alert)
-    return Envelope(data=AlertRead.model_validate(alert))
 
 
 @router.post(
@@ -557,24 +474,6 @@ def _risk_status(site: Site, score: RiskScore | None) -> str:
     return "unsupported" if not site.ml_supported else "missing"
 
 
-@router.get(
-    "/api/sites/{site_id}/briefings",
-    response_model=Envelope[list[BriefingRead]],
-    tags=["briefings"],
-)
-async def briefings(
-    site_id: uuid.UUID, _: UserPrincipal, session: DbSession
-) -> Envelope[list[BriefingRead]]:
-    rows = (
-        await session.scalars(
-            select(SafetyBriefing)
-            .where(SafetyBriefing.site_id == site_id)
-            .order_by(SafetyBriefing.briefing_date.desc())
-        )
-    ).all()
-    return Envelope(data=[BriefingRead.model_validate(row) for row in rows])
-
-
 @router.get("/api/briefings", response_model=Envelope[list[BriefingRead]], tags=["briefings"])
 async def fleet_briefings(
     _: UserPrincipal,
@@ -603,62 +502,6 @@ async def fleet_briefings(
         data=[BriefingRead.model_validate(row) for row in rows],
         meta=PageMeta(limit=limit, offset=offset, total=total or 0),
     )
-
-
-@router.post("/api/admin/ingestion/{provider}", tags=["admin"])
-async def ingest_provider(
-    provider: str,
-    _: AdminPrincipal,
-    session: DbSession,
-    settings: Settings = Depends(get_settings),
-    state: Annotated[list[str] | None, Query()] = None,
-) -> dict:
-    allowed = {"weather", "weather_alerts", "usgs", "wildfire", "soil"}
-    if provider not in allowed:
-        raise HTTPException(status_code=404, detail="Unknown provider")
-    recent = await session.scalar(
-        select(func.count())
-        .select_from(ProviderRun)
-        .where(
-            ProviderRun.provider == provider,
-            ProviderRun.started_at >= datetime.now(UTC) - timedelta(minutes=1),
-        )
-    )
-    if recent:
-        raise HTTPException(status_code=429, detail="Provider was already requested this minute")
-    states = []
-    for value in state or []:
-        normalized = value.strip().upper()
-        if len(normalized) != 2 or not normalized.isalpha():
-            raise HTTPException(status_code=422, detail=f"Invalid US state code: {value}")
-        if normalized not in states:
-            states.append(normalized)
-    run = await run_provider(session, provider, settings, states)
-    return {
-        "data": {
-            "run_id": str(run.id),
-            "status": run.status,
-            "records_written": run.records_written,
-            "error": run.error,
-            "scope": run.scope,
-        }
-    }
-
-
-@router.post("/api/admin/sites/import-eia", tags=["admin"])
-async def import_cached_eia_sites(_: AdminPrincipal, session: DbSession) -> dict:
-    """Refresh from the bundled, authenticated EIA-860M snapshot.
-
-    Network refreshes remain a CLI operation so an HTTP request cannot make the
-    production service download and parse an arbitrary workbook.
-    """
-    count = await import_plants(session, parse_cached_sites())
-    return {
-        "data": {
-            "sites_imported_or_refreshed": count,
-            "source": "EIA-860M August 2026 cached snapshot",
-        }
-    }
 
 
 @router.get("/api/stream", tags=["events"])

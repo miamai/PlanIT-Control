@@ -44,23 +44,23 @@ def run(
             _expect(client.get(f"/api/sites/{site_id}/hazards", params={"limit": 5}))["data"]
         )
         results["alerts"] = len(
-            _expect(client.get(f"/api/sites/{site_id}/alerts", params={"limit": 5}))["data"]
+            _expect(client.get("/api/alerts", params={"site_id": site_id, "limit": 5}))["data"]
         )
         results["risk_status"] = _expect(client.get(f"/api/sites/{site_id}/risk"))["data"]["status"]
-        results["briefings"] = len(_expect(client.get(f"/api/sites/{site_id}/briefings"))["data"])
+        results["briefings"] = len(
+            _expect(client.get("/api/briefings", params={"limit": 5}))["data"]
+        )
         results["rankings"] = len(_expect(client.get("/api/risk/rankings"))["data"])
-        results["system_ok"] = _expect(client.get("/api/admin/system"))["data"]["ok"]
         results["feeds"] = {}
-        for feed in ("weather", "lightning", "flood", "wildfire", "soil"):
-            payload = _expect(
-                client.get(
-                    f"/api/sites/{feed}",
-                    params=[("state", site["state"]), ("limit", "2")],
-                )
+        payload = _expect(
+            client.get(
+                "/api/sites/lightning",
+                params=[("state", site["state"]), ("limit", "2")],
             )
-            if payload["meta"]["states"] != [site["state"]]:
-                raise RuntimeError(f"{feed} feed did not preserve the requested state scope")
-            results["feeds"][feed] = payload["meta"]["total"]
+        )
+        if payload["meta"]["states"] != [site["state"]]:
+            raise RuntimeError("lightning feed did not preserve the requested state scope")
+        results["feeds"]["lightning"] = payload["meta"]["total"]
 
         if write_checks:
             report = _expect(
