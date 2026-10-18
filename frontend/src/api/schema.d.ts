@@ -126,6 +126,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/captures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Capture */
+        post: operations["start_capture_api_captures_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/captures/{capture_id}/frames": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check Frame */
+        post: operations["check_frame_api_captures__capture_id__frames_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/captures/{capture_id}/frames/{frame_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Frame Image */
+        get: operations["frame_image_api_captures__capture_id__frames__frame_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/captures/{capture_id}/hazard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Choose Hazard */
+        post: operations["choose_hazard_api_captures__capture_id__hazard_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/captures/{capture_id}/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Skip Step */
+        post: operations["skip_step_api_captures__capture_id__skip_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/captures/{capture_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit Capture */
+        post: operations["submit_capture_api_captures__capture_id__submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports": {
         parameters: {
             query?: never;
@@ -413,6 +515,130 @@ export interface components {
             /** Summary */
             summary: string;
         };
+        /** CaptureChecklistItemRead */
+        CaptureChecklistItemRead: {
+            /** Frames */
+            frames: number;
+            /** Instruction */
+            instruction: string;
+            /** Item */
+            item: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "done" | "skipped";
+            /** Text */
+            text?: string | null;
+        };
+        /** CaptureDangerRead */
+        CaptureDangerRead: {
+            /** Code */
+            code: string;
+            /** Instruction */
+            instruction: string;
+            /** Summary */
+            summary: string;
+        };
+        /** CaptureFeedback */
+        CaptureFeedback: {
+            /** Confidence */
+            confidence: number | null;
+            hazard_guess: components["schemas"]["HazardType"] | null;
+            /** Hint */
+            hint: string | null;
+            /** Item */
+            item: string;
+            /** Satisfied */
+            satisfied: boolean;
+            /** Text */
+            text: string | null;
+        };
+        /** CaptureFrameCreate */
+        CaptureFrameCreate: {
+            /** Heading Deg */
+            heading_deg?: number | null;
+            /** Images */
+            images: string[];
+            /** Item */
+            item: string;
+            /** Latitude */
+            latitude: number;
+            /** Longitude */
+            longitude: number;
+        };
+        /** CaptureFrameResult */
+        CaptureFrameResult: {
+            feedback: components["schemas"]["CaptureFeedback"];
+            session: components["schemas"]["CaptureSessionRead"];
+        };
+        /** CaptureHazardChoice */
+        CaptureHazardChoice: {
+            hazard_type: components["schemas"]["HazardType"];
+        };
+        /** CaptureSessionRead */
+        CaptureSessionRead: {
+            /** Checklist */
+            checklist: components["schemas"]["CaptureChecklistItemRead"][];
+            danger: components["schemas"]["CaptureDangerRead"] | null;
+            /** Draft */
+            draft: string;
+            /**
+             * Guided
+             * @description Whether the hazard has a guided checklist
+             */
+            guided: boolean;
+            hazard_type: components["schemas"]["HazardType"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            next_step: components["schemas"]["CaptureStepRead"] | null;
+            /** Report Id */
+            report_id: string | null;
+            /**
+             * Site Id
+             * Format: uuid
+             */
+            site_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "stopped" | "submitted";
+        };
+        /** CaptureSkip */
+        CaptureSkip: {
+            /** Item */
+            item: string;
+        };
+        /** CaptureStart */
+        CaptureStart: {
+            /** Latitude */
+            latitude: number;
+            /** Longitude */
+            longitude: number;
+            /**
+             * Site Id
+             * Format: uuid
+             */
+            site_id: string;
+        };
+        /** CaptureStepRead */
+        CaptureStepRead: {
+            /** Frames */
+            frames: number;
+            /** Instruction */
+            instruction: string;
+            /** Item */
+            item: string;
+        };
+        /** CaptureSubmit */
+        CaptureSubmit: {
+            /** Description */
+            description: string;
+        };
         /** CrewReportCreate */
         CrewReportCreate: {
             /** Description */
@@ -470,6 +696,22 @@ export interface components {
             site_id: string;
             /** Verification Status */
             verification_status: string;
+        };
+        /** Envelope[CaptureFrameResult] */
+        Envelope_CaptureFrameResult_: {
+            data: components["schemas"]["CaptureFrameResult"];
+            /** Meta */
+            meta?: components["schemas"]["FeedMeta"] | components["schemas"]["PageMeta"] | {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** Envelope[CaptureSessionRead] */
+        Envelope_CaptureSessionRead_: {
+            data: components["schemas"]["CaptureSessionRead"];
+            /** Meta */
+            meta?: components["schemas"]["FeedMeta"] | components["schemas"]["PageMeta"] | {
+                [key: string]: unknown;
+            } | null;
         };
         /** Envelope[CrewReportRead] */
         Envelope_CrewReportRead_: {
@@ -1269,6 +1511,212 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Envelope_list_BriefingRead__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_capture_api_captures_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptureStart"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_CaptureSessionRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_frame_api_captures__capture_id__frames_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                capture_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptureFrameCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_CaptureFrameResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    frame_image_api_captures__capture_id__frames__frame_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                capture_id: string;
+                frame_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": unknown;
+                    "image/png": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    choose_hazard_api_captures__capture_id__hazard_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                capture_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptureHazardChoice"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_CaptureSessionRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    skip_step_api_captures__capture_id__skip_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                capture_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptureSkip"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_CaptureSessionRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_capture_api_captures__capture_id__submit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                capture_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptureSubmit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_CrewReportRead_"];
                 };
             };
             /** @description Validation Error */

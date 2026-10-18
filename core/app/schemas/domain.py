@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -183,6 +183,80 @@ class CrewReportRead(ORMModel):
     reported_at: datetime
     reporter_subject: str
     verification_status: str
+
+
+# Base64 JPEG/PNG; the client downsizes frames to ~1024 px, well under this.
+CaptureImage = Annotated[str, Field(min_length=16, max_length=2_800_000)]
+
+
+class CaptureStart(BaseModel):
+    site_id: uuid.UUID
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+
+
+class CaptureFrameCreate(BaseModel):
+    item: str = Field(pattern=r"^[a-z_]{1,32}$")
+    images: list[CaptureImage] = Field(min_length=1, max_length=2)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    heading_deg: float | None = Field(default=None, ge=0, lt=360)
+
+
+class CaptureHazardChoice(BaseModel):
+    hazard_type: HazardType
+
+
+class CaptureSkip(BaseModel):
+    item: str = Field(pattern=r"^[a-z_]{1,32}$")
+
+
+class CaptureSubmit(BaseModel):
+    description: str = Field(min_length=3, max_length=2000)
+
+
+class CaptureStepRead(BaseModel):
+    item: str
+    instruction: str
+    frames: int = Field(ge=1, le=2)
+
+
+class CaptureChecklistItemRead(CaptureStepRead):
+    status: Literal["pending", "done", "skipped"]
+    text: str | None = None
+
+
+class CaptureDangerRead(BaseModel):
+    code: str
+    instruction: str
+    summary: str
+
+
+class CaptureSessionRead(BaseModel):
+    id: uuid.UUID
+    site_id: uuid.UUID
+    hazard_type: HazardType | None
+    status: Literal["active", "stopped", "submitted"]
+    guided: bool = Field(description="Whether the hazard has a guided checklist")
+    next_step: CaptureStepRead | None
+    checklist: list[CaptureChecklistItemRead]
+    draft: str
+    danger: CaptureDangerRead | None
+    report_id: uuid.UUID | None
+
+
+class CaptureFeedback(BaseModel):
+    item: str
+    satisfied: bool
+    text: str | None
+    hint: str | None
+    hazard_guess: HazardType | None
+    confidence: float | None
+
+
+class CaptureFrameResult(BaseModel):
+    session: CaptureSessionRead
+    feedback: CaptureFeedback
 
 
 class RiskDriverRead(BaseModel):

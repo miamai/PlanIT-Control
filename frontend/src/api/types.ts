@@ -156,6 +156,47 @@ export type NewHazardReport = Pick<
   'siteId' | 'type' | 'note' | 'lat' | 'lon'
 >
 
+/** One step of a guided photo report: what the crew is asked to point the camera at. */
+export interface CaptureStep {
+  item: string
+  instruction: string
+  /** Photos the step takes; the flow step takes two, a couple of seconds apart. */
+  frames: number
+}
+
+export interface CaptureChecklistItem extends CaptureStep {
+  status: 'pending' | 'done' | 'skipped'
+  /** What the photo showed, once the step is done. */
+  text?: string
+}
+
+/** A guided photo report in progress, as the core API tracks it. */
+export interface CaptureSession {
+  id: string
+  siteId: string
+  type?: HazardReportType
+  status: 'active' | 'stopped' | 'submitted'
+  /** Whether the hazard has a guided checklist (only flood, for now). */
+  guided: boolean
+  nextStep?: CaptureStep
+  checklist: CaptureChecklistItem[]
+  /** The report note joined from what each photo showed. */
+  draft: string
+  danger?: { code: string; instruction: string; summary: string }
+  reportId?: string
+}
+
+/** What one photo check found. */
+export interface CaptureFeedback {
+  item: string
+  satisfied: boolean
+  text?: string
+  /** How to retake the shot when it didn't answer the step. */
+  hint?: string
+  typeGuess?: HazardReportType
+  confidence?: number
+}
+
 export interface BriefingSite {
   siteId: string
   score: number | null

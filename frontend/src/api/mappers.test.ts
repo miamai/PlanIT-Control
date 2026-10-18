@@ -12,6 +12,8 @@ import {
   buildTimeline,
   hazardFromReportType,
   toAlert,
+  toCaptureFeedback,
+  toCaptureSession,
   toHazardReport,
   toSite,
   toSiteRisk,
@@ -410,5 +412,71 @@ describe('trendFromHistory', () => {
         { date: '2026-10-18', score: 3.1 },
       ])
     ).toBe('steady')
+  })
+})
+
+describe('guided photo reports', () => {
+  it('maps a session, turning weather into storm and nulls into absent fields', () => {
+    const session = toCaptureSession({
+      id: 'c1',
+      site_id: SITE_ID,
+      hazard_type: 'weather',
+      status: 'active',
+      guided: false,
+      next_step: null,
+      checklist: [],
+      draft: '',
+      danger: null,
+      report_id: null,
+    })
+    expect(session.type).toBe('storm')
+    expect(session.nextStep).toBeUndefined()
+    expect(session.danger).toBeUndefined()
+    expect(session.reportId).toBeUndefined()
+  })
+
+  it('keeps the checklist order and what each photo showed', () => {
+    const session = toCaptureSession({
+      id: 'c2',
+      site_id: SITE_ID,
+      hazard_type: 'flood',
+      status: 'active',
+      guided: true,
+      next_step: { item: 'depth', instruction: 'Frame a post.', frames: 1 },
+      checklist: [
+        {
+          item: 'extent',
+          instruction: 'Step back.',
+          frames: 1,
+          status: 'done',
+          text: 'Water covers part of the road',
+        },
+        {
+          item: 'depth',
+          instruction: 'Frame a post.',
+          frames: 1,
+          status: 'pending',
+        },
+      ],
+      draft: 'Water covers part of the road.',
+      danger: null,
+      report_id: null,
+    })
+    expect(session.nextStep?.item).toBe('depth')
+    expect(session.checklist.map((s) => s.status)).toEqual(['done', 'pending'])
+    expect(session.checklist[1].text).toBeUndefined()
+  })
+
+  it('maps the hazard guess from a photo check', () => {
+    const feedback = toCaptureFeedback({
+      item: 'identify',
+      satisfied: true,
+      text: 'Looks like storm damage',
+      hint: null,
+      hazard_guess: 'weather',
+      confidence: 0.8,
+    })
+    expect(feedback.typeGuess).toBe('storm')
+    expect(feedback.hint).toBeUndefined()
   })
 })

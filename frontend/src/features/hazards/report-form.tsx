@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { createHazardReport } from '@/api'
-import { LocateFixed, Loader2, MapPin, Send } from 'lucide-react'
+import { Camera, LocateFixed, Loader2, MapPin, Send } from 'lucide-react'
 import { type HazardReportType, type Site } from '@/api/types'
 import { hasRole, useAuthStore } from '@/stores/auth-store'
 import { REPORT_TYPE_ICON, REPORT_TYPE_LABEL } from '@/lib/planit'
@@ -69,8 +69,10 @@ function nearestSite(sites: Site[], point: { lat: number; lon: number }) {
 
 export function HazardReportForm({
   defaultSiteId,
+  defaultType,
 }: {
   defaultSiteId?: string
+  defaultType?: HazardReportType
 }) {
   const { sites, isLoading } = useSites()
 
@@ -78,7 +80,16 @@ export function HazardReportForm({
     <>
       <PlanitHeader />
       <Main>
-        <PageHeading title='Report a hazard' />
+        <PageHeading
+          title='Report a hazard'
+          actions={
+            <Button asChild variant='outline' size='sm'>
+              <Link to='/hazards/capture' search={{ site: defaultSiteId }}>
+                <Camera /> Photo report
+              </Link>
+            </Button>
+          }
+        />
         {isLoading ? (
           <Skeleton className='h-[480px] w-full' />
         ) : sites.length === 0 ? (
@@ -88,7 +99,11 @@ export function HazardReportForm({
             </CardContent>
           </Card>
         ) : (
-          <ReportFormFields sites={sites} defaultSiteId={defaultSiteId} />
+          <ReportFormFields
+            sites={sites}
+            defaultSiteId={defaultSiteId}
+            defaultType={defaultType}
+          />
         )}
       </Main>
     </>
@@ -98,9 +113,11 @@ export function HazardReportForm({
 function ReportFormFields({
   sites,
   defaultSiteId,
+  defaultType,
 }: {
   sites: Site[]
   defaultSiteId?: string
+  defaultType?: HazardReportType
 }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -110,7 +127,7 @@ function ReportFormFields({
   const [siteId, setSiteId] = useState(
     sites.some((s) => s.id === defaultSiteId) ? defaultSiteId! : sites[0].id
   )
-  const [type, setType] = useState<HazardReportType>('soil')
+  const [type, setType] = useState<HazardReportType>(defaultType ?? 'soil')
   const [note, setNote] = useState('')
   const site = useMemo(
     () => sites.find((s) => s.id === siteId) ?? sites[0],

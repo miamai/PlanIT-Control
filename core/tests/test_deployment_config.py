@@ -7,7 +7,7 @@ from app.services.database_check import application_migration_head
 
 
 def test_application_migration_head_is_frozen_revision() -> None:
-    assert application_migration_head() == "20261017_0006"
+    assert application_migration_head() == "20261017_0007"
 
 
 def test_production_requires_database_tls() -> None:

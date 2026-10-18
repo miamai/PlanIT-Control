@@ -5,6 +5,8 @@ import {
   type ObservationDTO,
   hazardFromReportType,
   toAlert,
+  toCaptureFeedback,
+  toCaptureSession,
   toHazardIndexPoint,
   toHazardReport,
   toSite,
@@ -13,8 +15,11 @@ import {
 } from './mappers'
 import {
   type Alert,
+  type CaptureFeedback,
+  type CaptureSession,
   type HazardIndexPoint,
   type HazardReport,
+  type HazardReportType,
   type LightningStrike,
   type NewHazardReport,
   type Site,
@@ -204,6 +209,93 @@ export async function createHazardReport(
         longitude: input.lon,
         observed_at: new Date().toISOString(),
       },
+    })
+  )
+  return toHazardReport(report)
+}
+
+/** Start a guided photo report near a site. Fails with 503 when photo checks are down. */
+export async function startCapture(input: {
+  siteId: string
+  lat: number
+  lon: number
+}): Promise<CaptureSession> {
+  const session = await unwrapData(
+    api.POST('/api/captures', {
+      body: {
+        site_id: input.siteId,
+        latitude: input.lat,
+        longitude: input.lon,
+      },
+    })
+  )
+  return toCaptureSession(session)
+}
+
+/** Send one step's photo(s) (base64 JPEG) for checking. */
+export async function sendCaptureFrame(
+  captureId: string,
+  input: {
+    item: string
+    images: string[]
+    lat: number
+    lon: number
+    headingDeg?: number
+  }
+): Promise<{ session: CaptureSession; feedback: CaptureFeedback }> {
+  const result = await unwrapData(
+    api.POST('/api/captures/{capture_id}/frames', {
+      params: { path: { capture_id: captureId } },
+      body: {
+        item: input.item,
+        images: input.images,
+        latitude: input.lat,
+        longitude: input.lon,
+        heading_deg: input.headingDeg ?? null,
+      },
+    })
+  )
+  return {
+    session: toCaptureSession(result.session),
+    feedback: toCaptureFeedback(result.feedback),
+  }
+}
+
+export async function chooseCaptureType(
+  captureId: string,
+  type: HazardReportType
+): Promise<CaptureSession> {
+  const session = await unwrapData(
+    api.POST('/api/captures/{capture_id}/hazard', {
+      params: { path: { capture_id: captureId } },
+      body: { hazard_type: hazardFromReportType(type) },
+    })
+  )
+  return toCaptureSession(session)
+}
+
+export async function skipCaptureStep(
+  captureId: string,
+  item: string
+): Promise<CaptureSession> {
+  const session = await unwrapData(
+    api.POST('/api/captures/{capture_id}/skip', {
+      params: { path: { capture_id: captureId } },
+      body: { item },
+    })
+  )
+  return toCaptureSession(session)
+}
+
+/** Send the finished capture as a crew report with the crew's final note. */
+export async function submitCapture(
+  captureId: string,
+  note: string
+): Promise<HazardReport> {
+  const report = await unwrapData(
+    api.POST('/api/captures/{capture_id}/submit', {
+      params: { path: { capture_id: captureId } },
+      body: { description: note },
     })
   )
   return toHazardReport(report)

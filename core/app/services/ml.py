@@ -93,6 +93,41 @@ class MLBriefing(BaseModel):
     tried: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class MLCaptureStep(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = Field(pattern=r"^[a-z_]{1,32}$")
+    instruction: str = Field(min_length=1, max_length=300)
+    frames: int = Field(ge=1, le=2)
+
+
+class MLCaptureChecklists(BaseModel):
+    identify: MLCaptureStep
+    hazards: dict[str, list[MLCaptureStep]]
+
+
+class MLCaptureDanger(BaseModel):
+    code: str = Field(max_length=40)
+    hazard: str
+    instruction: str = Field(max_length=300)
+    summary: str = Field(max_length=200)
+
+
+class MLObservation(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    item: str
+    satisfied: bool
+    observation: dict[str, Any] = Field(default_factory=dict)
+    text: str | None = Field(default=None, max_length=300)
+    hint: str | None = None
+    hint_text: str | None = Field(default=None, max_length=300)
+    danger: MLCaptureDanger | None = None
+    hazard_guess: str | None = None
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    source: str = ""
+
+
 class MLClient:
     def __init__(self, settings: Settings, transport: httpx.AsyncBaseTransport | None = None):
         self.base_url = settings.ml_base_url.rstrip("/")
@@ -145,6 +180,22 @@ class MLClient:
         risk = MLRisk.model_validate(raw)
         _check_risk(site, prediction_date, risk)
         return risk
+
+    async def capture_checklists(self) -> MLCaptureChecklists:
+        return MLCaptureChecklists.model_validate(await self._request("GET", "/capture/checklists"))
+
+    async def observe(
+        self, hazard: str | None, item: str, images: list[str], heading_deg: float | None
+    ) -> MLObservation:
+        raw = await self._request(
+            "POST",
+            "/capture/observe",
+            json={"hazard": hazard, "item": item, "images": images, "heading_deg": heading_deg},
+        )
+        result = MLObservation.model_validate(raw)
+        if result.item != item:
+            raise ValueError("ML observation does not match the requested step")
+        return result
 
 
 def _request_payload(
