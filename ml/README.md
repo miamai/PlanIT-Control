@@ -14,6 +14,9 @@ uv run python score.py EIA-56407     # tomorrow's risk JSON for one site
 uv run uvicorn api:app --port 8001   # internal HTTP endpoint for core
 ```
 
+Outside Docker nothing reads `ml/.env` automatically. With a Gemini key in it, start the service as
+`uv run --env-file .env uvicorn api:app --port 8001`.
+
 Each script under `pipeline/` can be run on its own and skips work that is already on disk.
 
 | Step | Script | Output |
