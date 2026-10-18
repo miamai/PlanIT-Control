@@ -117,12 +117,6 @@ async def logout(
     return response
 
 
-@router.get("/api/auth/me", response_model=Envelope[UserRead], tags=["auth"])
-async def me(principal: AuthenticatedPrincipal, session: DbSession) -> Envelope[UserRead]:
-    user = await session.get(UserAccount, principal.user_id)
-    return Envelope(data=UserRead.model_validate(user))
-
-
 @router.patch("/api/auth/me/password", response_model=TokenResponse, tags=["auth"])
 async def change_password(
     body: PasswordChange,
@@ -140,7 +134,7 @@ async def change_password(
         )
     user.password_hash = hash_password(body.new_password)
     user.updated_at = datetime.now(UTC)
-    await revoke_user_sessions(session, user.id)
+    await revoke_user_sessions(session, user.id, expire=True)
     access, refresh_token, expires_in, _ = await issue_token_pair(session, user, settings)
     await session.commit()
     await session.refresh(user)

@@ -8,7 +8,7 @@ The application accepts exactly two role values: `user` and `admin`.
 | Submit field hazard reports | Yes | Yes |
 | Read submitted reports | No | Yes |
 | Acknowledge and resolve alerts | No | Yes |
-| Manage accounts, ingestion, and system operations | No | Yes |
+| Manage accounts | No | Yes |
 
 The backend reads the account's current database role for authorization rather
 than trusting the JWT role claim. Existing access tokens therefore use the new

@@ -2,10 +2,6 @@
 
 Admin Dashboard UI crafted with Shadcn and Vite. Built with responsiveness and accessibility in mind.
 
-PlanIT backend integration is documented in the
-[frontend API guide](../core/docs/frontend-api.md), with a checked-in OpenAPI contract and
-TypeScript request/SSE examples.
-
 ![alt text](public/images/shadcn-admin.png)
 
 [![Sponsored by Clerk](https://img.shields.io/badge/Sponsored%20by-Clerk-5b6ee1?logo=clerk)](https://go.clerk.com/GttUAaK)

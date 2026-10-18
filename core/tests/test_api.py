@@ -337,3 +337,71 @@ async def test_risk_rankings_use_each_sites_latest_score() -> None:
     finally:
         app.dependency_overrides.clear()
         await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_stream_releases_request_session_before_streaming(monkeypatch) -> None:
+    import asyncio
+
+    from app.api import routes
+
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    async with factory() as session:
+        user = UserAccount(
+            username="stream-tester",
+            password_hash=hash_password("testing-password"),
+            role=UserRole.USER,
+            status=UserStatus.ACTIVE,
+        )
+        session.add(user)
+        await session.flush()
+        token, _, _, _ = await issue_token_pair(session, user, get_settings())
+        await session.commit()
+
+    request_sessions = []
+
+    async def override_session():
+        async with factory() as session:
+            request_sessions.append(session)
+            yield session
+
+    # Recorded when the first heartbeat is sent, while the stream is still open.
+    in_transaction_while_streaming = []
+    first_chunk = asyncio.Event()
+
+    async def receive():
+        await first_chunk.wait()
+        return {"type": "http.disconnect"}
+
+    async def send(message):
+        if message["type"] == "http.response.body" and message.get("body"):
+            if not first_chunk.is_set():
+                in_transaction_while_streaming.extend(s.in_transaction() for s in request_sessions)
+                first_chunk.set()
+
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "path": "/api/stream",
+        "raw_path": b"/api/stream",
+        "query_string": b"",
+        "root_path": "",
+        "headers": [(b"authorization", f"Bearer {token}".encode())],
+        "client": ("test", 1),
+        "server": ("test", 80),
+    }
+    monkeypatch.setattr(routes, "SessionFactory", factory)
+    app.dependency_overrides[get_session] = override_session
+    try:
+        await asyncio.wait_for(app(scope, receive, send), timeout=5)
+        assert len(request_sessions) == 1
+        assert in_transaction_while_streaming == [False]
+    finally:
+        app.dependency_overrides.clear()
+        await engine.dispose()

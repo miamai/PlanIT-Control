@@ -29,14 +29,15 @@ export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
             </TableHead>
             <TableHead className='hidden px-4 lg:table-cell'>
               <span className='ms-auto block w-[180px] max-w-full'>
-                Top driver
+                Top drivers
               </span>
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.map((bundle, index) => {
-            const driver = bundle.risk.reasons[0]
+            const drivers = bundle.risk.reasons.slice(0, 3)
+            const driver = drivers[0]
             return (
               <TableRow
                 key={bundle.site.id}
@@ -80,18 +81,23 @@ export function RiskRankedTable({ items }: { items: SiteBundle[] }) {
                   />
                 </TableCell>
                 <TableCell className='hidden px-4 lg:table-cell'>
-                  {driver ? (
-                    <span className='ms-auto block w-[180px] max-w-full'>
-                      <span className='block truncate text-sm leading-5'>
-                        {driver.label}
-                      </span>
-                      <span className='block text-xs leading-5 text-muted-foreground'>
-                        {Math.round(driver.contribution * 100)}% of score
-                      </span>
-                    </span>
+                  {drivers.length > 0 ? (
+                    <ul className='ms-auto w-[180px] max-w-full space-y-1.5'>
+                      {drivers.map((item) => (
+                        <li key={`${item.domain}:${item.label}`}>
+                          <span className='block truncate text-sm leading-5'>
+                            {item.label}
+                          </span>
+                          <span className='block text-xs leading-4 text-muted-foreground capitalize'>
+                            {item.domain} · {item.severity} · +
+                            {item.impact.toFixed(1)} sub-score
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   ) : (
                     <span className='ms-auto block w-[180px] max-w-full text-xs text-muted-foreground'>
-                      —
+                      Insufficient data
                     </span>
                   )}
                 </TableCell>

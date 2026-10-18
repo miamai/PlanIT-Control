@@ -79,7 +79,10 @@ describe('SiteMap viewport', () => {
     await screen.rerender(<SiteMap markers={markers()} selectedSiteId='one' />)
 
     expect(flyTo).not.toHaveBeenCalled()
-    expect(map.getCenter()).toEqual(center)
+    // A late container resize can re-pan by a fraction of a pixel.
+    expect(
+      map.project(map.getCenter()).distanceTo(map.project(center))
+    ).toBeLessThan(1)
     expect(map.getZoom()).toBe(6)
 
     await screen.rerender(<SiteMap markers={markers()} selectedSiteId='two' />)

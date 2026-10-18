@@ -16,6 +16,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  optimizeDeps: { include: ['@radix-ui/react-popover'] },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

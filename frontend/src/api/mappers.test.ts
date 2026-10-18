@@ -12,7 +12,6 @@ import {
   buildTimeline,
   hazardFromReportType,
   toAlert,
-  toHazardIndexPoint,
   toHazardReport,
   toSite,
   toSiteRisk,
@@ -79,6 +78,23 @@ function risk(overrides: Partial<RiskDTO> = {}): RiskDTO {
         avoid: [{ start: '13:00', end: '17:00', why: 'heat' }],
       },
     },
+    top_drivers: [
+      {
+        hazard: 'heat',
+        severity: 'HIGH',
+        impact: 3,
+        explanation: 'Heat index peaks at 108°F',
+        value: 108,
+        explanation_method: 'tree_shap',
+      },
+      {
+        hazard: 'convective',
+        severity: 'MODERATE',
+        impact: 1,
+        explanation: 'Unstable air',
+        explanation_method: 'tree_shap',
+      },
+    ],
     ...overrides,
   }
 }
@@ -100,6 +116,8 @@ function observation(overrides: Partial<ObservationDTO>): ObservationDTO {
     longitude: null,
     quality_status: 'verified',
     is_estimated: false,
+    severity: 'MODERATE',
+    severity_basis: 'Configured heat-index bands (91/103/125°F)',
     metadata: {},
     ...overrides,
   }
@@ -151,11 +169,10 @@ describe('toSiteRisk', () => {
     expect(result.status).toBe('unsupported')
   })
 
-  it('uses the model recommendation, reasons, sub-scores and work plan', () => {
+  it('uses the live decision, typed drivers, sub-scores and work plan', () => {
     const result = toSiteRisk(SITE_ID, 'available', risk())
     expect(result.score).toBe(7.2)
-    // The model's call wins over the score band (7.2 would be NO-GO).
-    expect(result.recommendation).toBe('CAUTION')
+    expect(result.recommendation).toBe('NO-GO')
     expect(result.reasons.map((r) => [r.domain, r.contribution])).toEqual([
       ['heat', 0.75],
       ['storm', 0.25],
@@ -171,7 +188,11 @@ describe('toSiteRisk', () => {
     const result = toSiteRisk(
       SITE_ID,
       'available',
-      risk({ score: 2.5, contributing_factors: { synthetic_notice: true } })
+      risk({
+        score: 2.5,
+        contributing_factors: { synthetic_notice: true },
+        top_drivers: [],
+      })
     )
     expect(result.recommendation).toBe('GO')
     expect(result.reasons).toEqual([])
@@ -216,6 +237,8 @@ describe('observations', () => {
           metric_name: 'gage_height',
           numeric_value: 3.21,
           unit: 'ft',
+          severity: 'UNKNOWN',
+          severity_basis: 'No configured flood stage for this station',
         }),
       ],
       { heat: 6.1 },
@@ -223,8 +246,8 @@ describe('observations', () => {
     )
     expect(domains.map((d) => [d.domain, d.severity, d.display])).toEqual([
       ['lightning', 'extreme', 'Alert'],
-      ['heat', 'high', '101°F'],
-      ['flood', 'low', '3.21 ft'],
+      ['heat', 'moderate', '101°F'],
+      ['flood', 'unknown', '3.21 ft'],
     ])
   })
 
@@ -343,7 +366,7 @@ describe('briefings', () => {
     ])
     expect(briefing?.sites[0].headline).toBe('Hot afternoon expected.')
     expect(briefing?.sites[0].generator).toBe('gemini')
-    expect(briefing?.headline).toBe('0 NO-GO · 1 CAUTION · 0 GO')
+    expect(briefing?.headline).toBe('1 NO-GO · 0 CAUTION · 0 REVIEW · 0 GO')
     expect(
       briefing?.watchlist.find((item) => item.type === 'lightning')?.count
     ).toBe(1)
@@ -415,19 +438,6 @@ describe('briefings', () => {
       toAlert(alert({ hazard_type: 'flood', action_code: 'STOP_WORK' }))
         .actionCode
     ).toBe('STOP_WORK')
-  })
-})
-
-describe('toHazardIndexPoint', () => {
-  it('marks only backfilled scores as backfilled', () => {
-    expect(toHazardIndexPoint(risk())).toEqual({
-      date: risk().prediction_date,
-      score: 7.2,
-      backfilled: false,
-    })
-    expect(
-      toHazardIndexPoint(risk({ score_source: 'ml_backfill' })).backfilled
-    ).toBe(true)
   })
 })
 

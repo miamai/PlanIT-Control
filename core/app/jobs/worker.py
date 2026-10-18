@@ -12,6 +12,8 @@ from app.core.logging import configure_logging
 from app.services.briefing import generate_due_briefings
 from app.services.ingestion import run_provider
 from app.services.lightning import expire_lightning_alerts
+from app.services.live_scoring import NewReportWatcher, rescore_sites
+from app.services.ml import MLClient
 
 log = structlog.get_logger()
 
@@ -45,6 +47,9 @@ async def run() -> None:
         if name in settings.enabled_providers
     }
     next_due = {name: datetime.now(UTC) for name in schedules}
+    scoring_client = MLClient(settings) if settings.ml_enabled else None
+    next_scoring = datetime.now(UTC)
+    report_watcher = NewReportWatcher()
     while True:
         now = datetime.now(UTC)
         for index, (provider, interval) in enumerate(schedules.items(), start=1):
@@ -63,6 +68,26 @@ async def run() -> None:
 
             await _with_lock(710000 + index, ingest)
             next_due[provider] = now + timedelta(seconds=interval)
+
+        if scoring_client:
+            # Every site on the interval; a site with a new crew report on the next tick.
+            async with SessionFactory() as session:
+                reported = await report_watcher.sites_with_new_reports(session, now)
+            full_pass = now >= next_scoring
+            if full_pass or reported:
+                scoring = await rescore_sites(
+                    SessionFactory, scoring_client, now, None if full_pass else reported
+                )
+                await log.ainfo(
+                    "ml_scoring",
+                    trigger="interval" if full_pass else "crew_report",
+                    scored=scoring.scored,
+                    skipped=scoring.skipped,
+                    failed=scoring.failed,
+                    error=scoring.first_error,
+                )
+            if full_pass:
+                next_scoring = now + timedelta(seconds=settings.ml_score_interval_seconds)
 
         async def maintenance(session, maintenance_time=now):
             expired = await expire_lightning_alerts(session, maintenance_time)

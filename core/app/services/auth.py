@@ -152,12 +152,19 @@ async def revoke_refresh_token(session: AsyncSession, token: str, settings: Sett
         stored.revoked_at = datetime.now(UTC)
 
 
-async def revoke_user_sessions(session: AsyncSession, user_id: uuid.UUID) -> None:
-    await session.execute(
-        update(RefreshSession)
-        .where(RefreshSession.user_id == user_id, RefreshSession.revoked_at.is_(None))
-        .values(revoked_at=datetime.now(UTC))
-    )
+async def revoke_user_sessions(
+    session: AsyncSession, user_id: uuid.UUID, *, expire: bool = False
+) -> None:
+    now = datetime.now(UTC)
+    statement = update(RefreshSession).where(RefreshSession.user_id == user_id)
+    if expire:
+        # A password change intentionally ends every old rotation chain. Reject
+        # those cookies as expired before replay detection can revoke the newly
+        # issued session when another device wakes up.
+        statement = statement.values(revoked_at=now, expires_at=now)
+    else:
+        statement = statement.where(RefreshSession.revoked_at.is_(None)).values(revoked_at=now)
+    await session.execute(statement)
 
 
 async def initialize_admin(session: AsyncSession, settings: Settings) -> UserAccount:

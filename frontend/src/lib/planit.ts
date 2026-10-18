@@ -67,6 +67,7 @@ export const SEVERITY_LABEL: Record<SeverityLevel, string> = {
   moderate: 'Moderate',
   high: 'High',
   extreme: 'Extreme',
+  unknown: 'Unknown',
 }
 
 export const SEVERITY_DOT: Record<SeverityLevel, string> = {
@@ -74,6 +75,7 @@ export const SEVERITY_DOT: Record<SeverityLevel, string> = {
   moderate: 'bg-amber-500',
   high: 'bg-orange-500',
   extreme: 'bg-red-600',
+  unknown: 'bg-slate-400',
 }
 
 export const SEVERITY_TEXT: Record<SeverityLevel, string> = {
@@ -81,6 +83,7 @@ export const SEVERITY_TEXT: Record<SeverityLevel, string> = {
   moderate: 'text-amber-700 dark:text-amber-300',
   high: 'text-orange-700 dark:text-orange-300',
   extreme: 'text-red-700 dark:text-red-300',
+  unknown: 'text-muted-foreground',
 }
 
 /** Decision text reinforces the score without adding another colored container. */
@@ -88,6 +91,7 @@ export const RECOMMENDATION_TEXT: Record<Recommendation, string> = {
   GO: 'text-emerald-700 dark:text-emerald-300',
   CAUTION: 'text-amber-700 dark:text-amber-300',
   'NO-GO': 'text-red-700 dark:text-red-300',
+  'REVIEW REQUIRED': 'text-slate-700 dark:text-slate-300',
 }
 
 /** Hex colors for SVG, charts and map markers (same scale as the risk indicators). */
@@ -95,12 +99,14 @@ export const RECOMMENDATION_HEX: Record<Recommendation, string> = {
   GO: '#10b981',
   CAUTION: '#f59e0b',
   'NO-GO': '#dc2626',
+  'REVIEW REQUIRED': '#64748b',
 }
 
 export const RECOMMENDATION_BG: Record<Recommendation, string> = {
   GO: 'bg-emerald-500',
   CAUTION: 'bg-amber-500',
   'NO-GO': 'bg-red-600',
+  'REVIEW REQUIRED': 'bg-slate-500',
 }
 
 /** Score cut-offs shared with the ML service (index rounded: 0-3 GO, 4-6 CAUTION, 7-10 NO-GO). */

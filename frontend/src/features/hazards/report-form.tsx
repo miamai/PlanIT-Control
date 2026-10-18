@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { createHazardReport } from '@/api'
+import { createHazardReport, getSite } from '@/api'
 import { LocateFixed, Loader2, MapPin, Send } from 'lucide-react'
 import { type HazardReportType, type Site } from '@/api/types'
 import { hasRole, useAuthStore } from '@/stores/auth-store'
@@ -13,13 +13,6 @@ import { useProfile } from '@/hooks/use-profile'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { Main } from '@/components/layout/main'
@@ -27,6 +20,7 @@ import { LocationPicker } from '@/components/planit/location-picker'
 import { PageHeading } from '@/components/planit/page-heading'
 import { PanelHeader } from '@/components/planit/panel-header'
 import { PlanitHeader } from '@/components/planit/planit-header'
+import { SiteCombobox } from './site-combobox'
 
 const TYPES: HazardReportType[] = [
   'lightning',
@@ -72,23 +66,66 @@ export function HazardReportForm({
 }: {
   defaultSiteId?: string
 }) {
-  const { sites, isLoading } = useSites()
+  const { sites, isLoading, isError, refresh } = useSites()
+  const inList = sites.some((site) => site.id === defaultSiteId)
+  const target = useQuery({
+    queryKey: ['report-target-site', defaultSiteId],
+    queryFn: async () => (await getSite(defaultSiteId!)) ?? null,
+    enabled: !!defaultSiteId && !inList && !isLoading && !isError,
+    retry: false,
+  })
+  const availableSites =
+    target.data && !inList ? [...sites, target.data] : sites
+  const resolvingTarget =
+    !!defaultSiteId && !inList && !isError && (isLoading || target.isPending)
 
   return (
     <>
       <PlanitHeader />
       <Main>
         <PageHeading title='Report a hazard' />
-        {isLoading ? (
+        {isError ? (
+          <Card>
+            <CardContent className='space-y-3'>
+              <p role='alert'>Could not load sites.</p>
+              <Button variant='outline' onClick={() => void refresh()}>
+                Try again
+              </Button>
+            </CardContent>
+          </Card>
+        ) : isLoading || resolvingTarget ? (
           <Skeleton className='h-[480px] w-full' />
-        ) : sites.length === 0 ? (
+        ) : availableSites.length === 0 && !defaultSiteId ? (
           <Card>
             <CardContent className='p-10 text-center text-sm text-muted-foreground'>
               No sites are available to report against.
             </CardContent>
           </Card>
         ) : (
-          <ReportFormFields sites={sites} defaultSiteId={defaultSiteId} />
+          <>
+            {defaultSiteId && !inList && !target.data ? (
+              <div role='alert' className='mb-4 rounded-lg border p-4 text-sm'>
+                {target.isError
+                  ? 'Could not load the linked site. Retry, or choose another site.'
+                  : 'The linked site is unavailable. Select a site to continue.'}
+                {target.isError ? (
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='ms-2'
+                    onClick={() => void target.refetch()}
+                  >
+                    Retry linked site
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
+            <ReportFormFields
+              key={`${defaultSiteId ?? 'new'}:${availableSites.some((site) => site.id === defaultSiteId) ? 'resolved' : 'unselected'}`}
+              sites={availableSites}
+              defaultSiteId={defaultSiteId}
+            />
+          </>
         )}
       </Main>
     </>
@@ -108,17 +145,17 @@ function ReportFormFields({
   const profile = useProfile()
 
   const [siteId, setSiteId] = useState(
-    sites.some((s) => s.id === defaultSiteId) ? defaultSiteId! : sites[0].id
+    sites.some((s) => s.id === defaultSiteId) ? defaultSiteId! : ''
   )
   const [type, setType] = useState<HazardReportType>('soil')
   const [note, setNote] = useState('')
   const site = useMemo(
-    () => sites.find((s) => s.id === siteId) ?? sites[0],
+    () => sites.find((s) => s.id === siteId),
     [sites, siteId]
   )
   const [location, setLocation] = useState<{ lat: number; lon: number }>({
-    lat: site.lat,
-    lon: site.lon,
+    lat: site?.lat ?? 39,
+    lon: site?.lon ?? -98,
   })
   const [locating, setLocating] = useState(false)
   const [geoError, setGeoError] = useState('')
@@ -159,7 +196,8 @@ function ReportFormFields({
           lon: Number(position.coords.longitude.toFixed(5)),
         }
         setLocation(point)
-        setSiteId(nearestSite(sites, point).id)
+        const nearest = nearestSite(sites, point)
+        if (nearest) setSiteId(nearest.id)
         setLocating(false)
       },
       (error) => {
@@ -172,14 +210,22 @@ function ReportFormFields({
 
   function chooseSite(id: string) {
     const next = sites.find((s) => s.id === id)
+    if (!next) return
     setSiteId(id)
-    if (next) setLocation({ lat: next.lat, lon: next.lon })
+    setLocation({ lat: next.lat, lon: next.lon })
   }
 
-  const distanceToSite = milesBetween(location, site)
+  const distanceToSite = site ? milesBetween(location, site) : 0
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
+    if (!site) {
+      toastError(
+        'Select a site',
+        'Choose the site for this report before submitting.'
+      )
+      return
+    }
     if (note.trim().length < 3) {
       toastError(
         'Note required',
@@ -262,7 +308,14 @@ function ReportFormFields({
           <PanelHeader title='Location' />
           <CardContent className='space-y-4'>
             <div className='flex flex-wrap items-center gap-2'>
-              <Button type='button' variant='outline' onClick={locateMe}>
+              <Button
+                type='button'
+                variant='outline'
+                disabled={
+                  sites.length === 0 || locating || createMutation.isPending
+                }
+                onClick={locateMe}
+              >
                 {locating ? (
                   <Loader2 className='animate-spin' />
                 ) : (
@@ -273,37 +326,43 @@ function ReportFormFields({
               <Button
                 type='button'
                 variant='ghost'
-                onClick={() => setSiteId(nearestSite(sites, location).id)}
+                disabled={!site || createMutation.isPending}
+                onClick={() => {
+                  const nearest = nearestSite(sites, location)
+                  if (nearest) chooseSite(nearest.id)
+                }}
               >
                 <MapPin /> Snap to nearest site
               </Button>
-              <span className='ms-auto text-xs text-muted-foreground tabular-nums'>
-                {location.lat.toFixed(5)}, {location.lon.toFixed(5)}
-              </span>
+              {site ? (
+                <span className='ms-auto text-xs text-muted-foreground tabular-nums'>
+                  {location.lat.toFixed(5)}, {location.lon.toFixed(5)}
+                </span>
+              ) : null}
             </div>
             {geoError ? (
               <p className='text-xs text-red-600'>{geoError}</p>
             ) : null}
-            <LocationPicker
-              value={location}
-              site={site}
-              onChange={setLocation}
-            />
+            {site ? (
+              <LocationPicker
+                value={location}
+                site={site}
+                onChange={setLocation}
+              />
+            ) : (
+              <p className='rounded-lg border border-dashed p-6 text-sm text-muted-foreground'>
+                Select a site to place the hazard pin.
+              </p>
+            )}
             <div className='space-y-2'>
               <Label>Site</Label>
-              <Select value={siteId} onValueChange={chooseSite}>
-                <SelectTrigger className='w-full sm:w-80'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className='max-h-72'>
-                  {sites.map((option) => (
-                    <SelectItem key={option.id} value={option.id}>
-                      {option.name} · {option.state}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {distanceToSite >= 0.1 ? (
+              <SiteCombobox
+                sites={sites}
+                value={siteId}
+                onChange={chooseSite}
+                disabled={createMutation.isPending}
+              />
+              {site && distanceToSite >= 0.1 ? (
                 <p
                   className={cn(
                     'text-xs',
@@ -335,7 +394,7 @@ function ReportFormFields({
               type='submit'
               size='lg'
               className='w-full'
-              disabled={createMutation.isPending}
+              disabled={createMutation.isPending || !site}
             >
               {createMutation.isPending ? (
                 <Loader2 className='animate-spin' />

@@ -4,3 +4,4 @@ data/processed/
 __pycache__/
 *.sqlite
 .DS_Store
+.env

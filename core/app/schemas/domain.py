@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -18,6 +18,18 @@ from app.models.entities import (
 
 class ORMModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
+
+def _score_severity(value: Any) -> Literal["LOW", "MODERATE", "HIGH", "CRITICAL", "UNKNOWN"]:
+    if not isinstance(value, (int, float)):
+        return "UNKNOWN"
+    if value >= 7.5:
+        return "CRITICAL"
+    if value >= 5:
+        return "HIGH"
+    if value >= 2.5:
+        return "MODERATE"
+    return "LOW"
 
 
 class PageMeta(BaseModel):
@@ -77,6 +89,8 @@ class ObservationRead(ORMModel):
     quality_status: QualityStatus
     is_estimated: bool
     metadata_: dict[str, Any] = Field(serialization_alias="metadata")
+    severity: Literal["LOW", "MODERATE", "HIGH", "CRITICAL", "UNKNOWN"] = "UNKNOWN"
+    severity_basis: str = "No severity assessment was provided"
 
 
 class SiteObservationRead(BaseModel):
@@ -190,6 +204,15 @@ class CrewReportRead(ORMModel):
     verification_status: str
 
 
+class RiskDriverRead(BaseModel):
+    hazard: str
+    severity: Literal["LOW", "MODERATE", "HIGH", "CRITICAL", "UNKNOWN"]
+    impact: float = Field(gt=0)
+    explanation: str
+    value: float | None = None
+    explanation_method: Literal["tree_shap", "rule_based"]
+
+
 class RiskRead(ORMModel):
     id: uuid.UUID
     site_id: uuid.UUID
@@ -200,6 +223,48 @@ class RiskRead(ORMModel):
     model_version: str
     score_source: str
     contributing_factors: dict[str, Any]
+    top_drivers: list[RiskDriverRead] = Field(default_factory=list)
+
+    @classmethod
+    def from_score(cls, score: Any) -> RiskRead:
+        result = cls.model_validate(score)
+        factors = score.contributing_factors or {}
+        sub_scores = factors.get("sub_scores") or {}
+        drivers = []
+        for reason in factors.get("reasons") or []:
+            if not isinstance(reason, dict):
+                continue
+            hazard = reason.get("hazard")
+            impact = reason.get("impact")
+            explanation = reason.get("text")
+            if not isinstance(hazard, str) or not isinstance(explanation, str):
+                continue
+            if not isinstance(impact, (int, float)) or impact <= 0:
+                continue
+            method = reason.get("explanation_method")
+            if method not in {"tree_shap", "rule_based"}:
+                # Older stored ML results predate the explicit method field, but
+                # their producer is known: model features are TreeSHAP and the
+                # wildlife category is the documented rule-based exception.
+                if score.score_source == "ml_service":
+                    method = "rule_based" if hazard == "wildlife" else "tree_shap"
+                else:
+                    continue
+            sub_score = sub_scores.get(hazard)
+            severity = _score_severity(sub_score)
+            value = reason.get("value")
+            drivers.append(
+                RiskDriverRead(
+                    hazard=hazard,
+                    severity=severity,
+                    impact=float(impact),
+                    explanation=explanation,
+                    value=float(value) if isinstance(value, (int, float)) else None,
+                    explanation_method=method,
+                )
+            )
+        drivers.sort(key=lambda driver: driver.impact, reverse=True)
+        return result.model_copy(update={"top_drivers": drivers[:3]})
 
 
 class RiskPredictionCreate(BaseModel):
@@ -223,12 +288,18 @@ class RiskResult(BaseModel):
     site_id: uuid.UUID
     status: str
     score: RiskRead | None
+    decision: Literal["GO", "CAUTION", "NO_GO", "REVIEW_REQUIRED"]
+    decision_basis: list[str]
+    operational_authorization: Literal["NOT_GRANTED"] = "NOT_GRANTED"
 
 
 class RiskRanking(BaseModel):
     site: SiteRead
     risk: RiskRead | None
     status: str
+    decision: Literal["GO", "CAUTION", "NO_GO", "REVIEW_REQUIRED"]
+    decision_basis: list[str]
+    operational_authorization: Literal["NOT_GRANTED"] = "NOT_GRANTED"
 
 
 class BriefingRead(ORMModel):
@@ -238,11 +309,6 @@ class BriefingRead(ORMModel):
     generated_at: datetime
     summary: str
     hazard_details: dict[str, Any]
-
-
-class AlertUpdate(BaseModel):
-    status: AlertStatus
-    reason: str = Field(min_length=3, max_length=1000)
 
 
 class NormalizedObservation(BaseModel):
@@ -276,3 +342,8 @@ class LightningStrikeInput(BaseModel):
         if value.tzinfo is None:
             raise ValueError("occurred_at must include a timezone")
         return value
+
+
+class AlertUpdate(BaseModel):
+    status: AlertStatus
+    reason: str = Field(min_length=3, max_length=1000)

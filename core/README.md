@@ -1,310 +1,156 @@
 # PlanIT Control Core
 
-FastAPI/PostgreSQL backend for environmental monitoring at demonstration U.S.
-power-plant reference locations. Imported EIA plants are **not verified active
-construction sites**. Synthetic records are marked `synthetic`, and rainfall
-soil/flood indicators are marked as estimates or proxies.
+## Background
 
-## Local startup
+- FastAPI + PostgreSQL (Tiger Cloud) backend for environmental monitoring at U.S. power-plant locations
+- Hazard index and briefings come from a separate `ml` service
+  - Only the `ml` container gets `GEMINI_API_KEY` (set it in `ml/.env`)
+  - Without the key, briefings fall back to a deterministic template
 
-Requirements: Docker with Compose, Python 3.12, and a Tiger Cloud service.
+### Architecture
+
+- `api`: REST + SSE (`/api/stream`)
+- `worker`: provider polling, alert evaluation, hazard index refresh, daily briefing after 6 PM
+  site-local time
+  - Every `ML_SCORE_INTERVAL_SECONDS` (default 900) it rescores each ML-covered site's operational
+    day (today until 6 PM site-local, then tomorrow) with the newest forecast, active alerts and
+    crew reports, updating that day's score in place; a site with a new crew report is rescored on
+    the next tick
+  - The narrative briefing is still written once per site and day
+- `ml`: hazard index (0-10) and briefing text
+- `bootstrap`: one-shot setup that runs before `api` and `worker` start
+
+## Development
+
+### Start (Docker)
 
 ```bash
 cd core
 cp .env.example .env
-docker compose build
-docker compose run --rm init-admin
+```
+
+- Required: `DATABASE_URL`, `DOCKER_DATABASE_URL`, `INITIAL_ADMIN_USERNAME`, `INITIAL_ADMIN_PASSWORD`, `NWS_USER_AGENT`
+- Recommended: `EIA_API_KEY` (free, https://www.eia.gov/opendata/register.php), otherwise sites load from the bundled snapshot
+- Database URLs use the `postgresql+asyncpg://` scheme and `sslmode=require`
+- Then start everything
+
+```bash
 docker compose up -d
-docker compose exec api planit-import-sites
-docker compose exec api planit-ml-sync-sites
-docker compose exec api planit-seed-demo
-docker compose exec api planit-db-check
-docker compose exec api planit-api-smoke --username <username>
 ```
 
-Before running `init-admin`, supply `INITIAL_ADMIN_USERNAME` and
-`INITIAL_ADMIN_PASSWORD` through the uncommitted `.env` file or deployment
-secret injection. The command refuses to run if any user account already
-exists. Remove those values from the environment after provisioning. The API is
-at `http://localhost:8000`, OpenAPI at `/docs`, and health at `/health`.
+- `bootstrap` runs once and is safe to re-run. It does the following in order:
 
-Set both `DATABASE_URL` and `DOCKER_DATABASE_URL` in the ignored `.env` file to
-the Tiger Cloud URL using the `postgresql+asyncpg://` scheme and
-`sslmode=require`. Compose intentionally has no local PostgreSQL service; it
-fails fast when `DOCKER_DATABASE_URL` is missing.
+1. Apply migrations
+1. Create the first admin (skipped if any user exists)
+1. Load sites (skipped if sites already exist)
+   - From the EIA Open Data API when `EIA_API_KEY` is set, otherwise from the bundled snapshot
+1. Sync ML site coverage
+1. Schema check (also logs row counts and TimescaleDB availability)
 
-Without Docker:
+- Check progress with `docker compose logs -f bootstrap`
+- API: `http://localhost:8000`, docs: `/docs`, health: `/health`
+
+### Start (local)
+
+- Requires Python 3.12, [uv](https://docs.astral.sh/uv/) and a running `ml` service
 
 ```bash
-cd core
-uv sync --extra dev
-uv run alembic upgrade head
-INITIAL_ADMIN_USERNAME=<username> INITIAL_ADMIN_PASSWORD=<secret> uv run planit-init-admin
-uv run planit-import-sites
-uv run planit-seed-demo
-uv run planit-db-check
-uv run uvicorn app.main:app --reload
-uv run planit-worker
+uv sync
+uv run setup # idempotent migrations, admin, sites, ML sync and checks
+uv run dev   # API (hot reload) + worker
 ```
 
-In another terminal, verify the running API with:
+### Re-run part of bootstrap
+
+- Prefix with `docker compose exec api` for Docker, or `uv run` for local
+- Run one step only (`migrate`, `admin`, `sites`, `ml-sync`, `check`)
 
 ```bash
-cd core
-uv run planit-api-smoke --username <username>
+planit-bootstrap --only ml-sync
 ```
 
-The smoke command prompts for a password without echoing it. Automation may
-provide `PLANIT_SMOKE_USERNAME` and `PLANIT_SMOKE_PASSWORD` through secret
-injection. It is read-only by default; pass `--write-checks` only against a
-development database when you also want to verify report creation.
-
-## Daily ML hazard index and briefing
-
-The worker generates a next-day briefing after 6 PM in each site's timezone. For sites in the
-checked-in model catalog it calls the internal `ml` service, stores the validated 0–10 hazard index,
-and writes a checked Gemini briefing (or the deterministic template fallback). Active alerts may
-raise the recommendation but never alter the numeric index. Sites outside the catalog receive a
-deterministic report/alert briefing and expose `unsupported` risk status; the system never substitutes
-a nearby modeled site.
-
-Synchronize coverage after migrations and the regular EIA import:
+- Reload sites from the source (e.g. after changing the site filter)
 
 ```bash
-docker compose exec api planit-ml-sync-sites
+planit-bootstrap --only sites --refresh-sites
 ```
 
-The sync is additive and does not delete existing sites. Core sends reports since the previous
-briefing (24 hours for the first run), without reporter identity. All reports contribute to aggregate
-counts. Wildlife is handled as one category without species filters or weights; animal metadata is
-not forwarded to ML or used in briefing generation.
+### Frontend contract
 
-### Backfilling recent history
-
-The worker only records forward: one next-day score per evening and one station reading per poll.
-To fill the 14-day hazard index chart and the 24-hour weather chart right away, with the ML
-service running:
+- OpenAPI UI: `/docs`, schema: `/openapi.json`, checked-in copy: `docs/openapi.json`
+- Regenerate after changing any route or schema
 
 ```bash
-uv run planit-backfill                   # every ML-covered site
-uv run planit-backfill <site-uuid>       # one site
-uv run planit-backfill --days 7 --weather-hours 72 --skip-weather
-```
-
-Each of the last `--days` site-local days (today included, at most 14) that has no score from the
-current model version is scored through the ML service's `/score` and stored with
-`score_source=ml_backfill` and `contributing_factors.backfilled=true`. These are model output for
-a past date computed from observed weather, not forecasts made in advance, and no alerts or crew
-reports are sent with them. They appear in `/risk/history` only; the current score and rankings
-ignore them. Weather backfill stores one nearest-station NWS reading per hour (at most a week back,
-which is what NWS keeps) without evaluating alert rules. Both parts skip data already stored, so
-the command is safe to rerun.
-The ML container alone receives `GEMINI_API_KEY`: copy `ml/.env.example` to the ignored `ml/.env`
-and inject the key there (or through an equivalent deployment secret). Leave it unset to use the
-deterministic template. Core's API and worker explicitly clear this variable, and no paid Gemini call
-is made by the test suite.
-
-For a due site-specific operational retry, use `planit-ml-generate <core-site-uuid>`. The command
-still enforces the site's local 6 PM cutoff. `GET /api/admin/system` reports ML health, model version,
-catalog size, and the last successful stored generation.
-
-## Frontend API contract
-
-- Interactive OpenAPI: `http://localhost:8000/docs`
-- Machine-readable runtime schema: `http://localhost:8000/openapi.json`
-- Checked-in schema: [`docs/openapi.json`](docs/openapi.json)
-- Frontend guide and endpoint examples: [`docs/frontend-api.md`](docs/frontend-api.md)
-- Axios, TanStack Query, and SSE examples:
-  [`docs/frontend-api.example.ts`](docs/frontend-api.example.ts)
-
-Regenerate the checked-in contract after changing a route or schema:
-
-```bash
-cd core
 uv run python scripts/export_openapi.py
 ```
 
-The test suite fails when the checked-in contract is stale.
+- Tests fail if the checked-in copy is stale
 
-## Site data
-
-The bundled cache contains 153 authentic operating plants from the official
-August 2026 EIA-860M workbook. Refresh options are:
+### Run tests and lint
 
 ```bash
-# Deterministic bundled snapshot
-uv run planit-import-sites
-
-# Download the pinned official release
-uv run planit-import-sites --download
-
-# Parse a supplied authentic workbook after inspecting its headers
-uv run planit-import-sites --file /path/to/eia860m.xlsx
-```
-
-All modes upsert by EIA Plant ID. The administrative HTTP endpoint refreshes
-only from the bundled snapshot; it cannot download an arbitrary URL.
-
-## Authentication and authorization
-
-Authentication is local and identical in development and production. Login at
-`POST /api/auth/login`; keep the returned 15-minute access token in memory and
-send it as `Authorization: Bearer ...`. The seven-day rotating refresh token is
-an HttpOnly, SameSite=Lax cookie scoped to `/api/auth`. Call
-`POST /api/auth/refresh` with browser credentials enabled. Each refresh rotates
-the cookie. Presenting an already rotated or logged-out refresh token is treated
-as theft and revokes every session for that user, except within
-`REFRESH_REUSE_GRACE_SECONDS` (default 30) of its rotation: a reload that aborts
-an in-flight refresh, or two tabs refreshing at once, gets a new session
-instead. Production requires a unique `JWT_SECRET_KEY` of at least 32 random
-bytes.
-
-Roles are:
-
-- `user`: operational reads and hazard report submission.
-- `admin`: user access, report review, alert acknowledgement/resolution, user management,
-  ingestion, system status, and EIA refresh.
-
-Admins manage all roles through `/api/admin/users`; the last active admin cannot
-be disabled, demoted, or deleted, and an admin cannot self-delete. Password
-changes, disablement, role changes, and soft deletion revoke refresh sessions.
-Report submissions are limited to 30 per user per minute, and provider runs to
-one per provider per minute.
-
-The frontend hazard feeds are stored-data reads and never call upstream services:
-`/api/sites/weather`, `/api/sites/lightning`, `/api/sites/flood`,
-`/api/sites/wildfire`, and `/api/sites/soil`. Filter any feed with repeated US
-state parameters, for example `?state=TX&state=LA`; omitting `state` returns all
-stored U.S. observations. Each row contains `{ "site": ..., "observation": ... }`.
-
-## Providers and safety semantics
-
-Scheduled external polling is opt-in. The default `ENABLED_PROVIDERS=[]` keeps
-local startup deterministic and avoids contacting third parties. Enable only
-configured providers using JSON, for example
-`ENABLED_PROVIDERS=["weather","weather_alerts","usgs"]`. Manual admin runs
-remain available to administrators.
-
-- NWS: hourly forecasts, nearest-station observations, official point alerts,
-  and NOAA-formula calculated heat index. Set an identifiable `NWS_USER_AGENT`.
-- USGS: nearby stream gage height and streamflow from the modern Water Data OGC
-  API (`api.waterdata.usgs.gov`), replacing the legacy service retiring in 2027.
-  Measurements do not alone claim flooding; flood stages must be configured or
-  an official warning used.
-- NASA FIRMS: VIIRS active-fire detections. `NASA_FIRMS_MAP_KEY` is required.
-  Detections are not evacuation orders.
-- Soil: a 72-hour antecedent-rainfall proxy with uncertainty metadata, not a
-  measured saturation value.
-- Lightning: provider-neutral state machine. Only the fixture adapter exists;
-  it produces no spontaneous events and must never be represented as live.
-- Wildlife: crew reports are shared to reference sites inside the configured
-  radius and retain their verification status.
-
-All non-lightning thresholds default to the explicitly labeled `demo` profile.
-They are not OSHA or utility standards. Replace
-or disable them before operational use. Production startup rejects the `demo`
-profile; set `ALERT_THRESHOLD_PROFILE=approved` only after configuring reviewed
-threshold values, or set it to `disabled`.
-
-Lightning strikes at or within 10 miles activate `STOP_WORK`. Only a newer,
-unique qualifying strike resets the server-side 30-minute window. When the
-window elapses the state becomes `ALL_CLEAR_ELIGIBLE`; it never authorizes work
-to resume. Alert changes are persisted with transition history and sent through
-authenticated SSE at `/api/stream`. Clients reconnect with `Last-Event-ID` and
-must recover current state through REST.
-
-## Testing
-
-```bash
-cd core
 uv run ruff check .
 uv run pytest
 ```
 
-Unit and provider-normalization tests run without a database. Database,
-lightning, concurrency, briefing, and API integration tests require a dedicated
-PostgreSQL database:
+- DB integration tests need a dedicated database
 
 ```bash
-TEST_DATABASE_URL=postgresql+asyncpg://planit:planit@localhost:5432/planit_test \
-  uv run pytest
+TEST_DATABASE_URL=postgresql+asyncpg://planit:planit@localhost:5432/planit_test uv run pytest
 ```
 
-Never point integration tests at production or a shared Tiger Data database;
-the fixtures create and drop the application schema.
+- Never point `TEST_DATABASE_URL` at production or shared Tiger Data (fixtures drop the schema)
 
-## Tiger Data and TimescaleDB
+## Production
 
-The application uses PostgreSQL by default; SQLite is limited to isolated unit
-tests. PostgreSQL is retained because ingestion relies on conflict-safe upserts,
-advisory locks, and concurrency behavior that SQLite cannot reproduce safely.
+- Set `ENVIRONMENT=production`, `JWT_SECRET_KEY`, `DB_REQUIRE_TLS=true`, an approved or disabled threshold profile, the real frontend origin and NWS contact
+- `docker compose up -d` runs bootstrap before `api` and `worker`
+- Bootstrap refuses to create an admin with the placeholder credentials from `.env.example`
+- Keep secrets out of Git
+- If the schema check reports TimescaleDB available, review and run `scripts/enable_timescale.sql` (converts only `hazard_observations`)
+- Rollback: redeploy the previous image tag
+  - Prefer forward DB fixes; take a Tiger backup before any `alembic downgrade`
 
-For Tiger Data, copy the service connection string, change its scheme from
-`postgresql://` to `postgresql+asyncpg://`, and retain `sslmode=require`. Do not
-commit the resulting URL. A production configuration should include:
+### Administrative alert and report actions
 
-```dotenv
-DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require
-DB_REQUIRE_TLS=true
-```
+The current two-role policy is unchanged: `user` may submit reports, while
+`admin` may list all reports and manage them. Users cannot edit/delete even their
+own reports. All alert updates also require `admin`.
 
-Then apply and verify the exact application schema:
+- `PATCH /api/alerts/{alert_id}` accepts `status` (`ACKNOWLEDGED` or `RESOLVED`
+  for the UI) and a review `reason` (3–1000 characters). It records an alert
+  transition with the administrator's identity. For lightning `STOP_WORK`,
+  resolution requires server status `ALL_CLEAR_ELIGIBLE` and an elapsed current
+  countdown. A newer strike can make a previously displayed sign-off stale;
+  handle HTTP 409 by refreshing, without showing success. Eligibility itself
+  is controlled by the server, never set by the client.
+- `PATCH /api/reports/{report_id}` accepts only `description` (3–2000 characters
+  after trimming), returns the updated report envelope, and preserves original
+  type, pin, reporter and timestamp. Shared wildlife observation descriptions
+  and their alert source metadata are synchronized.
+- `DELETE /api/reports/{report_id}` returns 204 with no body. It removes the
+  report and its exact derived `crew_report` wildlife observations, resolves
+  only alerts sourced from those observations, and retains alert transition
+  history with the deleting administrator's identity. Other sources and reports
+  are unaffected. The UI asks for explicit confirmation before deletion.
 
-```bash
-cd core
-uv run alembic upgrade head
-uv run planit-db-check
-```
+Unknown reports return 404; unauthorized roles return 403. No database schema
+migration or ML scoring change is required. Refresh reports, site observations,
+alerts and briefings after successful mutations; report events also use the
+existing event stream.
 
-For a new Tiger Data database, create the first administrator exactly once after
-the migration, with the connection URL and credentials supplied by secret
-management:
 
-```bash
-DATABASE_URL=<tiger-asyncpg-url> INITIAL_ADMIN_USERNAME=<username> \
-INITIAL_ADMIN_PASSWORD=<secret> uv run planit-init-admin
-```
+### Password changes and session recovery
 
-`planit-db-check` reports the sanitized host/database, TLS state, current and
-expected migration revisions, required tables, row counts, and TimescaleDB
-availability without printing credentials. The authenticated
-`GET /api/admin/system` endpoint exposes the same deployment check.
+`PATCH /api/auth/me/password` is available to both authenticated roles. It accepts
+`current_password` and `new_password` (8–256 characters), rejects an incorrect
+current password with 401 and a reused new password with 422, and returns a fresh
+`TokenResponse` plus a rotated HttpOnly refresh cookie on success. Old refresh
+sessions are both revoked and expired, so a waking older device cannot revoke the
+new session via replay detection. There is no schema migration or token lifetime
+extension.
 
-Tiger Data services support TimescaleDB, but this application treats standard
-PostgreSQL as the baseline. If the check reports the extension as available,
-review and run `scripts/enable_timescale.sql`; it converts only
-`hazard_observations`, whose compound primary/unique keys include the partition
-timestamp. Lightning remains a regular table to preserve global provider event
-uniqueness.
-
-## Vultr deployment and rollback
-
-1. Create a Vultr host, install Docker/Compose, restrict inbound access to the
-   reverse proxy and administration addresses, and copy the repository.
-2. Store production secrets outside Git (Vultr secret/user-data mechanism or a
-   root-readable environment file). Set `ENVIRONMENT=production`,
-   a unique `JWT_SECRET_KEY`, an approved or disabled alert-threshold profile,
-   Tiger Data TLS `DATABASE_URL`, the real
-   frontend origin, NWS contact, and optional FIRMS key.
-3. Point both `api` and `worker` at Tiger Data. Run the one-shot migration
-   service before rolling API/worker containers.
-4. Build immutable, version-tagged images, start one worker plus the desired API
-   replicas, verify `/health`, then exercise authenticated REST and SSE reads.
-5. Roll back by redeploying the previous image tag. Prefer forward database
-   fixes; run `alembic downgrade <revision>` only after reviewing its data-loss
-   impact and taking a Tiger Data backup.
-
-No infrastructure is provisioned by this repository, and no paid service is
-contacted without explicit credentials.
-
-## Known integration limits
-
-- A licensed production strike-level lightning provider is not selected.
-- Soil moisture uses a rainfall proxy; SMAP ingestion is not implemented.
-- River flood-stage thresholds require site-specific configuration; USGS values
-  are stored without declaring a flood otherwise.
-- ML coverage is deliberately partial and explicitly exposed per site. Unsupported sites receive a
-  deterministic briefing but no fabricated numeric score. Seeded risk scores remain labeled
-  `score_source=demo` and `model_version=demo-not-a-model-v1`.
-- Tiger Data connectivity and extension availability must be verified with the
-  actual deployment credentials using `planit-db-check`.
+The UI preserves session state on transient refresh/network failures, retries one
+refresh attempt, and distinguishes these failures from a refresh 401/403. Password
+mutations use the same browser lock as refresh rotation; an incorrect current
+password does not trigger a silent retry of the password update.

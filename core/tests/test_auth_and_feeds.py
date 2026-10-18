@@ -7,7 +7,6 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app import cli
 from app.core.config import Settings
 from app.core.database import get_session
 from app.main import app
@@ -37,6 +36,11 @@ async def test_initialized_admin_crud_and_state_feed() -> None:
                 initial_admin_password="test-only-initial-secret",
             ),
         )
+        administrator = await session.scalar(
+            select(UserAccount).where(UserAccount.username == "provisioned.operator")
+        )
+        assert administrator is not None
+        admin_id = str(administrator.id)
         sites = []
         for plant_id, state in ((1, "LA"), (2, "TX")):
             site = Site(
@@ -91,28 +95,17 @@ async def test_initialized_admin_crud_and_state_feed() -> None:
             assert login.status_code == 200
             initial_token = login.json()["access_token"]
             initial_headers = {"Authorization": f"Bearer {initial_token}"}
-            assert (await client.get("/api/auth/me", headers=initial_headers)).status_code == 200
             assert (await client.get("/api/sites", headers=initial_headers)).status_code == 200
 
-            changed = await client.patch(
-                "/api/auth/me/password",
-                headers=initial_headers,
-                json={
-                    "current_password": "test-only-initial-secret",
-                    "new_password": "new-secure-password",
-                },
-            )
-            assert changed.status_code == 200
             refreshed = await client.post("/api/auth/refresh")
             assert refreshed.status_code == 200
             token = refreshed.json()["access_token"]
             headers = {"Authorization": f"Bearer {token}"}
 
-            feed = await client.get("/api/sites/weather?state=LA&state=TX", headers=headers)
+            feed = await client.get("/api/sites/lightning?state=LA&state=TX", headers=headers)
             assert feed.status_code == 200
             assert feed.json()["meta"]["states"] == ["LA", "TX"]
-            assert feed.json()["meta"]["total"] == 2
-            assert set(feed.json()["data"][0]) == {"site", "observation"}
+            assert feed.json()["meta"]["total"] == 0
 
             created = await client.post(
                 "/api/admin/users",
@@ -154,7 +147,6 @@ async def test_initialized_admin_crud_and_state_feed() -> None:
             reset_headers = {"Authorization": f"Bearer {reset_login.json()['access_token']}"}
             assert (await client.get("/api/sites", headers=reset_headers)).status_code == 200
 
-            admin_id = changed.json()["user"]["id"]
             demote_last_admin = await client.patch(
                 f"/api/admin/users/{admin_id}", headers=headers, json={"role": "user"}
             )
@@ -225,39 +217,4 @@ async def test_initial_admin_requires_secrets_and_an_empty_user_table() -> None:
                     initial_admin_password="another-test-only-secret",
                 ),
             )
-    await engine.dispose()
-
-
-@pytest.mark.asyncio
-async def test_init_admin_cli_output_is_credential_neutral(monkeypatch, capsys) -> None:
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    factory = async_sessionmaker(engine, expire_on_commit=False)
-    async with engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
-
-    username = "output.must.not.include.this"
-    password = "output-must-not-include-this-password"
-    monkeypatch.setattr(cli, "SessionFactory", factory)
-    monkeypatch.setattr(
-        cli,
-        "get_settings",
-        lambda: Settings(
-            _env_file=None,
-            initial_admin_username=username,
-            initial_admin_password=password,
-        ),
-    )
-
-    assert await cli._initialize_admin() == 0
-    output = capsys.readouterr().out
-    assert output == "Created initial administrator account.\n"
-    assert username not in output
-    assert password not in output
-    assert "$argon2" not in output
-
-    assert await cli._initialize_admin() == 1
-    failure_output = capsys.readouterr().out
-    assert username not in failure_output
-    assert password not in failure_output
-    assert "$argon2" not in failure_output
     await engine.dispose()

@@ -26,6 +26,11 @@ export function SummaryCards({ summary }: { summary: Summary }) {
         to='/sites'
         segments={[
           {
+            value: summary.calls['REVIEW REQUIRED'],
+            label: 'review',
+            color: RECOMMENDATION_BG['REVIEW REQUIRED'],
+          },
+          {
             value: summary.calls['NO-GO'],
             label: 'NO-GO',
             color: RECOMMENDATION_BG['NO-GO'],

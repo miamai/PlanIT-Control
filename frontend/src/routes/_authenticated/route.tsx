@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { ensureSession } from '@/api/auth'
 import { AuthenticatedLayout } from '@/components/layout/authenticated-layout'
+import { SessionRecovery } from '@/components/session-recovery'
 
 export const Route = createFileRoute('/_authenticated')({
   // The access token lives in memory, so after a reload this restores the
@@ -11,4 +12,5 @@ export const Route = createFileRoute('/_authenticated')({
     }
   },
   component: AuthenticatedLayout,
+  errorComponent: SessionRecovery,
 })

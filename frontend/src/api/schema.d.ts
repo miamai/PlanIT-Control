@@ -4,63 +4,6 @@
  */
 
 export interface paths {
-    "/api/admin/ingestion/{provider}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Ingest Provider */
-        post: operations["ingest_provider_api_admin_ingestion__provider__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/sites/import-eia": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Import Cached Eia Sites
-         * @description Refresh from the bundled, authenticated EIA-860M snapshot.
-         *
-         *     Network refreshes remain a CLI operation so an HTTP request cannot make the
-         *     production service download and parse an arbitrary workbook.
-         */
-        post: operations["import_cached_eia_sites_api_admin_sites_import_eia_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/system": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** System Status */
-        get: operations["system_status_api_admin_system_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/admin/users": {
         parameters: {
             query?: never;
@@ -160,23 +103,6 @@ export interface paths {
         put?: never;
         /** Logout */
         post: operations["logout_api_auth_logout_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Me */
-        get: operations["me_api_auth_me_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -338,23 +264,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sites/flood": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Stored flood observations across US sites */
-        get: operations["flood_feed_api_sites_flood_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/sites/lightning": {
         parameters: {
             query?: never;
@@ -372,57 +281,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sites/soil": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Stored soil observations across US sites */
-        get: operations["soil_feed_api_sites_soil_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/sites/weather": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Stored weather observations across US sites */
-        get: operations["weather_feed_api_sites_weather_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/sites/wildfire": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Stored wildfire observations across US sites */
-        get: operations["wildfire_feed_api_sites_wildfire_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/sites/{site_id}": {
         parameters: {
             query?: never;
@@ -432,40 +290,6 @@ export interface paths {
         };
         /** Get Site */
         get: operations["get_site_api_sites__site_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/sites/{site_id}/alerts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Site Alerts */
-        get: operations["site_alerts_api_sites__site_id__alerts_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/sites/{site_id}/briefings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Briefings */
-        get: operations["briefings_api_sites__site_id__briefings_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -907,6 +731,17 @@ export interface components {
             observed_at: string;
             quality_status: components["schemas"]["QualityStatus"];
             /**
+             * Severity
+             * @default UNKNOWN
+             * @enum {string}
+             */
+            severity: "LOW" | "MODERATE" | "HIGH" | "CRITICAL" | "UNKNOWN";
+            /**
+             * Severity Basis
+             * @default No severity assessment was provided
+             */
+            severity_basis: string;
+            /**
              * Site Id
              * Format: uuid
              */
@@ -941,6 +776,27 @@ export interface components {
          * @enum {string}
          */
         QualityStatus: "verified" | "provisional" | "stale" | "estimated" | "synthetic";
+        /** RiskDriverRead */
+        RiskDriverRead: {
+            /** Explanation */
+            explanation: string;
+            /**
+             * Explanation Method
+             * @enum {string}
+             */
+            explanation_method: "tree_shap" | "rule_based";
+            /** Hazard */
+            hazard: string;
+            /** Impact */
+            impact: number;
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "LOW" | "MODERATE" | "HIGH" | "CRITICAL" | "UNKNOWN";
+            /** Value */
+            value?: number | null;
+        };
         /** RiskPredictionCreate */
         RiskPredictionCreate: {
             /** Contributing Factors */
@@ -971,6 +827,19 @@ export interface components {
         };
         /** RiskRanking */
         RiskRanking: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "GO" | "CAUTION" | "NO_GO" | "REVIEW_REQUIRED";
+            /** Decision Basis */
+            decision_basis: string[];
+            /**
+             * Operational Authorization
+             * @default NOT_GRANTED
+             * @constant
+             */
+            operational_authorization: "NOT_GRANTED";
             risk: components["schemas"]["RiskRead"] | null;
             site: components["schemas"]["SiteRead"];
             /** Status */
@@ -1008,11 +877,26 @@ export interface components {
              * Format: uuid
              */
             site_id: string;
+            /** Top Drivers */
+            top_drivers?: components["schemas"]["RiskDriverRead"][];
             /** Valid For Seconds */
             valid_for_seconds: number;
         };
         /** RiskResult */
         RiskResult: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "GO" | "CAUTION" | "NO_GO" | "REVIEW_REQUIRED";
+            /** Decision Basis */
+            decision_basis: string[];
+            /**
+             * Operational Authorization
+             * @default NOT_GRANTED
+             * @constant
+             */
+            operational_authorization: "NOT_GRANTED";
             score: components["schemas"]["RiskRead"] | null;
             /**
              * Site Id
@@ -1172,85 +1056,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    ingest_provider_api_admin_ingestion__provider__post: {
-        parameters: {
-            query?: {
-                state?: string[] | null;
-            };
-            header?: never;
-            path: {
-                provider: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    import_cached_eia_sites_api_admin_sites_import_eia_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-    system_status_api_admin_system_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
     list_users_api_admin_users_get: {
         parameters: {
             query?: {
@@ -1533,26 +1338,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    me_api_auth_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Envelope_UserRead_"];
-                };
             };
         };
     };
@@ -1895,143 +1680,7 @@ export interface operations {
             };
         };
     };
-    flood_feed_api_sites_flood_get: {
-        parameters: {
-            query?: {
-                state?: string[] | null;
-                since?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Envelope_list_SiteObservationRead__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     lightning_feed_api_sites_lightning_get: {
-        parameters: {
-            query?: {
-                state?: string[] | null;
-                since?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Envelope_list_SiteObservationRead__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    soil_feed_api_sites_soil_get: {
-        parameters: {
-            query?: {
-                state?: string[] | null;
-                since?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Envelope_list_SiteObservationRead__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    weather_feed_api_sites_weather_get: {
-        parameters: {
-            query?: {
-                state?: string[] | null;
-                since?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Envelope_list_SiteObservationRead__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    wildfire_feed_api_sites_wildfire_get: {
         parameters: {
             query?: {
                 state?: string[] | null;
@@ -2083,74 +1732,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Envelope_SiteRead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    site_alerts_api_sites__site_id__alerts_get: {
-        parameters: {
-            query?: {
-                hazard_type?: components["schemas"]["HazardType"] | null;
-                severity?: string | null;
-                status?: components["schemas"]["AlertStatus"] | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Envelope_list_AlertRead__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    briefings_api_sites__site_id__briefings_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Envelope_list_BriefingRead__"];
                 };
             };
             /** @description Validation Error */

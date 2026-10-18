@@ -24,7 +24,6 @@ from app.models.entities import (
     HazardObservation,
     HazardType,
     LightningSiteState,
-    ProviderRun,
     QualityStatus,
     RiskScore,
     SafetyBriefing,
@@ -46,18 +45,27 @@ from app.schemas.domain import (
     RiskResult,
     SiteRead,
 )
-from app.services.backfill import BACKFILL_SCORE_SOURCE
-from app.services.database_check import inspect_database
-from app.services.eia import import_plants, parse_cached_sites
+from app.services.decision import assess_decision
 from app.services.events import publish_event
-from app.services.ingestion import run_provider
-from app.services.ml import MLClient
+from app.services.hazard_severity import assess_observation
 from app.services.risk import historical_features
 from app.services.rules import evaluate_observation
 from app.utils.geo import haversine_miles
 
 router = APIRouter()
 DbSession = Annotated[AsyncSession, Depends(get_session)]
+OPEN_ALERT_STATUSES = (
+    AlertStatus.ACTIVE,
+    AlertStatus.ACKNOWLEDGED,
+    AlertStatus.ALL_CLEAR_ELIGIBLE,
+)
+
+
+def _observation_read(observation: HazardObservation, settings: Settings) -> ObservationRead:
+    assessment = assess_observation(observation, settings)
+    return ObservationRead.model_validate(observation).model_copy(
+        update={"severity": assessment.severity, "severity_basis": assessment.basis}
+    )
 
 
 @router.get("/health", tags=["system"])
@@ -67,28 +75,6 @@ async def health() -> dict:
     if not healthy:
         return JSONResponse(status_code=503, content=payload)
     return payload
-
-
-@router.get("/api/admin/system", tags=["admin"])
-async def system_status(
-    _: AdminPrincipal,
-    session: DbSession,
-    settings: Settings = Depends(get_settings),
-) -> dict:
-    data = (await inspect_database(session, settings)).to_dict()
-    if settings.ml_enabled:
-        try:
-            health = await MLClient(settings).health()
-            data["ml"] = health.model_dump()
-        except Exception:  # noqa: BLE001 - system status must remain available during ML outage
-            data["ml"] = {"ok": False, "models_ready": False}
-    else:
-        data["ml"] = {"ok": False, "enabled": False}
-    last_ml = await session.scalar(
-        select(func.max(RiskScore.generated_at)).where(RiskScore.score_source == "ml_service")
-    )
-    data["ml"]["last_successful_generation"] = last_ml.isoformat() if last_ml else None
-    return {"data": data}
 
 
 @router.get("/api/sites", response_model=Envelope[list[SiteRead]], tags=["sites"])
@@ -138,6 +124,7 @@ async def site_hazards(
     since: datetime | None = None,
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
+    settings: Settings = Depends(get_settings),
 ) -> Envelope[list[ObservationRead]]:
     filters = [HazardObservation.site_id == site_id]
     if hazard_type:
@@ -157,7 +144,7 @@ async def site_hazards(
         )
     ).all()
     return Envelope(
-        data=[ObservationRead.model_validate(row) for row in rows],
+        data=[_observation_read(row, settings) for row in rows],
         meta=PageMeta(limit=limit, offset=offset, total=total or 0),
     )
 
@@ -194,22 +181,6 @@ async def _alerts_query(
         data=[AlertRead.model_validate(alert) for alert in alerts],
         meta=PageMeta(limit=limit, offset=offset, total=total or 0),
     )
-
-
-@router.get(
-    "/api/sites/{site_id}/alerts", response_model=Envelope[list[AlertRead]], tags=["alerts"]
-)
-async def site_alerts(
-    site_id: uuid.UUID,
-    _: UserPrincipal,
-    session: DbSession,
-    hazard_type: HazardType | None = None,
-    severity: str | None = None,
-    status_: AlertStatus | None = Query(None, alias="status"),
-    limit: int = Query(100, ge=1, le=500),
-    offset: int = Query(0, ge=0),
-) -> Envelope[list[AlertRead]]:
-    return await _alerts_query(session, site_id, hazard_type, severity, status_, limit, offset)
 
 
 @router.get("/api/alerts", response_model=Envelope[list[AlertRead]], tags=["alerts"])
@@ -478,12 +449,24 @@ async def delete_report(
 
 
 async def _latest_risk(session: AsyncSession, site_id: uuid.UUID) -> RiskScore | None:
-    # Backfilled scores are history only; the current score is the newest forward prediction.
     return await session.scalar(
         select(RiskScore)
-        .where(RiskScore.site_id == site_id, RiskScore.score_source != BACKFILL_SCORE_SOURCE)
+        .where(RiskScore.site_id == site_id)
         .order_by(RiskScore.generated_at.desc())
         .limit(1)
+    )
+
+
+async def _active_alerts(session: AsyncSession, site_id: uuid.UUID) -> list[Alert]:
+    return list(
+        (
+            await session.scalars(
+                select(Alert).where(
+                    Alert.site_id == site_id,
+                    Alert.status.in_(OPEN_ALERT_STATUSES),
+                )
+            )
+        ).all()
     )
 
 
@@ -496,11 +479,16 @@ async def site_risk(
         raise HTTPException(status_code=404, detail="Site not found")
     score = await _latest_risk(session, site_id)
     status = _risk_status(site, score)
+    decision = assess_decision(
+        score.score if score else None, status, await _active_alerts(session, site_id)
+    )
     return Envelope(
         data=RiskResult(
             site_id=site_id,
             status=status,
-            score=RiskRead.model_validate(score) if score else None,
+            score=RiskRead.from_score(score) if score else None,
+            decision=decision.decision,
+            decision_basis=decision.basis,
         )
     )
 
@@ -533,7 +521,7 @@ async def site_risk_history(
     latest_per_day: dict = {}
     for row in rows:
         latest_per_day.setdefault(row.prediction_date, row)
-    return Envelope(data=[RiskRead.model_validate(row) for row in latest_per_day.values()])
+    return Envelope(data=[RiskRead.from_score(row) for row in latest_per_day.values()])
 
 
 @router.get("/api/risk/rankings", response_model=Envelope[list[RiskRanking]], tags=["risk"])
@@ -545,25 +533,33 @@ async def risk_rankings(_: UserPrincipal, session: DbSession) -> Envelope[list[R
         .over(partition_by=RiskScore.site_id, order_by=RiskScore.generated_at.desc())
         .label("rank")
     )
-    ranked = (
-        select(RiskScore.id, newest_first)
-        .where(RiskScore.score_source != BACKFILL_SCORE_SOURCE)
-        .subquery()
-    )
+    ranked = select(RiskScore.id, newest_first).subquery()
     latest_scores = (
         await session.scalars(
             select(RiskScore).join(ranked, RiskScore.id == ranked.c.id).where(ranked.c.rank == 1)
         )
     ).all()
     latest = {score.site_id: score for score in latest_scores}
+    active_alerts = (
+        await session.scalars(select(Alert).where(Alert.status.in_(OPEN_ALERT_STATUSES)))
+    ).all()
+    alerts_by_site: dict[uuid.UUID, list[Alert]] = {}
+    for alert in active_alerts:
+        alerts_by_site.setdefault(alert.site_id, []).append(alert)
     rankings = []
     for site in sites:
         score = latest.get(site.id)
+        status = _risk_status(site, score)
+        decision = assess_decision(
+            score.score if score else None, status, alerts_by_site.get(site.id, [])
+        )
         rankings.append(
             RiskRanking(
                 site=SiteRead.model_validate(site),
-                risk=RiskRead.model_validate(score) if score else None,
-                status=_risk_status(site, score),
+                risk=RiskRead.from_score(score) if score else None,
+                status=status,
+                decision=decision.decision,
+                decision_basis=decision.basis,
             )
         )
     rankings.sort(key=lambda row: row.risk.score if row.risk else -1, reverse=True)
@@ -602,7 +598,7 @@ async def store_risk_prediction(
         )
     )
     if existing:
-        return Envelope(data=RiskRead.model_validate(existing))
+        return Envelope(data=RiskRead.from_score(existing))
     score = RiskScore(**body.model_dump(), score_source="model")
     session.add(score)
     await session.flush()
@@ -614,35 +610,19 @@ async def store_risk_prediction(
     )
     await session.commit()
     await session.refresh(score)
-    return Envelope(data=RiskRead.model_validate(score))
+    return Envelope(data=RiskRead.from_score(score))
 
 
 def _risk_status(site: Site, score: RiskScore | None) -> str:
     if score:
+        now = datetime.now(UTC)
         generated = score.generated_at
         if generated.tzinfo is None:  # SQLite drops the zone; every stored time is UTC
             generated = generated.replace(tzinfo=UTC)
         expires = generated + timedelta(seconds=score.valid_for_seconds)
-        return "available" if expires > datetime.now(UTC) else "stale"
+        local_today = now.astimezone(ZoneInfo(site.timezone)).date()
+        return "available" if expires > now and score.prediction_date >= local_today else "stale"
     return "unsupported" if not site.ml_supported else "missing"
-
-
-@router.get(
-    "/api/sites/{site_id}/briefings",
-    response_model=Envelope[list[BriefingRead]],
-    tags=["briefings"],
-)
-async def briefings(
-    site_id: uuid.UUID, _: UserPrincipal, session: DbSession
-) -> Envelope[list[BriefingRead]]:
-    rows = (
-        await session.scalars(
-            select(SafetyBriefing)
-            .where(SafetyBriefing.site_id == site_id)
-            .order_by(SafetyBriefing.briefing_date.desc())
-        )
-    ).all()
-    return Envelope(data=[BriefingRead.model_validate(row) for row in rows])
 
 
 @router.get("/api/briefings", response_model=Envelope[list[BriefingRead]], tags=["briefings"])
@@ -675,68 +655,18 @@ async def fleet_briefings(
     )
 
 
-@router.post("/api/admin/ingestion/{provider}", tags=["admin"])
-async def ingest_provider(
-    provider: str,
-    _: AdminPrincipal,
-    session: DbSession,
-    settings: Settings = Depends(get_settings),
-    state: Annotated[list[str] | None, Query()] = None,
-) -> dict:
-    allowed = {"weather", "weather_alerts", "usgs", "wildfire", "soil"}
-    if provider not in allowed:
-        raise HTTPException(status_code=404, detail="Unknown provider")
-    recent = await session.scalar(
-        select(func.count())
-        .select_from(ProviderRun)
-        .where(
-            ProviderRun.provider == provider,
-            ProviderRun.started_at >= datetime.now(UTC) - timedelta(minutes=1),
-        )
-    )
-    if recent:
-        raise HTTPException(status_code=429, detail="Provider was already requested this minute")
-    states = []
-    for value in state or []:
-        normalized = value.strip().upper()
-        if len(normalized) != 2 or not normalized.isalpha():
-            raise HTTPException(status_code=422, detail=f"Invalid US state code: {value}")
-        if normalized not in states:
-            states.append(normalized)
-    run = await run_provider(session, provider, settings, states)
-    return {
-        "data": {
-            "run_id": str(run.id),
-            "status": run.status,
-            "records_written": run.records_written,
-            "error": run.error,
-            "scope": run.scope,
-        }
-    }
-
-
-@router.post("/api/admin/sites/import-eia", tags=["admin"])
-async def import_cached_eia_sites(_: AdminPrincipal, session: DbSession) -> dict:
-    """Refresh from the bundled, authenticated EIA-860M snapshot.
-
-    Network refreshes remain a CLI operation so an HTTP request cannot make the
-    production service download and parse an arbitrary workbook.
-    """
-    count = await import_plants(session, parse_cached_sites())
-    return {
-        "data": {
-            "sites_imported_or_refreshed": count,
-            "source": "EIA-860M August 2026 cached snapshot",
-        }
-    }
-
-
 @router.get("/api/stream", tags=["events"])
 async def stream_events(
     _: UserPrincipal,
     request: Request,
+    session: DbSession,
     last_event_id: Annotated[int | None, Header(alias="Last-Event-ID")] = None,
 ) -> StreamingResponse:
+    # The request session (shared with the auth lookup) would otherwise stay idle
+    # in a transaction for the life of the stream, holding a pooled connection and
+    # a lock on user_accounts that blocks migrations. Each poll opens its own.
+    await session.close()
+
     async def events():
         cursor = last_event_id or 0
         while not await request.is_disconnected():

@@ -158,13 +158,18 @@ function useAlertsQuery() {
 }
 
 /** All monitored sites (shares the rankings request). */
-export function useSites(): { sites: Site[]; isLoading: boolean } {
+export function useSites() {
   const query = useQuery({
     queryKey: planitKeys.sites,
     queryFn: listSites,
     staleTime: 5 * 60_000,
   })
-  return { sites: query.data ?? [], isLoading: query.isLoading }
+  return {
+    sites: query.data ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refresh: query.refetch,
+  }
 }
 
 /** Every site with its latest risk and unresolved alerts, riskiest first. */
@@ -270,6 +275,7 @@ export function useSiteDetail(siteId: string) {
     staleTime: 5 * 60_000,
   })
   const alertsQuery = useAlertsQuery()
+  const hazardRows = hazardsQuery.data
 
   const alerts = useMemo(
     () => (alertsQuery.data ?? []).filter((alert) => alert.siteId === siteId),
@@ -280,25 +286,20 @@ export function useSiteDetail(siteId: string) {
     const trend = trendFromHistory(historyQuery.data ?? [])
     return trend ? { ...riskQuery.data, trend } : riskQuery.data
   }, [riskQuery.data, historyQuery.data])
-  const domains = useMemo(
-    () => buildDomains(hazardsQuery.data ?? [], risk?.subScores ?? {}, alerts),
-    [hazardsQuery.data, risk?.subScores, alerts]
-  )
+  const riskSubScores = risk?.subScores
+  const domains = buildDomains(hazardRows ?? [], riskSubScores ?? {}, alerts)
   const hazardsFetchedAt = hazardsQuery.dataUpdatedAt
   const timeline = useMemo(() => {
     const dayAgo = hazardsFetchedAt - 24 * 60 * 60 * 1000
-    return hazardsQuery.data
+    return hazardRows
       ? buildTimeline(
-          hazardsQuery.data.filter(
+          hazardRows.filter(
             (row) => new Date(row.observed_at).getTime() >= dayAgo
           )
         )
       : undefined
-  }, [hazardsQuery.data, hazardsFetchedAt])
-  const strikes = useMemo(
-    () => toSiteStrikes(hazardsQuery.data ?? []),
-    [hazardsQuery.data]
-  )
+  }, [hazardRows, hazardsFetchedAt])
+  const strikes = useMemo(() => toSiteStrikes(hazardRows ?? []), [hazardRows])
 
   return {
     site: siteQuery.data,

@@ -12,6 +12,7 @@ from app.models.entities import (
     Severity,
 )
 from app.services.events import publish_event
+from app.services.hazard_severity import alert_severity, assess_observation
 
 
 def _rule_for(
@@ -19,13 +20,9 @@ def _rule_for(
 ) -> tuple[Severity, str, str] | None:
     metadata = observation.metadata_ or {}
     if observation.metric_name == "official_alert":
-        provider_severity = str(metadata.get("severity", "")).lower()
-        severity = {
-            "extreme": Severity.CRITICAL,
-            "severe": Severity.HIGH,
-            "moderate": Severity.MODERATE,
-            "minor": Severity.LOW,
-        }.get(provider_severity, Severity.MODERATE)
+        severity = alert_severity(assess_observation(observation, settings))
+        if severity is None:
+            severity = Severity.MODERATE
         return (
             severity,
             str(metadata.get("headline") or metadata.get("event") or "Official warning"),
@@ -39,9 +36,10 @@ def _rule_for(
     if settings.alert_threshold_profile == "disabled":
         return None
     if observation.metric_name == "calculated_heat_index" and observation.numeric_value is not None:
-        if observation.numeric_value >= settings.heat_critical_threshold_f:
+        severity = alert_severity(assess_observation(observation, settings))
+        if severity == Severity.CRITICAL:
             return Severity.CRITICAL, "Extreme demo heat threshold", "Use the approved heat plan."
-        if observation.numeric_value >= settings.heat_high_threshold_f:
+        if severity == Severity.HIGH:
             return Severity.HIGH, "Dangerous demo heat threshold", "Increase heat controls."
     if observation.metric_name == "satellite_active_fire_detection":
         distance = float(metadata.get("distance_miles", 999))
@@ -55,13 +53,14 @@ def _rule_for(
         observation.metric_name == "soil_saturation_risk_proxy"
         and observation.numeric_value is not None
     ):
-        if observation.numeric_value >= settings.soil_high_rainfall_mm_72h:
+        severity = alert_severity(assess_observation(observation, settings))
+        if severity in {Severity.HIGH, Severity.CRITICAL}:
             return (
                 Severity.HIGH,
                 "Elevated rainfall-based soil risk proxy",
                 "Inspect ground conditions.",
             )
-        if observation.numeric_value >= settings.soil_moderate_rainfall_mm_72h:
+        if severity == Severity.MODERATE:
             return (
                 Severity.MODERATE,
                 "Rainfall-based soil risk proxy",

@@ -35,7 +35,7 @@ export type HazardDomain =
   | 'wildlife'
   | 'storm'
 
-export type SeverityLevel = 'low' | 'moderate' | 'high' | 'extreme'
+export type SeverityLevel = 'low' | 'moderate' | 'high' | 'extreme' | 'unknown'
 
 export type Trend = 'rising' | 'falling' | 'steady'
 
@@ -52,7 +52,7 @@ export interface DomainStatus {
   updatedAt?: string
 }
 
-export type Recommendation = 'GO' | 'CAUTION' | 'NO-GO'
+export type Recommendation = 'GO' | 'CAUTION' | 'NO-GO' | 'REVIEW REQUIRED'
 
 /** Backend availability of a site's hazard index. Absent scores are never zero. */
 export type RiskStatus = 'available' | 'missing' | 'stale' | 'unsupported'
@@ -61,20 +61,24 @@ export type RiskStatus = 'available' | 'missing' | 'stale' | 'unsupported'
 export interface ReasonContribution {
   domain: HazardDomain
   label: string
-  /** 0..1 share of the total explained impact attributable to this feature. */
+  severity: SeverityLevel
+  /** 0..1 share of the displayed explanation impacts, not of the overall index. */
   contribution: number
+  /** Change in the hazard's 0-10 sub-score attributed to this feature. */
+  impact: number
+  explanationMethod: 'tree_shap' | 'rule_based'
   detail: string
 }
 
 /** The 0-10 hazard index plus the explanation and go/no-go call. */
 export interface SiteRisk {
-  scoreSource?: string
   siteId: string
   status: RiskStatus
   /** Null when the site has no score (unsupported or missing). */
   score: number | null
   severity: SeverityLevel | null
   recommendation: Recommendation | null
+  decisionBasis: string[]
   reasons: ReasonContribution[]
   /** 0-10 per-hazard sub-scores from the model, keyed by UI domain. */
   subScores: Partial<Record<HazardDomain, number>>
@@ -82,6 +86,7 @@ export interface SiteRisk {
   workPlan: string[]
   trend?: Trend
   modelVersion?: string
+  scoreSource?: string
   predictionDate?: string
   updatedAt?: string
 }
@@ -203,6 +208,4 @@ export interface TimelinePoint {
 export interface HazardIndexPoint {
   date: string
   score: number
-  /** Scored after the fact from observed weather, not forecast in advance. */
-  backfilled?: boolean
 }

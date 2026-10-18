@@ -105,10 +105,23 @@ async def test_site_sync_adds_catalog_sites_without_deleting_existing() -> None:
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/health":
-            return httpx.Response(200, json={"ok": True, "models_ready": True, "model_version": "v1", "site_count": 1})
+            return httpx.Response(
+                200, json={"ok": True, "models_ready": True, "model_version": "v1", "site_count": 1}
+            )
         return httpx.Response(
             200,
-            json=[{"site_id": "EIA-123", "name": "Catalog Plant", "state": "LA", "county": "Test", "lat": 30, "lon": -90, "timezone": "America/Chicago", "model_version": "v1"}],
+            json=[
+                {
+                    "site_id": "EIA-123",
+                    "name": "Catalog Plant",
+                    "state": "LA",
+                    "county": "Test",
+                    "lat": 30,
+                    "lon": -90,
+                    "timezone": "America/Chicago",
+                    "model_version": "v1",
+                }
+            ],
         )
 
     client = MLClient(Settings(ml_base_url="http://ml"), transport=httpx.MockTransport(handler))
@@ -133,5 +146,7 @@ async def test_site_sync_adds_catalog_sites_without_deleting_existing() -> None:
         sites = list((await session.scalars(select(Site))).all())
         assert len(sites) == 2
         assert next(site for site in sites if site.eia_plant_id == 123).ml_supported
-        assert not next(site for site in sites if site.eia_plant_id == 999).ml_supported
+        retained = next(site for site in sites if site.eia_plant_id == 999)
+        assert retained.ml_supported
+        assert retained.ml_model_version == "old-v0"
     await engine.dispose()

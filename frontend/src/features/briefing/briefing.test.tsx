@@ -60,9 +60,13 @@ beforeEach(() => {
     score: 7,
     severity: 'high',
     recommendation: 'NO-GO',
+    decisionBasis: [],
     reasons: [
       {
         domain: 'heat',
+        severity: 'high',
+        impact: 1,
+        explanationMethod: 'tree_shap',
         label: 'Heat index peaks at 108°F',
         contribution: 1,
         detail: 'From the dated forecast',

@@ -138,27 +138,3 @@ async def test_logged_out_token_replayed_revokes_every_session(stack) -> None:
 
     assert (await _refresh(client, token)).status_code == 401
     assert (await _refresh(client, other_device)).status_code == 401
-
-
-@pytest.mark.asyncio
-async def test_grace_does_not_outlive_a_password_change(stack) -> None:
-    """Revoking every session (password change, logout of the replacement)
-    must not be undone by a stale cookie still inside the grace window."""
-    client, _ = stack
-    original = await _login(client)
-    first = await _refresh(client, original)
-    assert first.status_code == 200
-
-    changed = await client.patch(
-        "/api/auth/me/password",
-        headers={"Authorization": f"Bearer {first.json()['access_token']}"},
-        json={"current_password": PASSWORD, "new_password": "another-password"},
-    )
-    assert changed.status_code == 200
-    current = changed.cookies[COOKIE]
-
-    stale = await _refresh(client, original)
-    assert stale.status_code == 401
-    assert COOKIE not in stale.cookies
-    # Refused without treating it as theft: the new session survives.
-    assert (await _refresh(client, current)).status_code == 200

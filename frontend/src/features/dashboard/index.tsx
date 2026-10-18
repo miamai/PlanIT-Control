@@ -61,6 +61,7 @@ export function Dashboard() {
       GO: 0,
       CAUTION: 0,
       'NO-GO': 0,
+      'REVIEW REQUIRED': 0,
     }
     for (const bundle of bundles) {
       if (bundle.risk.recommendation) calls[bundle.risk.recommendation] += 1
