@@ -16,6 +16,9 @@ vi.mock('@/hooks/use-planit', () => ({
   useFleetBriefing: () => mocks.briefing(),
   useSiteBundles: () => mocks.fleet(),
 }))
+vi.mock('@/components/planit/alert-controls', () => ({
+  AlertControls: () => null,
+}))
 vi.mock('@/components/planit/planit-header', () => ({
   PlanitHeader: () => null,
 }))
@@ -124,7 +127,7 @@ describe('Briefing scope', () => {
       .element(screen.getByText(/ML source: as reported by the API/))
       .toBeVisible()
     expect(document.body.textContent).not.toMatch(
-      /Verified ML|Verified model|Shift coverage|Saved shifts|Back to latest/
+      /Verified ML|Verified model|Shift coverage|Saved shifts|Back to latest|Tomorrow’s priorities/
     )
   })
 

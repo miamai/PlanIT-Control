@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react'
 import { type Alert, type Site } from '@/api/types'
 import { ALERT_TYPE_ICON, relativeTime } from '@/lib/planit'
 import { cn } from '@/lib/utils'
+import { AlertControls } from './alert-controls'
 import { LightningCountdown } from './lightning-countdown'
 import { AlertSeverityStatus } from './risk-status'
 
@@ -85,6 +86,7 @@ export function AlertItem({
             </p>
           </details>
         )}
+        <AlertControls alert={alert} />
       </div>
     </div>
   )

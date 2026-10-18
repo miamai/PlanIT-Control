@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Main } from '@/components/layout/main'
+import { AlertControls } from '@/components/planit/alert-controls'
 import { AlertItem } from '@/components/planit/alert-item'
 import { HazardGauge } from '@/components/planit/hazard-gauge'
 import { LightningCountdown } from '@/components/planit/lightning-countdown'
@@ -74,7 +75,10 @@ export function SiteDetail({ siteId }: { siteId: string }) {
 
   const { site, risk, alerts, domains, strikes, timeline, history } = detail
   const lightningAlert = alerts.find(
-    (alert) => alert.type === 'lightning' && alert.allClearAt
+    (alert) =>
+      alert.type === 'lightning' &&
+      alert.actionCode === 'STOP_WORK' &&
+      alert.allClearAt
   )
 
   return (
@@ -95,6 +99,7 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                 strikeCount={lightningAlert.strikeCount}
                 distanceMi={lightningAlert.distanceMi}
               />
+              <AlertControls alert={lightningAlert} />
             </div>
           ) : null}
           <div className='flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between'>
@@ -336,6 +341,8 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                 <ReportList
                   reports={reportsQuery.reports}
                   isLoading={reportsQuery.isLoading}
+                  isError={reportsQuery.isError}
+                  onRetry={() => void reportsQuery.refresh()}
                   emptyMessage={
                     reportsQuery.canView ? 'No reports' : 'Visible to admins'
                   }

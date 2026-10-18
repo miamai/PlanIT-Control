@@ -159,6 +159,8 @@ export function Hazards() {
               <ReportList
                 reports={filtered}
                 isLoading={reportsQuery.isLoading}
+                isError={reportsQuery.isError}
+                onRetry={() => void reportsQuery.refresh()}
                 showSite
                 emptyMessage={
                   reportsQuery.canView

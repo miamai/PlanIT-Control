@@ -30,7 +30,7 @@ async def stack():
             UserAccount(
                 username="tester",
                 password_hash=hash_password(PASSWORD),
-                role=UserRole.CREW,
+                role=UserRole.USER,
                 status=UserStatus.ACTIVE,
             )
         )

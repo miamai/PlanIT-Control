@@ -6,17 +6,23 @@ import { REPORT_TYPE_ICON, REPORT_TYPE_LABEL, relativeTime } from '@/lib/planit'
 import { cn } from '@/lib/utils'
 import { useSites } from '@/hooks/use-planit'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ReportControls } from './report-controls'
 
 export function ReportList({
   reports,
   isLoading,
+  isError,
+  onRetry,
   emptyMessage = 'No reports',
   showSite = false,
   compact = false,
   className,
 }: {
   reports: HazardReport[] | undefined
+  isError?: boolean
+  onRetry?: () => void
   isLoading?: boolean
   emptyMessage?: string
   showSite?: boolean
@@ -35,6 +41,19 @@ export function ReportList({
       <div className={cn('space-y-3', className)}>
         <Skeleton className='h-16 w-full' />
         <Skeleton className='h-16 w-full' />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div role='alert' className='space-y-2 text-sm'>
+        <p>Could not load reports.</p>
+        {onRetry ? (
+          <Button size='sm' variant='outline' onClick={onRetry}>
+            Try again
+          </Button>
+        ) : null}
       </div>
     )
   }
@@ -121,6 +140,7 @@ export function ReportList({
                   </Link>
                 ) : null}
               </div>
+              <ReportControls report={report} />
             </div>
           </li>
         )

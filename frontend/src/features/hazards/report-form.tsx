@@ -128,7 +128,12 @@ function ReportFormFields({
     onSuccess: async (report) => {
       await queryClient.invalidateQueries({ queryKey: ['hazard-reports'] })
       // Wildlife reports are shared with nearby sites and can raise alerts.
-      await queryClient.invalidateQueries({ queryKey: planitKeys.alerts })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: planitKeys.alerts }),
+        queryClient.invalidateQueries({ queryKey: ['site'] }),
+        queryClient.invalidateQueries({ queryKey: planitKeys.rankings }),
+        queryClient.invalidateQueries({ queryKey: planitKeys.briefings }),
+      ])
       toastSuccess(
         'Hazard shared',
         `${REPORT_TYPE_LABEL[report.type]} report sent to the network.`

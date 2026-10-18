@@ -270,6 +270,7 @@ export function toAlert(dto: AlertDTO): Alert {
   const details = asRecord(dto.details)
   const type = alertTypeFromHazard(dto.hazard_type)
   const alert: Alert = {
+    acknowledged: dto.status === 'ACKNOWLEDGED',
     isDemo: details.synthetic_notice === true,
     actionCode: dto.action_code,
     sourceReference: dto.source_reference,

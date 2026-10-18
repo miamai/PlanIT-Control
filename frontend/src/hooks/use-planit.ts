@@ -96,6 +96,7 @@ export function usePlanitLiveFeed(): void {
         planitKeys.rankings,
         planitKeys.strikes,
         planitKeys.briefings,
+        ['hazard-reports'],
       ]) {
         void queryClient.invalidateQueries({ queryKey: key })
       }
@@ -206,6 +207,8 @@ export function useSiteBundles(): {
 export function useActiveAlerts(): {
   alerts: RankedAlert[]
   isLoading: boolean
+  isError: boolean
+  refresh: () => Promise<unknown>
 } {
   const { sites: siteList, isLoading: sitesLoading } = useSites()
   const alerts = useAlertsQuery()
@@ -224,7 +227,12 @@ export function useActiveAlerts(): {
       )
   }, [siteList, alerts.data])
 
-  return { alerts: ranked, isLoading: sitesLoading || alerts.isLoading }
+  return {
+    alerts: ranked,
+    isLoading: sitesLoading || alerts.isLoading,
+    isError: alerts.isError,
+    refresh: alerts.refetch,
+  }
 }
 
 /** Strikes recorded within the all-clear window, one marker per strike. */
@@ -319,7 +327,9 @@ export function useHazardReports(siteId?: string) {
     refetchInterval: REFETCH_MS,
   })
   return {
-    reports: query.data,
+    reports: canView ? query.data : undefined,
+    isError: canView && query.isError,
+    refresh: query.refetch,
     /** Epoch ms of the last successful fetch, for time-window filters. */
     fetchedAt: query.dataUpdatedAt,
     isLoading: canView && query.isLoading,

@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime, timedelta
 from typing import Annotated
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +23,7 @@ from app.models.entities import (
     EventOutbox,
     HazardObservation,
     HazardType,
+    LightningSiteState,
     ProviderRun,
     QualityStatus,
     RiskScore,
@@ -35,6 +36,7 @@ from app.schemas.domain import (
     BriefingRead,
     CrewReportCreate,
     CrewReportRead,
+    CrewReportUpdate,
     Envelope,
     ObservationRead,
     PageMeta,
@@ -231,9 +233,33 @@ async def update_alert(
     principal: AdminPrincipal,
     session: DbSession,
 ) -> Envelope[AlertRead]:
-    alert = await session.get(Alert, alert_id, with_for_update=True)
+    # Match the lightning worker's lock order: site state, then alert. A new
+    # strike must not race an admin sign-off against an obsolete countdown.
+    site_id = await session.scalar(select(Alert.site_id).where(Alert.id == alert_id))
+    if site_id is None:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    state = await session.get(LightningSiteState, site_id, with_for_update=True)
+    alert = await session.get(Alert, alert_id, with_for_update=True, populate_existing=True)
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
+    if (
+        body.status == AlertStatus.RESOLVED
+        and alert.hazard_type == HazardType.LIGHTNING
+        and alert.action_code == "STOP_WORK"
+        and alert.status != AlertStatus.RESOLVED
+    ):
+        eligible_at = state.all_clear_eligible_at if state else alert.expires_at
+        if eligible_at is not None and eligible_at.tzinfo is None:
+            eligible_at = eligible_at.replace(tzinfo=UTC)
+        if (
+            alert.status != AlertStatus.ALL_CLEAR_ELIGIBLE
+            or eligible_at is None
+            or eligible_at > datetime.now(UTC)
+            or (state is not None and state.alert_id != alert.id)
+        ):
+            raise HTTPException(
+                status_code=409, detail="Lightning all-clear is not yet eligible; refresh the alert"
+            )
     if body.status == AlertStatus.ALL_CLEAR_ELIGIBLE:
         raise HTTPException(
             status_code=422, detail="All-clear eligibility is controlled by the server rule"
@@ -330,6 +356,7 @@ async def create_report(
                 session.add(observation)
                 await session.flush()
                 await evaluate_observation(session, observation)
+    publish_event(session, "report.created", {"report_id": str(report.id)}, report.site_id)
     await session.commit()
     await session.refresh(report)
     return Envelope(data=CrewReportRead.model_validate(report))
@@ -358,6 +385,96 @@ async def list_reports(
         data=[CrewReportRead.model_validate(row) for row in reports],
         meta=PageMeta(limit=limit, offset=offset, total=total or 0),
     )
+
+
+@router.patch("/api/reports/{report_id}", response_model=Envelope[CrewReportRead], tags=["reports"])
+async def update_report(
+    report_id: uuid.UUID,
+    body: CrewReportUpdate,
+    _: AdminPrincipal,
+    session: DbSession,
+) -> Envelope[CrewReportRead]:
+    report = await session.get(CrewReport, report_id, with_for_update=True)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    report.description = body.description
+    # Wildlife reports are shared as observations. Keep their text consistent
+    # without changing the original location, time, or hazard assessment.
+    observations = (
+        await session.scalars(
+            select(HazardObservation)
+            .where(
+                HazardObservation.source == "crew_report",
+                HazardObservation.source_event_id == str(report.id),
+            )
+            .with_for_update()
+        )
+    ).all()
+    for observation in observations:
+        observation.metadata_ = {**observation.metadata_, "description": body.description}
+        derived = await session.scalar(
+            select(Alert)
+            .where(Alert.source_reference == f"observation:{observation.id}")
+            .with_for_update()
+        )
+        if derived:
+            derived.details = {**derived.details, "source_metadata": observation.metadata_}
+        publish_event(session, "report.updated", {"report_id": str(report.id)}, observation.site_id)
+    publish_event(session, "report.updated", {"report_id": str(report.id)}, report.site_id)
+    await session.commit()
+    await session.refresh(report)
+    return Envelope(data=CrewReportRead.model_validate(report))
+
+
+@router.delete("/api/reports/{report_id}", status_code=204, tags=["reports"])
+async def delete_report(
+    report_id: uuid.UUID,
+    principal: AdminPrincipal,
+    session: DbSession,
+) -> Response:
+    report = await session.get(CrewReport, report_id, with_for_update=True)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    observations = (
+        await session.scalars(
+            select(HazardObservation)
+            .where(
+                HazardObservation.source == "crew_report",
+                HazardObservation.source_event_id == str(report.id),
+            )
+            .with_for_update()
+        )
+    ).all()
+    for observation in observations:
+        derived = await session.scalar(
+            select(Alert)
+            .where(Alert.source_reference == f"observation:{observation.id}")
+            .with_for_update()
+        )
+        if derived and derived.status != AlertStatus.RESOLVED:
+            previous = derived.status
+            derived.status = AlertStatus.RESOLVED
+            derived.resolved_at = derived.updated_at = datetime.now(UTC)
+            session.add(
+                AlertTransition(
+                    alert_id=derived.id,
+                    from_status=previous,
+                    to_status=derived.status,
+                    reason=f"Source report {report.id} deleted by {principal.subject}",
+                )
+            )
+            publish_event(
+                session,
+                "alert.updated",
+                {"alert_id": str(derived.id), "status": derived.status.value},
+                derived.site_id,
+            )
+        await session.delete(observation)
+        publish_event(session, "report.deleted", {"report_id": str(report.id)}, observation.site_id)
+    publish_event(session, "report.deleted", {"report_id": str(report.id)}, report.site_id)
+    await session.delete(report)
+    await session.commit()
+    return Response(status_code=204)
 
 
 async def _latest_risk(session: AsyncSession, site_id: uuid.UUID) -> RiskScore | None:

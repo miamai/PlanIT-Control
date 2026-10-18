@@ -100,6 +100,7 @@ export type AlertSeverity = 'info' | 'warning' | 'critical'
 export type AlertStatus = 'active' | 'all-clear' | 'resolved'
 
 export interface Alert {
+  acknowledged?: boolean
   /** Existing backend action_code, passed through without inferring restrictions. */
   actionCode?: string | null
   sourceReference?: string | null

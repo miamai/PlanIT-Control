@@ -185,3 +185,31 @@ await streamPlanitEvents({
 ```
 
 The complete TypeScript reference is [`frontend-api.example.ts`](frontend-api.example.ts).
+
+### Administrative alert and report actions
+
+The current two-role policy is unchanged: `user` may submit reports, while
+`admin` may list all reports and manage them. Users cannot edit/delete even their
+own reports. All alert updates also require `admin`.
+
+- `PATCH /api/alerts/{alert_id}` accepts `status` (`ACKNOWLEDGED` or `RESOLVED`
+  for the UI) and a review `reason` (3–1000 characters). It records an alert
+  transition with the administrator's identity. For lightning `STOP_WORK`,
+  resolution requires server status `ALL_CLEAR_ELIGIBLE` and an elapsed current
+  countdown. A newer strike can make a previously displayed sign-off stale;
+  handle HTTP 409 by refreshing, without showing success. Eligibility itself
+  is controlled by the server, never set by the client.
+- `PATCH /api/reports/{report_id}` accepts only `description` (3–2000 characters
+  after trimming), returns the updated report envelope, and preserves original
+  type, pin, reporter and timestamp. Shared wildlife observation descriptions
+  and their alert source metadata are synchronized.
+- `DELETE /api/reports/{report_id}` returns 204 with no body. It removes the
+  report and its exact derived `crew_report` wildlife observations, resolves
+  only alerts sourced from those observations, and retains alert transition
+  history with the deleting administrator's identity. Other sources and reports
+  are unaffected. The UI asks for explicit confirmation before deletion.
+
+Unknown reports return 404; unauthorized roles return 403. No database schema
+migration or ML scoring change is required. Refresh reports, site observations,
+alerts and briefings after successful mutations; report events also use the
+existing event stream.

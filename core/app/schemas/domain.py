@@ -162,6 +162,20 @@ class CrewReportCreate(BaseModel):
         return value
 
 
+class CrewReportUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    description: str = Field(min_length=3, max_length=2000)
+
+    @field_validator("description")
+    @classmethod
+    def nonblank_description(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) < 3:
+            raise ValueError("description must contain at least three non-whitespace characters")
+        return value
+
+
 class CrewReportRead(ORMModel):
     id: uuid.UUID
     site_id: uuid.UUID

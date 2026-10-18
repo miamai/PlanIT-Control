@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Main } from '@/components/layout/main'
+import { AlertControls } from '@/components/planit/alert-controls'
 import { PageHeading } from '@/components/planit/page-heading'
 import { PanelHeader } from '@/components/planit/panel-header'
 import { PlanitHeader } from '@/components/planit/planit-header'
@@ -67,9 +68,6 @@ export function BriefingPage() {
       <PlanitHeader />
       <Main>
         <PageHeading title='Briefing' />
-        <p className='-mt-2 mb-5 text-sm leading-6 text-muted-foreground'>
-          Tomorrow’s priorities, with current work restrictions kept in view.
-        </p>
 
         <Card className='mb-4 gap-3 py-4'>
           <PanelHeader
@@ -290,6 +288,7 @@ function CurrentPriority({
             {alert.action ? (
               <p className='break-words'>{alert.action}</p>
             ) : null}
+            <AlertControls alert={alert} />
           </li>
         ))}
       </ul>
