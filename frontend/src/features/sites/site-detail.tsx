@@ -141,6 +141,12 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                   {risk.status === 'stale' ? ' · stale' : ''}
                 </span>
               ) : null}
+              {risk.decisionBasis[0] ? (
+                <span className='max-w-64 text-center text-[11px] text-muted-foreground'>
+                  {risk.decisionBasis[0]}. Environmental assessment only; work
+                  authorization is not granted by this dashboard.
+                </span>
+              ) : null}
             </div>
           </div>
         </Card>
@@ -223,7 +229,7 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                   <p className='text-sm text-muted-foreground'>
                     {risk.score === null
                       ? 'No hazard index for this site.'
-                      : 'The model did not report score drivers for this prediction.'}
+                      : 'Insufficient data: no valid score contribution explanation was reported for this prediction.'}
                   </p>
                 ) : null}
                 <ul className='space-y-3'>
@@ -232,7 +238,7 @@ export function SiteDetail({ siteId }: { siteId: string }) {
                       <div className='mb-1 flex items-center justify-between gap-2 text-sm'>
                         <span className='font-medium'>{reason.label}</span>
                         <span className='text-xs text-muted-foreground tabular-nums'>
-                          {Math.round(reason.contribution * 100)}%
+                          +{reason.impact.toFixed(1)} sub-score
                         </span>
                       </div>
                       <div

@@ -27,7 +27,7 @@ export function PrioritySites({ items }: { items: SiteBundle[] }) {
                 />
               </span>
               <span className='block text-xs leading-5 text-muted-foreground'>
-                {bundle.risk.reasons[0]?.label ?? 'No dominant driver'} ·{' '}
+                {bundle.risk.reasons[0]?.label ?? 'Insufficient driver data'} ·{' '}
                 {bundle.site.state}
               </span>
             </span>

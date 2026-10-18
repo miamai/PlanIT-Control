@@ -162,13 +162,15 @@ Components shouldn't know how risk is derived. The hooks memoize bundles with a
 
 ## 5. Screens
 
-Every 0–10 score (gauge, bars, map markers, charts) is colored by its call
+Every 0–10 score (gauge, bars, map markers, charts) is colored by its score band
 using the ML service's cut-offs: GO < 3.5, CAUTION 3.5–6.5, NO-GO ≥ 6.5
 (`GO_BELOW` / `CAUTION_BELOW` / `RISK_BANDS` in `src/lib/planit.ts`).
+The displayed live decision can instead be REVIEW REQUIRED for missing/stale
+data or NO-GO because of a current alert; that does not recolor the numeric score.
 
 ### 5.1 Dashboard (`/`)
 
-Admin overview: KPI cards (GO / CAUTION / NO-GO split, lightning
+Supervisor overview: KPI cards (GO / CAUTION / NO-GO / review split, lightning
 stop-work count with the next all-clear, alerts by severity, average index), a
 US risk map whose top 10 markers carry their rank number, the matching top-10
 list, and compact panels for active alerts, tomorrow's briefing and crew
@@ -177,7 +179,7 @@ reports. Clicking a marker or row opens the site.
 ### 5.2 Sites (`/sites`)
 
 Searchable, filterable portfolio list. Filters: recommendation (`GO` /
-`CAUTION` / `NO-GO`), plant type, and quick chips with counts. List and map tabs.
+`CAUTION` / `NO-GO` / `REVIEW REQUIRED`), plant type, and quick chips with counts. List and map tabs.
 Each row links to the site detail page.
 
 ### 5.3 Site detail (`/sites/$siteId`)
@@ -189,8 +191,9 @@ The combined risk picture for one location:
   bands, with the recommendation badge;
 - **Hazards** (`RiskPicture`): one row per domain (heat, lightning, flood,
   storm, wildfire, soil, wildlife) with the reading, a 4-step severity meter
-  and trend; source and detail are on hover;
-- **Score drivers**: contributor bars with per-domain `% of score`;
+  (or Unknown) and trend; source, timestamp-aligned severity basis, and detail are on hover;
+- **Score drivers**: typed TreeSHAP or rule-based contributor impacts on each
+  hazard's 0–10 sub-score; no overall-score percentage is invented;
 - a **14-day hazard-index chart** drawn over the GO / CAUTION / NO-GO bands and
   **24-hour weather** as three small charts (heat index with the 100°F line,
   wind, rainfall);

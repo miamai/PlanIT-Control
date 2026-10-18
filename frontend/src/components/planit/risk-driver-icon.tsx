@@ -13,7 +13,7 @@ export function RiskDriverIcon({
   if (!driver) return null
 
   const Icon = DOMAIN_ICON[driver.domain]
-  const description = `Top risk driver: ${driver.label} · ${Math.round(driver.contribution * 100)}% of score`
+  const description = `Top risk driver: ${driver.label} · +${driver.impact.toFixed(1)} to its ${driver.domain} sub-score`
 
   return (
     <span

@@ -262,6 +262,7 @@ export function useSiteDetail(siteId: string) {
     staleTime: 5 * 60_000,
   })
   const alertsQuery = useAlertsQuery()
+  const hazardRows = hazardsQuery.data
 
   const alerts = useMemo(
     () => (alertsQuery.data ?? []).filter((alert) => alert.siteId === siteId),
@@ -272,24 +273,22 @@ export function useSiteDetail(siteId: string) {
     const trend = trendFromHistory(historyQuery.data ?? [])
     return trend ? { ...riskQuery.data, trend } : riskQuery.data
   }, [riskQuery.data, historyQuery.data])
-  const domains = useMemo(
-    () => buildDomains(hazardsQuery.data ?? [], risk?.subScores ?? {}, alerts),
-    [hazardsQuery.data, risk?.subScores, alerts]
-  )
+  const riskSubScores = risk?.subScores
+  const domains = buildDomains(hazardRows ?? [], riskSubScores ?? {}, alerts)
   const hazardsFetchedAt = hazardsQuery.dataUpdatedAt
   const timeline = useMemo(() => {
     const dayAgo = hazardsFetchedAt - 24 * 60 * 60 * 1000
-    return hazardsQuery.data
+    return hazardRows
       ? buildTimeline(
-          hazardsQuery.data.filter(
+          hazardRows.filter(
             (row) => new Date(row.observed_at).getTime() >= dayAgo
           )
         )
       : undefined
-  }, [hazardsQuery.data, hazardsFetchedAt])
+  }, [hazardRows, hazardsFetchedAt])
   const strikes = useMemo(
-    () => toSiteStrikes(hazardsQuery.data ?? []),
-    [hazardsQuery.data]
+    () => toSiteStrikes(hazardRows ?? []),
+    [hazardRows]
   )
 
   return {

@@ -19,7 +19,7 @@ function SeverityMeter({ severity }: { severity: SeverityLevel }) {
       role='meter'
       aria-valuemin={1}
       aria-valuemax={LEVELS.length}
-      aria-valuenow={level + 1}
+      aria-valuenow={severity === 'unknown' ? undefined : level + 1}
       aria-label={`${SEVERITY_LABEL[severity]} severity`}
     >
       {LEVELS.map((step, index) => (
@@ -27,7 +27,11 @@ function SeverityMeter({ severity }: { severity: SeverityLevel }) {
           key={step}
           className={cn(
             'h-1.5 flex-1 rounded-full',
-            index <= level ? SEVERITY_DOT[severity] : 'bg-muted'
+            severity === 'unknown'
+              ? 'border border-dashed border-muted-foreground/50'
+              : index <= level
+                ? SEVERITY_DOT[severity]
+                : 'bg-muted'
           )}
         />
       ))}

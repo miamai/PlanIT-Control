@@ -56,13 +56,10 @@ CAUTION_BELOW = 6.5
 HIDDEN_REASONS = {"doy_sin", "doy_cos", "region", "has_gauge", "has_tide"}
 
 # Wildlife heuristic (no trained model: there is no usable incident history).
-WILDLIFE_WEIGHT = {"alligator": 1.0, "venomous_snake": 1.0, "bear": 0.8}
-WILDLIFE_LABEL = {"alligator": "Alligator", "venomous_snake": "Venomous snake", "bear": "Bear"}
-WILDLIFE_BASE_P = 0.08          # max chance contribution of one animal group from sightings alone
+WILDLIFE_BASE_P = 0.08          # max chance contribution from nearby sightings alone
 WILDLIFE_SATURATE = 20          # sightings in that calendar month (2015-2025) that count as "common"
 CREW_REPORT_P = 0.5             # a same-day crew report
 CREW_REPORT_DECAY_DAYS = 3.0
-REPTILES = {"alligator", "venomous_snake"}
 
 
 def recommendation(index: float) -> str:
@@ -164,7 +161,8 @@ class HazardModels:
                 except (ValueError, TypeError):
                     pass
                 out.append({"hazard": h, "factor": name, "value": None if value is None else round(value, 2),
-                            "impact": round(impact, 2), "text": text})
+                            "impact": round(impact, 2), "text": text,
+                            "explanation_method": "tree_shap"})
         out.sort(key=lambda r: r["impact"], reverse=True)
         # One reason per factor, and at most one "this site's history" reason so today's
         # conditions aren't crowded out.
@@ -183,30 +181,20 @@ class HazardModels:
     def wildlife(self, site: dict, day: Date, t_max_f: float | None,
                  crew_reports: list[dict] | None = None) -> tuple[float, list[dict]]:
         s = self.sightings[(self.sightings["site_id"] == site["site_id"]) & (self.sightings["month"] == day.month)]
-        wet = bool(site.get("fema_sfha") == 1.0 or pd.notna(site.get("tide_station")))
         parts, reasons = [], []
-        for group, weight in WILDLIFE_WEIGHT.items():
-            n = int(s.loc[s["group"] == group, "count"].sum())
-            if n == 0:
-                continue
+        n = int(s["count"].sum())
+        if n:
             presence = min(1.0, math.log1p(n) / math.log1p(WILDLIFE_SATURATE))
-            factor = 1.0
-            if group in REPTILES and t_max_f is not None and not math.isnan(t_max_f):
-                if t_max_f < 60:
-                    factor = 0.2
-                elif t_max_f < 80:
-                    factor = 0.5 + 0.5 * (t_max_f - 60) / 20
-                else:
-                    factor = 1 + min(0.5, (t_max_f - 80) / 20)  # reptiles more active above ~80°F
-                if wet:
-                    factor *= 1.2
-            p = WILDLIFE_BASE_P * weight * presence * factor
+            p = WILDLIFE_BASE_P * presence
             parts.append(p)
-            reasons.append({"hazard": "wildlife", "factor": f"gbif_{group}", "value": n,
+            reasons.append({"hazard": "wildlife", "factor": "gbif_wildlife", "value": n,
                             "impact": round(10 * p, 2),
-                            "text": f"{WILDLIFE_LABEL[group]} sightings recorded nearby in {day:%B} ({n} since 2015)"})
+                            "explanation_method": "rule_based",
+                            "text": f"Wildlife sightings recorded nearby in {day:%B} ({n} since 2015)"})
         now = datetime.combine(day, datetime.min.time())
         for r in crew_reports or []:
+            if r.get("hazard_type") != "wildlife":
+                continue
             try:
                 when = datetime.fromisoformat(str(r.get("reported_at")).replace("Z", "+00:00")).replace(tzinfo=None)
             except ValueError:
@@ -216,7 +204,8 @@ class HazardModels:
             parts.append(p)
             reasons.append({"hazard": "wildlife", "factor": "crew_report", "value": round(age, 1),
                             "impact": round(10 * p, 2),
-                            "text": f"Crew reported {r.get('animal', 'wildlife')} " + (
+                            "explanation_method": "rule_based",
+                            "text": "Crew reported wildlife " + (
                                 "within the last day" if age < 1 else f"{age:.0f} days ago")})
         p_total = 1 - math.prod(1 - p for p in parts) if parts else 0.0
         reasons.sort(key=lambda r: r["impact"], reverse=True)

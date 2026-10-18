@@ -991,6 +991,23 @@
           "quality_status": {
             "$ref": "#/components/schemas/QualityStatus"
           },
+          "severity": {
+            "default": "UNKNOWN",
+            "enum": [
+              "LOW",
+              "MODERATE",
+              "HIGH",
+              "CRITICAL",
+              "UNKNOWN"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "severity_basis": {
+            "default": "No severity assessment was provided",
+            "title": "Severity Basis",
+            "type": "string"
+          },
           "site_id": {
             "format": "uuid",
             "title": "Site Id",
@@ -1105,6 +1122,62 @@
         "title": "QualityStatus",
         "type": "string"
       },
+      "RiskDriverRead": {
+        "properties": {
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "explanation_method": {
+            "enum": [
+              "tree_shap",
+              "rule_based"
+            ],
+            "title": "Explanation Method",
+            "type": "string"
+          },
+          "hazard": {
+            "title": "Hazard",
+            "type": "string"
+          },
+          "impact": {
+            "exclusiveMinimum": 0.0,
+            "title": "Impact",
+            "type": "number"
+          },
+          "severity": {
+            "enum": [
+              "LOW",
+              "MODERATE",
+              "HIGH",
+              "CRITICAL",
+              "UNKNOWN"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "hazard",
+          "severity",
+          "impact",
+          "explanation",
+          "explanation_method"
+        ],
+        "title": "RiskDriverRead",
+        "type": "object"
+      },
       "RiskPredictionCreate": {
         "properties": {
           "contributing_factors": {
@@ -1159,6 +1232,29 @@
       },
       "RiskRanking": {
         "properties": {
+          "decision": {
+            "enum": [
+              "GO",
+              "CAUTION",
+              "NO_GO",
+              "REVIEW_REQUIRED"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "decision_basis": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Decision Basis",
+            "type": "array"
+          },
+          "operational_authorization": {
+            "const": "NOT_GRANTED",
+            "default": "NOT_GRANTED",
+            "title": "Operational Authorization",
+            "type": "string"
+          },
           "risk": {
             "anyOf": [
               {
@@ -1180,7 +1276,9 @@
         "required": [
           "site",
           "risk",
-          "status"
+          "status",
+          "decision",
+          "decision_basis"
         ],
         "title": "RiskRanking",
         "type": "object"
@@ -1224,6 +1322,13 @@
             "title": "Site Id",
             "type": "string"
           },
+          "top_drivers": {
+            "items": {
+              "$ref": "#/components/schemas/RiskDriverRead"
+            },
+            "title": "Top Drivers",
+            "type": "array"
+          },
           "valid_for_seconds": {
             "title": "Valid For Seconds",
             "type": "integer"
@@ -1245,6 +1350,29 @@
       },
       "RiskResult": {
         "properties": {
+          "decision": {
+            "enum": [
+              "GO",
+              "CAUTION",
+              "NO_GO",
+              "REVIEW_REQUIRED"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "decision_basis": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Decision Basis",
+            "type": "array"
+          },
+          "operational_authorization": {
+            "const": "NOT_GRANTED",
+            "default": "NOT_GRANTED",
+            "title": "Operational Authorization",
+            "type": "string"
+          },
           "score": {
             "anyOf": [
               {
@@ -1268,7 +1396,9 @@
         "required": [
           "site_id",
           "status",
-          "score"
+          "score",
+          "decision",
+          "decision_basis"
         ],
         "title": "RiskResult",
         "type": "object"

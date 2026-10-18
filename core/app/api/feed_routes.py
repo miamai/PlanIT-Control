@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import UserPrincipal
+from app.core.config import Settings, get_settings
 from app.core.database import get_session
 from app.models.entities import HazardObservation, HazardType, ProviderRun, Site
 from app.schemas.domain import (
@@ -17,9 +18,18 @@ from app.schemas.domain import (
     SiteObservationRead,
     SiteRead,
 )
+from app.services.hazard_severity import assess_observation
 
 router = APIRouter()
 DbSession = Annotated[AsyncSession, Depends(get_session)]
+
+
+def _observation_read(observation: HazardObservation, settings: Settings) -> ObservationRead:
+    assessment = assess_observation(observation, settings)
+    return ObservationRead.model_validate(observation).model_copy(
+        update={"severity": assessment.severity, "severity_basis": assessment.basis}
+    )
+
 
 FEEDS = {
     "weather": (
@@ -52,6 +62,7 @@ async def _feed(
     since: datetime | None,
     limit: int,
     offset: int,
+    settings: Settings,
 ) -> Envelope[list[SiteObservationRead]]:
     hazard_types, providers, data_mode = FEEDS[name]
     normalized_states = _normalize_states(states)
@@ -87,7 +98,7 @@ async def _feed(
         data=[
             SiteObservationRead(
                 site=SiteRead.model_validate(site),
-                observation=ObservationRead.model_validate(observation),
+                observation=_observation_read(observation, settings),
             )
             for observation, site in rows
         ],
@@ -111,8 +122,9 @@ def feed_endpoint(name: str):
         since: datetime | None = None,
         limit: int = Query(100, ge=1, le=500),
         offset: int = Query(0, ge=0),
+        settings: Settings = Depends(get_settings),
     ) -> Envelope[list[SiteObservationRead]]:
-        return await _feed(name, session, state or [], since, limit, offset)
+        return await _feed(name, session, state or [], since, limit, offset, settings)
 
     endpoint.__name__ = f"{name}_feed"
     return endpoint

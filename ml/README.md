@@ -61,7 +61,8 @@ Response (the agreed shape, plus `hazard` on each reason and `overrides` when an
   "site_id": "EIA-59145", "date": "2026-10-17", "hazard_index": 5.8, "recommendation": "no-go",
   "sub_scores": {"heat": 0.0, "convective": 0.0, "flood": 0.0, "wildfire": 1.3, "wildlife": 5.2},
   "reasons": [{"hazard": "wildlife", "factor": "crew_report", "value": 0.4, "impact": 4.35,
-               "text": "Crew reported alligator within the last day"}],
+               "explanation_method": "rule_based",
+               "text": "Crew reported wildlife within the last day"}],
   "model_version": "v1",
   "overrides": [{"type": "lightning", "action": "no-go", "effect": "no-go"}]
 }
@@ -72,7 +73,8 @@ Response (the agreed shape, plus `hazard` on each reason and `overrides` when an
   (cut-offs 3.5 and 6.5). A's alerts with `action` `no-go`/`stop-work` force no-go, `caution`
   raises go to caution. Alerts never change the numbers.
 - **Reasons**: per-feature LightGBM contributions (TreeSHAP), converted to "how many sub-score
-  points this feature adds", top 5 across hazards. Seasonal/region context features are not shown.
+  points this feature adds", top 5 across hazards. They are labeled `tree_shap`; wildlife reasons
+  are labeled `rule_based`. Seasonal/region context features are not shown.
 
 ## Hourly work plan
 
@@ -224,8 +226,6 @@ index say no-go far too often. Three convective labels compared on 2025, origina
 - **FEMA**: `hazards.fema.gov` resets connections from some networks; `09_fema.py` falls back to
   Esri's Living Atlas copy of the NFHL. Points with no polygon are recorded as `unmapped/X`.
 - **Distance to river** is approximated by distance to the nearest USGS stream monitoring location.
-- **Wetland distance** for the wildlife score isn't available; FEMA flood-hazard area or a tide
-  station nearby is used as a "wet site" proxy.
 - **Live gauge and tide inputs**: gauge stage uses NWS observed + forecast stage (persisted to the
   target day); tides use CO-OPS predicted high water vs MHHW (astronomical only, no surge), whereas
   training used observed water levels.

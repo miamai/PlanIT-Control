@@ -36,7 +36,13 @@ export function Sites() {
   const [plantType, setPlantType] = useState(ALL)
 
   const counts = useMemo(() => {
-    const base = { GO: 0, CAUTION: 0, 'NO-GO': 0, [UNSCORED]: 0 }
+    const base = {
+      GO: 0,
+      CAUTION: 0,
+      'NO-GO': 0,
+      'REVIEW REQUIRED': 0,
+      [UNSCORED]: 0,
+    }
     for (const bundle of bundles)
       base[bundle.risk.recommendation ?? UNSCORED] += 1
     return base
@@ -87,7 +93,9 @@ export function Sites() {
 
         <div className='mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
           <div className='flex flex-wrap gap-2'>
-            {(['NO-GO', 'CAUTION', 'GO'] as const).map((call) => (
+            {(
+              ['NO-GO', 'CAUTION', 'GO', 'REVIEW REQUIRED'] as const
+            ).map((call) => (
               <button
                 key={call}
                 type='button'

@@ -46,8 +46,10 @@ from app.schemas.domain import (
 )
 from app.services.backfill import BACKFILL_SCORE_SOURCE
 from app.services.database_check import inspect_database
+from app.services.decision import assess_decision
 from app.services.eia import import_plants, parse_cached_sites
 from app.services.events import publish_event
+from app.services.hazard_severity import assess_observation
 from app.services.ingestion import run_provider
 from app.services.ml import MLClient
 from app.services.risk import historical_features
@@ -56,6 +58,18 @@ from app.utils.geo import haversine_miles
 
 router = APIRouter()
 DbSession = Annotated[AsyncSession, Depends(get_session)]
+OPEN_ALERT_STATUSES = (
+    AlertStatus.ACTIVE,
+    AlertStatus.ACKNOWLEDGED,
+    AlertStatus.ALL_CLEAR_ELIGIBLE,
+)
+
+
+def _observation_read(observation: HazardObservation, settings: Settings) -> ObservationRead:
+    assessment = assess_observation(observation, settings)
+    return ObservationRead.model_validate(observation).model_copy(
+        update={"severity": assessment.severity, "severity_basis": assessment.basis}
+    )
 
 
 @router.get("/health", tags=["system"])
@@ -136,6 +150,7 @@ async def site_hazards(
     since: datetime | None = None,
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
+    settings: Settings = Depends(get_settings),
 ) -> Envelope[list[ObservationRead]]:
     filters = [HazardObservation.site_id == site_id]
     if hazard_type:
@@ -155,7 +170,7 @@ async def site_hazards(
         )
     ).all()
     return Envelope(
-        data=[ObservationRead.model_validate(row) for row in rows],
+        data=[_observation_read(row, settings) for row in rows],
         meta=PageMeta(limit=limit, offset=offset, total=total or 0),
     )
 
@@ -370,6 +385,19 @@ async def _latest_risk(session: AsyncSession, site_id: uuid.UUID) -> RiskScore |
     )
 
 
+async def _active_alerts(session: AsyncSession, site_id: uuid.UUID) -> list[Alert]:
+    return list(
+        (
+            await session.scalars(
+                select(Alert).where(
+                    Alert.site_id == site_id,
+                    Alert.status.in_(OPEN_ALERT_STATUSES),
+                )
+            )
+        ).all()
+    )
+
+
 @router.get("/api/sites/{site_id}/risk", response_model=Envelope[RiskResult], tags=["risk"])
 async def site_risk(
     site_id: uuid.UUID, _: UserPrincipal, session: DbSession
@@ -379,11 +407,16 @@ async def site_risk(
         raise HTTPException(status_code=404, detail="Site not found")
     score = await _latest_risk(session, site_id)
     status = _risk_status(site, score)
+    decision = assess_decision(
+        score.score if score else None, status, await _active_alerts(session, site_id)
+    )
     return Envelope(
         data=RiskResult(
             site_id=site_id,
             status=status,
-            score=RiskRead.model_validate(score) if score else None,
+            score=RiskRead.from_score(score) if score else None,
+            decision=decision.decision,
+            decision_basis=decision.basis,
         )
     )
 
@@ -416,7 +449,7 @@ async def site_risk_history(
     latest_per_day: dict = {}
     for row in rows:
         latest_per_day.setdefault(row.prediction_date, row)
-    return Envelope(data=[RiskRead.model_validate(row) for row in latest_per_day.values()])
+    return Envelope(data=[RiskRead.from_score(row) for row in latest_per_day.values()])
 
 
 @router.get("/api/risk/rankings", response_model=Envelope[list[RiskRanking]], tags=["risk"])
@@ -439,14 +472,26 @@ async def risk_rankings(_: UserPrincipal, session: DbSession) -> Envelope[list[R
         )
     ).all()
     latest = {score.site_id: score for score in latest_scores}
+    active_alerts = (
+        await session.scalars(select(Alert).where(Alert.status.in_(OPEN_ALERT_STATUSES)))
+    ).all()
+    alerts_by_site: dict[uuid.UUID, list[Alert]] = {}
+    for alert in active_alerts:
+        alerts_by_site.setdefault(alert.site_id, []).append(alert)
     rankings = []
     for site in sites:
         score = latest.get(site.id)
+        status = _risk_status(site, score)
+        decision = assess_decision(
+            score.score if score else None, status, alerts_by_site.get(site.id, [])
+        )
         rankings.append(
             RiskRanking(
                 site=SiteRead.model_validate(site),
-                risk=RiskRead.model_validate(score) if score else None,
-                status=_risk_status(site, score),
+                risk=RiskRead.from_score(score) if score else None,
+                status=status,
+                decision=decision.decision,
+                decision_basis=decision.basis,
             )
         )
     rankings.sort(key=lambda row: row.risk.score if row.risk else -1, reverse=True)
@@ -485,7 +530,7 @@ async def store_risk_prediction(
         )
     )
     if existing:
-        return Envelope(data=RiskRead.model_validate(existing))
+        return Envelope(data=RiskRead.from_score(existing))
     score = RiskScore(**body.model_dump(), score_source="model")
     session.add(score)
     await session.flush()
@@ -497,16 +542,18 @@ async def store_risk_prediction(
     )
     await session.commit()
     await session.refresh(score)
-    return Envelope(data=RiskRead.model_validate(score))
+    return Envelope(data=RiskRead.from_score(score))
 
 
 def _risk_status(site: Site, score: RiskScore | None) -> str:
     if score:
+        now = datetime.now(UTC)
         generated = score.generated_at
         if generated.tzinfo is None:  # SQLite drops the zone; every stored time is UTC
             generated = generated.replace(tzinfo=UTC)
         expires = generated + timedelta(seconds=score.valid_for_seconds)
-        return "available" if expires > datetime.now(UTC) else "stale"
+        local_today = now.astimezone(ZoneInfo(site.timezone)).date()
+        return "available" if expires > now and score.prediction_date >= local_today else "stale"
     return "unsupported" if not site.ml_supported else "missing"
 
 

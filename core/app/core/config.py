@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -50,8 +50,12 @@ class Settings(BaseSettings):
     ml_briefing_backend: Literal["gemini", "template", "auto"] = "gemini"
 
     alert_threshold_profile: Literal["disabled", "demo", "approved"] = "demo"
+    heat_moderate_threshold_f: float = 91.0
     heat_high_threshold_f: float = 103.0
     heat_critical_threshold_f: float = 125.0
+    flood_rainfall_moderate_mm_24h: float = 25.4
+    flood_rainfall_high_mm_24h: float = 50.8
+    flood_rainfall_critical_mm_24h: float = 101.6
     soil_moderate_rainfall_mm_72h: float = 50.8
     soil_high_rainfall_mm_72h: float = 101.6
 
@@ -69,6 +73,26 @@ class Settings(BaseSettings):
         # equivalent `ssl=require` query argument.
         value = value.replace("?sslmode=", "?ssl=").replace("&sslmode=", "&ssl=")
         return value
+
+    @model_validator(mode="after")
+    def ordered_hazard_thresholds(self) -> Settings:
+        heat = (
+            self.heat_moderate_threshold_f,
+            self.heat_high_threshold_f,
+            self.heat_critical_threshold_f,
+        )
+        flood = (
+            self.flood_rainfall_moderate_mm_24h,
+            self.flood_rainfall_high_mm_24h,
+            self.flood_rainfall_critical_mm_24h,
+        )
+        if not heat[0] < heat[1] < heat[2]:
+            raise ValueError("Heat severity thresholds must be strictly increasing")
+        if not flood[0] < flood[1] < flood[2]:
+            raise ValueError("Flood-indicator thresholds must be strictly increasing")
+        if not self.soil_moderate_rainfall_mm_72h < self.soil_high_rainfall_mm_72h:
+            raise ValueError("Soil proxy severity thresholds must be strictly increasing")
+        return self
 
     def validate_runtime(self) -> None:
         if self.environment == "production" and (

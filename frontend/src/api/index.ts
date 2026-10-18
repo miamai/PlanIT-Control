@@ -56,7 +56,13 @@ export async function listSiteRisks(): Promise<SiteRiskRow[]> {
   const rankings = await unwrapData(api.GET('/api/risk/rankings'))
   return rankings.map((row) => ({
     site: toSite(row.site),
-    risk: toSiteRisk(row.site.id, row.status, row.risk),
+    risk: toSiteRisk(
+      row.site.id,
+      row.status,
+      row.risk,
+      row.decision,
+      row.decision_basis
+    ),
   }))
 }
 
@@ -99,7 +105,15 @@ export async function getSiteRisk(
       })
     )
   )
-  return result ? toSiteRisk(siteId, result.status, result.score) : undefined
+  return result
+    ? toSiteRisk(
+        siteId,
+        result.status,
+        result.score,
+        result.decision,
+        result.decision_basis
+      )
+    : undefined
 }
 
 const OPEN_ALERT_STATUSES = [

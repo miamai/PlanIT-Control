@@ -884,6 +884,17 @@ export interface components {
             observed_at: string;
             quality_status: components["schemas"]["QualityStatus"];
             /**
+             * Severity
+             * @default UNKNOWN
+             * @enum {string}
+             */
+            severity: "LOW" | "MODERATE" | "HIGH" | "CRITICAL" | "UNKNOWN";
+            /**
+             * Severity Basis
+             * @default No severity assessment was provided
+             */
+            severity_basis: string;
+            /**
              * Site Id
              * Format: uuid
              */
@@ -918,6 +929,27 @@ export interface components {
          * @enum {string}
          */
         QualityStatus: "verified" | "provisional" | "stale" | "estimated" | "synthetic";
+        /** RiskDriverRead */
+        RiskDriverRead: {
+            /** Explanation */
+            explanation: string;
+            /**
+             * Explanation Method
+             * @enum {string}
+             */
+            explanation_method: "tree_shap" | "rule_based";
+            /** Hazard */
+            hazard: string;
+            /** Impact */
+            impact: number;
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "LOW" | "MODERATE" | "HIGH" | "CRITICAL" | "UNKNOWN";
+            /** Value */
+            value?: number | null;
+        };
         /** RiskPredictionCreate */
         RiskPredictionCreate: {
             /** Contributing Factors */
@@ -948,6 +980,19 @@ export interface components {
         };
         /** RiskRanking */
         RiskRanking: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "GO" | "CAUTION" | "NO_GO" | "REVIEW_REQUIRED";
+            /** Decision Basis */
+            decision_basis: string[];
+            /**
+             * Operational Authorization
+             * @default NOT_GRANTED
+             * @constant
+             */
+            operational_authorization: "NOT_GRANTED";
             risk: components["schemas"]["RiskRead"] | null;
             site: components["schemas"]["SiteRead"];
             /** Status */
@@ -985,11 +1030,26 @@ export interface components {
              * Format: uuid
              */
             site_id: string;
+            /** Top Drivers */
+            top_drivers?: components["schemas"]["RiskDriverRead"][];
             /** Valid For Seconds */
             valid_for_seconds: number;
         };
         /** RiskResult */
         RiskResult: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "GO" | "CAUTION" | "NO_GO" | "REVIEW_REQUIRED";
+            /** Decision Basis */
+            decision_basis: string[];
+            /**
+             * Operational Authorization
+             * @default NOT_GRANTED
+             * @constant
+             */
+            operational_authorization: "NOT_GRANTED";
             score: components["schemas"]["RiskRead"] | null;
             /**
              * Site Id

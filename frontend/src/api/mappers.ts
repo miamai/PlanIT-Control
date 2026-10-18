@@ -95,7 +95,13 @@ const DOMAIN_LABEL: Record<HazardDomain, string> = {
   wildlife: 'Wildlife',
 }
 
-const SEVERITY_ORDER: SeverityLevel[] = ['low', 'moderate', 'high', 'extreme']
+const SEVERITY_ORDER: SeverityLevel[] = [
+  'unknown',
+  'low',
+  'moderate',
+  'high',
+  'extreme',
+]
 
 function maxSeverity(a: SeverityLevel, b: SeverityLevel): SeverityLevel {
   return SEVERITY_ORDER.indexOf(a) >= SEVERITY_ORDER.indexOf(b) ? a : b
@@ -107,6 +113,18 @@ function severityFromScore(score: number): SeverityLevel {
   if (score >= 5) return 'high'
   if (score >= 2.5) return 'moderate'
   return 'low'
+}
+
+function severityFromBackend(
+  severity: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL' | 'UNKNOWN'
+): SeverityLevel {
+  return {
+    LOW: 'low',
+    MODERATE: 'moderate',
+    HIGH: 'high',
+    CRITICAL: 'extreme',
+    UNKNOWN: 'unknown',
+  }[severity] as SeverityLevel
 }
 
 const ALERT_SEVERITY: Record<Schemas['Severity'], AlertSeverity> = {
@@ -142,6 +160,10 @@ const RECOMMENDATION: Record<string, Recommendation> = {
   go: 'GO',
   caution: 'CAUTION',
   'no-go': 'NO-GO',
+  GO: 'GO',
+  CAUTION: 'CAUTION',
+  NO_GO: 'NO-GO',
+  REVIEW_REQUIRED: 'REVIEW REQUIRED',
 }
 
 function toRiskStatus(status: string): RiskStatus {
@@ -152,26 +174,36 @@ function toRiskStatus(status: string): RiskStatus {
     : 'missing'
 }
 
-function toReasons(factors: Json): ReasonContribution[] {
-  const raw = asArray(factors.reasons)
-    .map((reason) => ({
-      domain: domainFromHazard(asString(reason.hazard) ?? ''),
-      impact: asNumber(reason.impact) ?? 0,
-      text: asString(reason.text) ?? asString(reason.factor) ?? '',
+function toReasons(dto: RiskDTO): ReasonContribution[] {
+  const raw = (dto.top_drivers ?? [])
+    .map((driver) => ({
+      domain: domainFromHazard(driver.hazard),
+      severity: severityFromBackend(driver.severity),
+      impact: driver.impact,
+      text: driver.explanation,
+      method: driver.explanation_method,
     }))
-    .filter(
-      (
-        reason
-      ): reason is { domain: HazardDomain; impact: number; text: string } =>
-        !!reason.domain && reason.impact > 0 && !!reason.text
+    .filter((driver): driver is typeof driver & { domain: HazardDomain } =>
+      Boolean(driver.domain && driver.impact > 0 && driver.text)
     )
   const total = raw.reduce((sum, reason) => sum + reason.impact, 0)
   return raw.map((reason) => ({
     domain: reason.domain,
     label: reason.text,
+    severity: reason.severity,
     contribution: total > 0 ? reason.impact / total : 0,
-    detail: `${DOMAIN_LABEL[reason.domain]} · +${reason.impact.toFixed(1)} to its sub-score`,
+    impact: reason.impact,
+    explanationMethod: reason.method,
+    detail: `${DOMAIN_LABEL[reason.domain]} · ${SEVERITY_LABEL_TEXT[reason.severity]} · +${reason.impact.toFixed(1)} to its sub-score · ${reason.method === 'tree_shap' ? 'ML TreeSHAP explanation' : 'rule-based contribution'}`,
   }))
+}
+
+const SEVERITY_LABEL_TEXT: Record<SeverityLevel, string> = {
+  low: 'Low',
+  moderate: 'Moderate',
+  high: 'High',
+  extreme: 'Critical',
+  unknown: 'Unknown',
 }
 
 function toSubScores(factors: Json): SiteRisk['subScores'] {
@@ -206,7 +238,9 @@ function toWorkPlan(factors: Json): string[] {
 export function toSiteRisk(
   siteId: string,
   status: string,
-  dto: RiskDTO | null | undefined
+  dto: RiskDTO | null | undefined,
+  decision?: 'GO' | 'CAUTION' | 'NO_GO' | 'REVIEW_REQUIRED',
+  decisionBasis: string[] = []
 ): SiteRisk {
   const riskStatus = toRiskStatus(status)
   if (!dto) {
@@ -215,7 +249,8 @@ export function toSiteRisk(
       status: riskStatus,
       score: null,
       severity: null,
-      recommendation: null,
+      recommendation: RECOMMENDATION[decision ?? ''] ?? null,
+      decisionBasis,
       reasons: [],
       subScores: {},
       workPlan: [],
@@ -228,12 +263,13 @@ export function toSiteRisk(
     score: dto.score,
     severity: severityFromScore(dto.score),
     recommendation:
-      RECOMMENDATION[asString(factors.recommendation) ?? ''] ??
-      recommendationFromScore(dto.score),
-    reasons: toReasons(factors),
+      RECOMMENDATION[decision ?? ''] ?? recommendationFromScore(dto.score),
+    decisionBasis,
+    reasons: toReasons(dto),
     subScores: toSubScores(factors),
     workPlan: toWorkPlan(factors),
     modelVersion: dto.model_version,
+    scoreSource: dto.score_source,
     predictionDate: dto.prediction_date,
     updatedAt: dto.generated_at,
   }
@@ -374,8 +410,9 @@ function describeObservation(dto: ObservationDTO): {
 
 /**
  * One row per hazard domain that has any evidence: a stored observation, a
- * model sub-score, or an active alert. Severity is the worst of the model
- * sub-score and the active alerts; a domain with only an observation is "low".
+ * model sub-score, or an active alert. When an observation is displayed, its
+ * backend-classified severity is used so the value and label always describe
+ * the same metric and timestamp. Alerts may raise that severity.
  */
 export function buildDomains(
   observations: ObservationDTO[],
@@ -416,20 +453,26 @@ export function buildDomains(
     .map((domain): DomainStatus => {
       const observation = latest.get(domain)
       const subScore = subScores[domain]
-      let severity: SeverityLevel = 'low'
-      if (subScore !== undefined)
-        severity = maxSeverity(severity, severityFromScore(subScore))
+      let severity: SeverityLevel = observation
+        ? severityFromBackend(observation.severity)
+        : subScore !== undefined
+          ? severityFromScore(subScore)
+          : 'unknown'
       const fromAlert = alertSeverity.get(domain)
       if (fromAlert) severity = maxSeverity(severity, fromAlert)
 
       const described = observation ? describeObservation(observation) : null
       const parts: string[] = []
       if (described) parts.push(described.label)
+      if (observation) parts.push(observation.severity_basis)
       if (subScore !== undefined) parts.push(`model ${subScore.toFixed(1)}/10`)
       if (fromAlert) parts.push('active alert')
       return {
         domain,
-        label: DOMAIN_LABEL[domain],
+        label:
+          observation?.metric_name === 'rainfall_flood_risk_proxy'
+            ? 'Rainfall flood indicator'
+            : DOMAIN_LABEL[domain],
         severity,
         display:
           described?.display ??
@@ -609,7 +652,12 @@ export function buildFleetBriefing(
     })
     .sort((a, b) => compareScores(a.score, b.score))
 
-  const calls = { GO: 0, CAUTION: 0, 'NO-GO': 0 }
+  const calls = {
+    GO: 0,
+    CAUTION: 0,
+    'NO-GO': 0,
+    'REVIEW REQUIRED': 0,
+  }
   for (const site of sites)
     if (site.recommendation) calls[site.recommendation] += 1
   const scoredCount = sites.filter((site) => site.score !== null).length
@@ -639,7 +687,7 @@ export function buildFleetBriefing(
 
   const headline =
     scoredCount > 0
-      ? `${calls['NO-GO']} NO-GO · ${calls.CAUTION} CAUTION · ${calls.GO} GO`
+      ? `${calls['NO-GO']} NO-GO · ${calls.CAUTION} CAUTION · ${calls['REVIEW REQUIRED']} REVIEW · ${calls.GO} GO`
       : `${sites.length} site briefing${sites.length === 1 ? '' : 's'}`
   const summary = [
     `${sites.length} site briefing${sites.length === 1 ? '' : 's'} stored for this shift.`,

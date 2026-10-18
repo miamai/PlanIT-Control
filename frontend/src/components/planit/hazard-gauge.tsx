@@ -46,6 +46,7 @@ export function HazardGauge({
   const value = score === null ? 0 : Math.min(10, Math.max(0, score))
   const call =
     score === null ? null : (recommendation ?? recommendationFromScore(score))
+  const scoreBand = score === null ? null : recommendationFromScore(score)
   const [markerX, markerY] = pointAt(value / 10)
 
   return (
@@ -90,12 +91,12 @@ export function HazardGauge({
             </g>
           )
         })}
-        {call ? (
+        {scoreBand ? (
           <circle
             cx={markerX}
             cy={markerY}
             r={STROKE / 2 + 2}
-            fill={RECOMMENDATION_HEX[call]}
+            fill={RECOMMENDATION_HEX[scoreBand]}
             className='stroke-background'
             strokeWidth={3}
           />

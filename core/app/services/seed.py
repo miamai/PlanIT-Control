@@ -12,7 +12,6 @@ from app.models.entities import (
     HazardObservation,
     HazardType,
     QualityStatus,
-    RiskScore,
     SafetyBriefing,
     Severity,
     Site,
@@ -69,18 +68,6 @@ async def seed_demo(session: AsyncSession, settings: Settings) -> dict[str, int]
                     is_estimated=True,
                 ),
             ]
-        )
-        session.add(
-            RiskScore(
-                site_id=site.id,
-                score=round(2.5 + index, 1),
-                generated_at=now,
-                prediction_date=(now + timedelta(days=1)).date(),
-                valid_for_seconds=86400,
-                model_version="demo-not-a-model-v1",
-                score_source="demo",
-                contributing_factors={"synthetic_notice": True},
-            )
         )
         if index < 2:
             source_reference = f"demo-alert:{site.eia_plant_id}:{now.date()}"

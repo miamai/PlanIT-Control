@@ -61,6 +61,9 @@ development database when you also want to verify report creation.
 
 ## Daily ML hazard index and briefing
 
+The authoritative calculation, explanation, severity, and decision policy is documented in
+[`docs/risk-scoring.md`](docs/risk-scoring.md).
+
 The worker generates a next-day briefing after 6 PM in each site's timezone. For sites in the
 checked-in model catalog it calls the internal `ml` service, stores the validated 0–10 hazard index,
 and writes a checked Gemini briefing (or the deterministic template fallback). Active alerts may
@@ -304,7 +307,7 @@ contacted without explicit credentials.
 - River flood-stage thresholds require site-specific configuration; USGS values
   are stored without declaring a flood otherwise.
 - ML coverage is deliberately partial and explicitly exposed per site. Unsupported sites receive a
-  deterministic briefing but no fabricated numeric score. Seeded risk scores remain labeled
-  `score_source=demo` and `model_version=demo-not-a-model-v1`.
+  deterministic briefing but no fabricated numeric score. Synthetic seed observations do not
+  create a Hazard Index because they are not valid model inputs.
 - Tiger Data connectivity and extension availability must be verified with the
   actual deployment credentials using `planit-db-check`.
