@@ -10,7 +10,13 @@
 ### Architecture
 
 - `api`: REST + SSE (`/api/stream`)
-- `worker`: provider polling, alert evaluation, daily briefing after 6 PM site-local time
+- `worker`: provider polling, alert evaluation, hazard index refresh, daily briefing after 6 PM
+  site-local time
+  - Every `ML_SCORE_INTERVAL_SECONDS` (default 900) it rescores each ML-covered site's operational
+    day (today until 6 PM site-local, then tomorrow) with the newest forecast, active alerts and
+    crew reports, updating that day's score in place; a site with a new crew report is rescored on
+    the next tick
+  - The narrative briefing is still written once per site and day
 - `ml`: hazard index (0-10) and briefing text
 - `bootstrap`: one-shot setup that runs before `api` and `worker` start
 

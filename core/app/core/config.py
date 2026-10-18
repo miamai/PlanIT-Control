@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     ml_base_url: str = "http://localhost:8001"
     ml_timeout_seconds: float = 120.0
     ml_briefing_backend: Literal["gemini", "template", "auto"] = "gemini"
+    # How often the worker rescores every ML-covered site. The ML service caches its weather
+    # inputs for an hour, so passes in between mostly pick up new crew reports and alerts.
+    ml_score_interval_seconds: int = Field(default=900, ge=60)
 
     alert_threshold_profile: Literal["disabled", "demo", "approved"] = "demo"
     heat_moderate_threshold_f: float = 91.0

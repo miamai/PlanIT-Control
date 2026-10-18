@@ -18,6 +18,10 @@ The score originates in `ml/score.py`. The daily ML service builds forecast feat
 ML site and prediction date, calculates calibrated hazard probabilities, and returns the index,
 sub-scores, explanations, model version, and date. `core/app/services/briefing.py` validates the
 site/date/version before storing the result. Core never substitutes another site's prediction.
+Between evening briefings the worker refreshes each covered site's score for its operational day
+(today until 6 PM site-local, then tomorrow) every `ML_SCORE_INTERVAL_SECONDS`, and on the next
+tick after a new crew report (`core/app/services/live_scoring.py`). Each refresh updates that
+day's row in place, so history keeps one score per day: the last one calculated.
 
 Relevant Tiger Data tables are:
 

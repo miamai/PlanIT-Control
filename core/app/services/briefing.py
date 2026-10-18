@@ -18,10 +18,14 @@ from app.models.entities import (
     Site,
 )
 from app.services.events import publish_event
-from app.services.ml import MLBriefing, MLClient
+from app.services.ml import MLBriefing, MLClient, MLRisk
+
+# Site-local hour after which the next-day briefing is generated and "tomorrow" becomes the
+# operational day.
+BRIEFING_LOCAL_HOUR = 18
 
 
-def _active_alert_query(site_id):
+def active_alert_query(site_id):
     return select(Alert).where(
         Alert.site_id == site_id,
         Alert.status.in_(
@@ -53,7 +57,7 @@ def _fallback_summary(site: Site, alerts: list[Alert], reports: list[CrewReport]
     )
 
 
-async def _reports_since_previous(
+async def reports_since_previous(
     session: AsyncSession, site: Site, prediction_date: date, now: datetime
 ) -> tuple[list[CrewReport], datetime]:
     previous = await session.scalar(
@@ -141,6 +145,46 @@ def _provenance(
     }
 
 
+async def store_ml_score(
+    session: AsyncSession, site: Site, prediction_date: date, now: datetime, ml_risk: MLRisk
+) -> RiskScore:
+    """Insert or refresh the site's score for this day and model version, and announce it."""
+    risk = await session.scalar(
+        select(RiskScore).where(
+            RiskScore.site_id == site.id,
+            RiskScore.prediction_date == prediction_date,
+            RiskScore.model_version == ml_risk.model_version,
+        )
+    )
+    factors = ml_risk.contributing_factors()
+    if risk is None:
+        risk = RiskScore(
+            site_id=site.id,
+            prediction_date=prediction_date,
+            score=ml_risk.hazard_index,
+            generated_at=now,
+            valid_for_seconds=_valid_seconds(site, prediction_date, now),
+            model_version=ml_risk.model_version,
+            score_source="ml_service",
+            contributing_factors=factors,
+        )
+        session.add(risk)
+        await session.flush()
+    else:
+        risk.score = ml_risk.hazard_index
+        risk.generated_at = now
+        risk.valid_for_seconds = _valid_seconds(site, prediction_date, now)
+        risk.score_source = "ml_service"
+        risk.contributing_factors = factors
+    publish_event(
+        session,
+        "risk.updated",
+        {"site_id": str(site.id), "score_id": str(risk.id), "score": risk.score},
+        site.id,
+    )
+    return risk
+
+
 async def _persist_ml_result(
     session: AsyncSession,
     site: Site,
@@ -154,39 +198,7 @@ async def _persist_ml_result(
     status: str = "generated",
     warnings: list[str] | None = None,
 ) -> None:
-    risk = await session.scalar(
-        select(RiskScore).where(
-            RiskScore.site_id == site.id,
-            RiskScore.prediction_date == prediction_date,
-            RiskScore.model_version == result.risk.model_version,
-        )
-    )
-    factors = result.risk.contributing_factors()
-    if risk is None:
-        risk = RiskScore(
-            site_id=site.id,
-            prediction_date=prediction_date,
-            score=result.risk.hazard_index,
-            generated_at=now,
-            valid_for_seconds=_valid_seconds(site, prediction_date, now),
-            model_version=result.risk.model_version,
-            score_source="ml_service",
-            contributing_factors=factors,
-        )
-        session.add(risk)
-        await session.flush()
-    else:
-        risk.score = result.risk.hazard_index
-        risk.generated_at = now
-        risk.valid_for_seconds = _valid_seconds(site, prediction_date, now)
-        risk.score_source = "ml_service"
-        risk.contributing_factors = factors
-    publish_event(
-        session,
-        "risk.updated",
-        {"site_id": str(site.id), "score_id": str(risk.id), "score": risk.score},
-        site.id,
-    )
+    risk = await store_ml_score(session, site, prediction_date, now, result.risk)
     details = _provenance(
         status, risk.id, result.source, alerts, reports, cutoff, warnings or [], "available"
     )
@@ -225,7 +237,7 @@ async def generate_due_briefings(
     count = 0
     for site in sites:
         local_now = now.astimezone(ZoneInfo(site.timezone))
-        if local_now.hour < 18:
+        if local_now.hour < BRIEFING_LOCAL_HOUR:
             continue
         prediction_date = local_now.date() + timedelta(days=1)
         lock_key = site.eia_plant_id * 100000 + prediction_date.toordinal() % 100000
@@ -245,10 +257,8 @@ async def generate_due_briefings(
                 "available",
             }:
                 continue
-        alerts = list((await session.scalars(_active_alert_query(site.id))).all())
-        reports, cutoff = await _reports_since_previous(
-            session, site, prediction_date, now
-        )
+        alerts = list((await session.scalars(active_alert_query(site.id))).all())
+        reports, cutoff = await reports_since_previous(session, site, prediction_date, now)
         latest, warnings = await _latest_observations(session, site, now, stale_minutes)
         if client and site.ml_supported:
             try:
