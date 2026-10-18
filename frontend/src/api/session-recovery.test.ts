@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '@/stores/auth-store'
+import { ensureSession } from './auth'
 import { api, refreshSession, unwrap, unwrapData, unwrapEmpty } from './client'
 
 const mocks = vi.hoisted(() => ({ fetch: vi.fn() }))
@@ -44,6 +45,22 @@ afterEach(() => {
 })
 
 describe('Session recovery and protected auth endpoints', () => {
+  it('allows the login route when Core is unavailable during startup', async () => {
+    useAuthStore.getState().auth.reset()
+    mocks.fetch.mockRejectedValue(new TypeError('Core is offline'))
+
+    await expect(ensureSession()).resolves.toBe(false)
+    expect(useAuthStore.getState().auth.accessToken).toBe('')
+  })
+
+  it('allows the login route after a temporary service failure', async () => {
+    useAuthStore.getState().auth.reset()
+    mocks.fetch.mockResolvedValue(new Response(null, { status: 503 }))
+
+    await expect(ensureSession()).resolves.toBe(false)
+    expect(useAuthStore.getState().auth.accessToken).toBe('')
+  })
+
   it('refreshes before an expired access token is sent', async () => {
     useAuthStore.getState().auth.setSession('old-access', 0, user)
     mocks.fetch.mockImplementation(async (input: Request | string) =>

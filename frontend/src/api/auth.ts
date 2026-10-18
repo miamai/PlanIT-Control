@@ -28,7 +28,12 @@ export async function login(
  */
 export async function ensureSession(): Promise<boolean> {
   if (useAuthStore.getState().auth.accessToken) return true
-  return (await refreshSession()) !== null
+  try {
+    return (await refreshSession()) !== null
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 503) return false
+    throw error
+  }
 }
 
 /** Revoke the refresh token server-side, then clear the local session. */
