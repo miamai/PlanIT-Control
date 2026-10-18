@@ -45,20 +45,34 @@ afterEach(() => {
 })
 
 describe('Session recovery and protected auth endpoints', () => {
-  it('allows the login route when Core is unavailable during startup', async () => {
+  it('keeps a startup outage distinguishable from a rejected session', async () => {
     useAuthStore.getState().auth.reset()
     mocks.fetch.mockRejectedValue(new TypeError('Core is offline'))
 
-    await expect(ensureSession()).resolves.toBe(false)
+    await expect(ensureSession()).rejects.toMatchObject({ status: 503 })
     expect(useAuthStore.getState().auth.accessToken).toBe('')
   })
 
-  it('allows the login route after a temporary service failure', async () => {
+  it('surfaces a temporary service failure to session recovery', async () => {
     useAuthStore.getState().auth.reset()
     mocks.fetch.mockResolvedValue(new Response(null, { status: 503 }))
 
-    await expect(ensureSession()).resolves.toBe(false)
+    await expect(ensureSession()).rejects.toMatchObject({ status: 503 })
     expect(useAuthStore.getState().auth.accessToken).toBe('')
+  })
+
+  it('redirects to login only when the refresh cookie is rejected', async () => {
+    useAuthStore.getState().auth.reset()
+    mocks.fetch.mockResolvedValue(new Response(null, { status: 401 }))
+    await expect(ensureSession()).resolves.toBe(false)
+  })
+
+  it('restores an in-memory session after a reload from the refresh cookie', async () => {
+    useAuthStore.getState().auth.reset()
+    mocks.fetch.mockResolvedValue(Response.json(session))
+    await expect(ensureSession()).resolves.toBe(true)
+    expect(useAuthStore.getState().auth.accessToken).toBe(session.access_token)
+    expect(mocks.fetch.mock.calls[0][1].credentials).toBe('include')
   })
 
   it('refreshes before an expired access token is sent', async () => {

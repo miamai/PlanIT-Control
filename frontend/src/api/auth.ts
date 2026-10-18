@@ -28,12 +28,9 @@ export async function login(
  */
 export async function ensureSession(): Promise<boolean> {
   if (useAuthStore.getState().auth.accessToken) return true
-  try {
-    return (await refreshSession()) !== null
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 503) return false
-    throw error
-  }
+  // Only a rejected refresh cookie means signed out. An unavailable API must
+  // reach SessionRecovery, preserving the route and the browser's cookie.
+  return (await refreshSession()) !== null
 }
 
 /** Revoke the refresh token server-side, then clear the local session. */
