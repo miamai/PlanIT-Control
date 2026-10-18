@@ -22,7 +22,7 @@ import {
 } from './types'
 
 /**
- * PlanIT Control data access layer, backed by the core API.
+ * Precognition data access layer, backed by the core API.
  *
  * Every function calls the typed client and maps the response into the UI
  * view model, so components never see backend field names.

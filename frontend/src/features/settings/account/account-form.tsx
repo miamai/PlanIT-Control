@@ -25,7 +25,7 @@ export function AccountForm() {
         ))}
       </dl>
       <p className='text-sm leading-relaxed text-muted-foreground'>
-        Accounts and roles are managed by a PlanIT administrator. The interface
+        Accounts and roles are managed by a Precognition administrator. The interface
         is currently available in English only.
       </p>
       <Button variant='outline' onClick={() => setSignOutOpen(true)}>

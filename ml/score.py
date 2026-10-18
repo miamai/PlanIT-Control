@@ -301,7 +301,7 @@ def fetch_tide(site: dict, start: Date, end: Date) -> pd.DataFrame | None:
     try:
         r = _live.get(COOPS, params={
             "product": "predictions", "interval": "hilo", "station": station, "datum": "MHHW",
-            "units": "english", "time_zone": "lst_ldt", "format": "json", "application": "PlanIT",
+            "units": "english", "time_zone": "lst_ldt", "format": "json", "application": "Precognition",
             "begin_date": start.strftime("%Y%m%d"), "end_date": end.strftime("%Y%m%d"),
         }, timeout=30)
         r.raise_for_status()

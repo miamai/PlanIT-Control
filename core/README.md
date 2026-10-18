@@ -1,4 +1,4 @@
-# PlanIT Control Core
+# Precognition Core
 
 ## Background
 

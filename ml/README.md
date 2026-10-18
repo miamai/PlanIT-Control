@@ -1,4 +1,4 @@
-# PlanIT ML: hazard models
+# Precognition ML: hazard models
 
 Implements [PLAN.md](PLAN.md): public data → daily features → one LightGBM model per hazard
 (heat, convective, flood, wildfire) plus a rule-based wildlife score → 0–10 hazard index,

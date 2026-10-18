@@ -1,7 +1,7 @@
 [project]
 name = "planit-ml"
 version = "0.1.0"
-description = "Hazard models behind the PlanIT 0-10 hazard index"
+description = "Hazard models behind the Precognition 0-10 hazard index"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pandas>=2.2",

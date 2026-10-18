@@ -59,7 +59,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         toast.error(
           error instanceof ApiError
             ? error.message
-            : 'Could not reach the PlanIT API. Check that it is running.'
+            : 'Could not reach the Precognition API. Check that it is running.'
         )
       }
     } finally {

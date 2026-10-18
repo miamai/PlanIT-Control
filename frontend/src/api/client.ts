@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/auth-store'
 import { type components, type paths } from './schema'
 
 /**
- * Typed client for the PlanIT core API.
+ * Typed client for the Precognition core API.
  *
  * Request and response types come from `schema.d.ts`, generated from
  * `core/docs/openapi.json` (`pnpm api:types`). The middleware attaches the

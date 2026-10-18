@@ -28,7 +28,7 @@ import briefing
 import score
 from common import MODELS
 
-app = FastAPI(title="PlanIT hazard scoring", version="v1")
+app = FastAPI(title="Precognition hazard scoring", version="v1")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 

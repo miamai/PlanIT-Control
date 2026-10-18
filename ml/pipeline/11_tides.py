@@ -33,7 +33,7 @@ def stations(s) -> pd.DataFrame:
 def high_low(station: str, year: int, s) -> pd.DataFrame:
     params = {"product": "high_low", "station": station, "begin_date": f"{year}0101",
               "end_date": f"{year}1231", "datum": "MHHW", "units": "english",
-              "time_zone": "lst_ldt", "format": "json", "application": "PlanIT"}
+              "time_zone": "lst_ldt", "format": "json", "application": "Precognition"}
     r = s.get(DATA, params=params, timeout=120)
     r.raise_for_status()
     rows = r.json().get("data", [])

@@ -8,7 +8,7 @@ export function Logo({
   return (
     <img
       src='/images/planit-icon.png'
-      alt='PlanIT Control'
+      alt='Precognition'
       height={32}
       width={32}
       className={cn('size-8 shrink-0 object-contain', className)}

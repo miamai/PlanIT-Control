@@ -1,4 +1,4 @@
-# PlanIT hazard index: model card (v1)
+# Precognition hazard index: model card (v1)
 
 Trained 2026-10-18T02:21:49+00:00 on 96 power-plant sites, 2019-2023; calibrated on 2024; tested on 2025, a year the models never saw.
 

@@ -1,5 +1,5 @@
 /**
- * PlanIT Control — UI view model.
+ * Precognition — UI view model.
  *
  * Components render these shapes. `src/api/mappers.ts` builds them from the
  * core API's DTOs (generated in `schema.d.ts`), so backend field names never

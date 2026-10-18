@@ -121,7 +121,7 @@ export function Users() {
       <Main>
         <PageHeading
           title='Users'
-          description='Manage account access across PlanIT Control.'
+          description='Manage account access across Precognition.'
           actions={
             authorized && (
               <Button onClick={() => setSelection({ mode: 'create' })}>
