@@ -1,5 +1,6 @@
 import createClient, { type Middleware } from 'openapi-fetch'
 import { useAuthStore } from '@/stores/auth-store'
+import { resolveApiBaseUrl } from './base-url'
 import { type components, type paths } from './schema'
 
 /**
@@ -13,9 +14,7 @@ import { type components, type paths } from './schema'
 
 export type TokenResponse = components['schemas']['TokenResponse']
 
-export const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
-).replace(/\/$/, '')
+export const API_BASE_URL = resolveApiBaseUrl()
 
 /** Refresh this long before the access token expires. */
 const REFRESH_LEEWAY_MS = 30_000
