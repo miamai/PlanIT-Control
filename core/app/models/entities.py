@@ -16,6 +16,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -261,6 +262,49 @@ class CrewReport(Base):
     reported_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     reporter_subject: Mapped[str] = mapped_column(String(255), index=True)
     verification_status: Mapped[str] = mapped_column(String(32), default="unverified")
+
+
+class CaptureSession(Base):
+    """A guided photo report in progress: which checklist steps are done and what each showed."""
+
+    __tablename__ = "capture_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    site_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"))
+    reporter_subject: Mapped[str] = mapped_column(String(255), index=True)
+    hazard_type: Mapped[HazardType | None] = mapped_column(Enum(HazardType, native_enum=False))
+    status: Mapped[str] = mapped_column(String(16), default="active")
+    # item id -> {"status": "done" | "skipped", "text", "observation", "frame_ids"}
+    steps: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    danger: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    frame_checks: Mapped[int] = mapped_column(Integer, default=0)
+    latitude: Mapped[float] = mapped_column(Float)
+    longitude: Mapped[float] = mapped_column(Float)
+    report_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("crew_reports.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class CaptureFrame(Base):
+    """A photo kept as evidence for one checklist step. Retakes are never stored."""
+
+    __tablename__ = "capture_frames"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("capture_sessions.id", ondelete="CASCADE"), index=True
+    )
+    item: Mapped[str] = mapped_column(String(32))
+    image: Mapped[bytes] = mapped_column(LargeBinary)
+    content_type: Mapped[str] = mapped_column(String(32))
+    latitude: Mapped[float] = mapped_column(Float)
+    longitude: Mapped[float] = mapped_column(Float)
+    heading_deg: Mapped[float | None] = mapped_column(Float)
+    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class RiskScore(Base):

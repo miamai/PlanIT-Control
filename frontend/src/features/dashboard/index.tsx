@@ -137,7 +137,7 @@ export function Dashboard() {
                 onSelect={(siteId) =>
                   navigate({ to: '/sites/$siteId', params: { siteId } })
                 }
-                height='h-[380px] lg:h-full lg:min-h-[440px]'
+                height='aspect-[1.7] h-auto min-h-[260px]'
               />
             </CardContent>
           </Card>

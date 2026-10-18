@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import '@/styles/index.css'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -28,7 +29,24 @@ vi.mock('@/hooks/use-planit', () => ({
 vi.mock('@/hooks/use-profile', () => ({
   useProfile: () => ({ name: 'Test user', roleLabel: 'User' }),
 }))
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => mocks.navigate }))
+vi.mock('@tanstack/react-router', () => ({
+  useNavigate: () => mocks.navigate,
+  Link: ({
+    to,
+    search,
+    children,
+  }: {
+    to: string
+    search?: Record<string, string | undefined>
+    children: ReactNode
+  }) => (
+    <a
+      href={`${to}?${new URLSearchParams(Object.entries(search ?? {}).filter((entry): entry is [string, string] => entry[1] !== undefined))}`}
+    >
+      {children}
+    </a>
+  ),
+}))
 vi.mock('@/components/planit/planit-header', () => ({
   PlanitHeader: () => null,
 }))

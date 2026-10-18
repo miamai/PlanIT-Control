@@ -1,7 +1,7 @@
 [project]
 name = "planit-control-core"
 version = "0.1.0"
-description = "Environmental monitoring and alert backend for PlanIT Control"
+description = "Environmental monitoring and alert backend for Precognition"
 requires-python = ">=3.12"
 dependencies = [
   "alembic>=1.14,<2",

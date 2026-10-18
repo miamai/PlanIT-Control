@@ -1,1 +1,1 @@
-"""PlanIT Control backend."""
+"""Precognition backend."""

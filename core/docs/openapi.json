@@ -188,6 +188,398 @@
         "title": "BriefingRead",
         "type": "object"
       },
+      "CaptureChecklistItemRead": {
+        "properties": {
+          "frames": {
+            "maximum": 2.0,
+            "minimum": 1.0,
+            "title": "Frames",
+            "type": "integer"
+          },
+          "instruction": {
+            "title": "Instruction",
+            "type": "string"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "done",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "required": [
+          "item",
+          "instruction",
+          "frames",
+          "status"
+        ],
+        "title": "CaptureChecklistItemRead",
+        "type": "object"
+      },
+      "CaptureDangerRead": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "instruction": {
+            "title": "Instruction",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "instruction",
+          "summary"
+        ],
+        "title": "CaptureDangerRead",
+        "type": "object"
+      },
+      "CaptureFeedback": {
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "hazard_guess": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HazardType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          },
+          "satisfied": {
+            "title": "Satisfied",
+            "type": "boolean"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "required": [
+          "item",
+          "satisfied",
+          "text",
+          "hint",
+          "hazard_guess",
+          "confidence"
+        ],
+        "title": "CaptureFeedback",
+        "type": "object"
+      },
+      "CaptureFrameCreate": {
+        "properties": {
+          "heading_deg": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 360.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heading Deg"
+          },
+          "images": {
+            "items": {
+              "maxLength": 2800000,
+              "minLength": 16,
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Images",
+            "type": "array"
+          },
+          "item": {
+            "pattern": "^[a-z_]{1,32}$",
+            "title": "Item",
+            "type": "string"
+          },
+          "latitude": {
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude",
+            "type": "number"
+          }
+        },
+        "required": [
+          "item",
+          "images",
+          "latitude",
+          "longitude"
+        ],
+        "title": "CaptureFrameCreate",
+        "type": "object"
+      },
+      "CaptureFrameResult": {
+        "properties": {
+          "feedback": {
+            "$ref": "#/components/schemas/CaptureFeedback"
+          },
+          "session": {
+            "$ref": "#/components/schemas/CaptureSessionRead"
+          }
+        },
+        "required": [
+          "session",
+          "feedback"
+        ],
+        "title": "CaptureFrameResult",
+        "type": "object"
+      },
+      "CaptureHazardChoice": {
+        "properties": {
+          "hazard_type": {
+            "$ref": "#/components/schemas/HazardType"
+          }
+        },
+        "required": [
+          "hazard_type"
+        ],
+        "title": "CaptureHazardChoice",
+        "type": "object"
+      },
+      "CaptureSessionRead": {
+        "properties": {
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/CaptureChecklistItemRead"
+            },
+            "title": "Checklist",
+            "type": "array"
+          },
+          "danger": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptureDangerRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "draft": {
+            "title": "Draft",
+            "type": "string"
+          },
+          "guided": {
+            "description": "Whether the hazard has a guided checklist",
+            "title": "Guided",
+            "type": "boolean"
+          },
+          "hazard_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HazardType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptureStepRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "report_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Id"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "stopped",
+              "submitted"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "site_id",
+          "hazard_type",
+          "status",
+          "guided",
+          "next_step",
+          "checklist",
+          "draft",
+          "danger",
+          "report_id"
+        ],
+        "title": "CaptureSessionRead",
+        "type": "object"
+      },
+      "CaptureSkip": {
+        "properties": {
+          "item": {
+            "pattern": "^[a-z_]{1,32}$",
+            "title": "Item",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "title": "CaptureSkip",
+        "type": "object"
+      },
+      "CaptureStart": {
+        "properties": {
+          "latitude": {
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude",
+            "type": "number"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "site_id",
+          "latitude",
+          "longitude"
+        ],
+        "title": "CaptureStart",
+        "type": "object"
+      },
+      "CaptureStepRead": {
+        "properties": {
+          "frames": {
+            "maximum": 2.0,
+            "minimum": 1.0,
+            "title": "Frames",
+            "type": "integer"
+          },
+          "instruction": {
+            "title": "Instruction",
+            "type": "string"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "instruction",
+          "frames"
+        ],
+        "title": "CaptureStepRead",
+        "type": "object"
+      },
+      "CaptureSubmit": {
+        "properties": {
+          "description": {
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Description",
+            "type": "string"
+          }
+        },
+        "required": [
+          "description"
+        ],
+        "title": "CaptureSubmit",
+        "type": "object"
+      },
       "CrewReportCreate": {
         "properties": {
           "description": {
@@ -373,6 +765,66 @@
           "data"
         ],
         "title": "Envelope[AlertRead]",
+        "type": "object"
+      },
+      "Envelope_CaptureFrameResult_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CaptureFrameResult"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[CaptureFrameResult]",
+        "type": "object"
+      },
+      "Envelope_CaptureSessionRead_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CaptureSessionRead"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[CaptureSessionRead]",
         "type": "object"
       },
       "Envelope_CrewReportRead_": {
@@ -1840,7 +2292,7 @@
   },
   "info": {
     "description": "Environmental hazard monitoring API. EIA plants are reference locations, not verified active job sites.",
-    "title": "PlanIT Control Core",
+    "title": "Precognition Core",
     "version": "0.1.0"
   },
   "openapi": "3.1.0",
@@ -2538,6 +2990,339 @@
         "summary": "Fleet Briefings",
         "tags": [
           "briefings"
+        ]
+      }
+    },
+    "/api/captures": {
+      "post": {
+        "operationId": "start_capture_api_captures_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CaptureSessionRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Capture",
+        "tags": [
+          "captures"
+        ]
+      }
+    },
+    "/api/captures/{capture_id}/frames": {
+      "post": {
+        "operationId": "check_frame_api_captures__capture_id__frames_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureFrameCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CaptureFrameResult_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Check Frame",
+        "tags": [
+          "captures"
+        ]
+      }
+    },
+    "/api/captures/{capture_id}/frames/{frame_id}": {
+      "get": {
+        "operationId": "frame_image_api_captures__capture_id__frames__frame_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Capture Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "frame_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Frame Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {},
+              "image/png": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Frame Image",
+        "tags": [
+          "captures"
+        ]
+      }
+    },
+    "/api/captures/{capture_id}/hazard": {
+      "post": {
+        "operationId": "choose_hazard_api_captures__capture_id__hazard_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureHazardChoice"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CaptureSessionRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Choose Hazard",
+        "tags": [
+          "captures"
+        ]
+      }
+    },
+    "/api/captures/{capture_id}/skip": {
+      "post": {
+        "operationId": "skip_step_api_captures__capture_id__skip_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureSkip"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CaptureSessionRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Skip Step",
+        "tags": [
+          "captures"
+        ]
+      }
+    },
+    "/api/captures/{capture_id}/submit": {
+      "post": {
+        "operationId": "submit_capture_api_captures__capture_id__submit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureSubmit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CrewReportRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Submit Capture",
+        "tags": [
+          "captures"
         ]
       }
     },

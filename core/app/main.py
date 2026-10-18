@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.auth_routes import router as auth_router
+from app.api.capture_routes import router as capture_router
 from app.api.feed_routes import router as feed_router
 from app.api.routes import router
 from app.core.config import get_settings
@@ -44,6 +45,7 @@ app.add_middleware(
 )
 app.include_router(auth_router)
 app.include_router(feed_router)
+app.include_router(capture_router)
 app.include_router(router)
 
 

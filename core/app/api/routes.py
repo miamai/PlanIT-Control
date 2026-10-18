@@ -24,7 +24,6 @@ from app.models.entities import (
     HazardObservation,
     HazardType,
     LightningSiteState,
-    QualityStatus,
     RiskScore,
     SafetyBriefing,
     Site,
@@ -48,9 +47,8 @@ from app.schemas.domain import (
 from app.services.decision import assess_decision
 from app.services.events import publish_event
 from app.services.hazard_severity import assess_observation
+from app.services.reports import ReportRejected, store_crew_report
 from app.services.risk import historical_features
-from app.services.rules import evaluate_observation
-from app.utils.geo import haversine_miles
 
 router = APIRouter()
 DbSession = Annotated[AsyncSession, Depends(get_session)]
@@ -271,63 +269,23 @@ async def create_report(
     site = await session.get(Site, body.site_id)
     if not site:
         raise HTTPException(status_code=404, detail="Site not found")
-    now = datetime.now(UTC)
-    recent_count = await session.scalar(
-        select(func.count())
-        .select_from(CrewReport)
-        .where(
-            CrewReport.reporter_subject == principal.subject,
-            CrewReport.reported_at >= now - timedelta(minutes=1),
+    try:
+        report = await store_crew_report(
+            session,
+            settings,
+            site,
+            reporter_subject=principal.subject,
+            hazard_type=body.hazard_type,
+            description=body.description,
+            latitude=body.latitude,
+            longitude=body.longitude,
+            reported_at=body.observed_at,
+            image_reference=body.image_reference,
+            image_metadata=body.image_metadata,
         )
-    )
-    if (recent_count or 0) >= 30:
-        raise HTTPException(status_code=429, detail="Report submission rate limit exceeded")
-    if haversine_miles(site.latitude, site.longitude, body.latitude, body.longitude) > 100:
-        raise HTTPException(
-            status_code=422, detail="Report coordinates are implausibly far from the selected site"
-        )
-    report = CrewReport(
-        site_id=body.site_id,
-        hazard_type=body.hazard_type,
-        description=body.description,
-        latitude=body.latitude,
-        longitude=body.longitude,
-        image_reference=body.image_reference,
-        image_metadata=body.image_metadata,
-        reported_at=body.observed_at or now,
-        reporter_subject=principal.subject,
-        verification_status="unverified",
-    )
-    session.add(report)
-    await session.flush()
-    if body.hazard_type == HazardType.WILDLIFE:
-        sites = (await session.scalars(select(Site))).all()
-        for nearby in sites:
-            distance = haversine_miles(
-                nearby.latitude, nearby.longitude, body.latitude, body.longitude
-            )
-            if distance <= settings.wildlife_share_radius_miles:
-                observation = HazardObservation(
-                    site_id=nearby.id,
-                    hazard_type=HazardType.WILDLIFE,
-                    source="crew_report",
-                    source_event_id=str(report.id),
-                    observed_at=report.reported_at,
-                    metric_name="crew_wildlife_sighting",
-                    latitude=body.latitude,
-                    longitude=body.longitude,
-                    metadata_={
-                        "description": body.description,
-                        "distance_miles": round(distance, 3),
-                        "verification_status": "unverified",
-                    },
-                    quality_status=QualityStatus.PROVISIONAL,
-                    is_estimated=False,
-                )
-                session.add(observation)
-                await session.flush()
-                await evaluate_observation(session, observation)
-    publish_event(session, "report.created", {"report_id": str(report.id)}, report.site_id)
+    except ReportRejected as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+
     await session.commit()
     await session.refresh(report)
     return Envelope(data=CrewReportRead.model_validate(report))

@@ -157,7 +157,7 @@ def main() -> None:
 
     (MODELS / "model_card.json").write_text(json.dumps(card, indent=2, default=str))
 
-    L = [f"# PlanIT hazard index: model card ({card['model_version']})", "",
+    L = [f"# Precognition hazard index: model card ({card['model_version']})", "",
          f"Trained {card['trained_at']} on {card['n_sites']} power-plant sites, 2019-2023; calibrated on 2024; "
          f"tested on {TEST_YEAR}, a year the models never saw.", "",
          "## Test-year skill (95% CI, whole sites resampled)", "",

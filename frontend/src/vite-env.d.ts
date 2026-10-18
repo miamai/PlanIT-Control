@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  /** Base URL of the PlanIT core API, e.g. http://localhost:8000 */
+  /** Base URL of the Precognition core API, e.g. http://localhost:8000 */
   readonly VITE_API_BASE_URL?: string
 }
 

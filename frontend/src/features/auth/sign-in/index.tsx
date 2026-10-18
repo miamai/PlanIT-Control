@@ -9,9 +9,7 @@ export function SignIn() {
         <div className='flex items-center gap-3'>
           <Logo className='size-12' alt='' />
           <div>
-            <p className='text-lg font-semibold tracking-tight'>
-              PlanIT Control
-            </p>
+            <p className='text-lg font-semibold tracking-tight'>Precognition</p>
             <p className='mt-1 text-xs text-white/55'>
               Field operations intelligence
             </p>
@@ -55,7 +53,7 @@ export function SignIn() {
             Welcome back.
           </h2>
           <p className='mt-3 text-sm leading-6 text-muted-foreground'>
-            Sign in to your PlanIT Control workspace.
+            Sign in to your Precognition workspace.
           </p>
           <UserAuthForm className='mt-8' />
           <p className='mt-8 border-t pt-5 text-xs leading-5 text-muted-foreground'>
@@ -63,7 +61,7 @@ export function SignIn() {
           </p>
         </div>
         <p className='text-center text-[11px] text-muted-foreground'>
-          PlanIT Control
+          Precognition
         </p>
       </section>
     </main>

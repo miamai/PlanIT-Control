@@ -12,7 +12,7 @@ class Settings(BaseSettings):
         env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
     )
 
-    app_name: str = "PlanIT Control Core"
+    app_name: str = "Precognition Core"
     environment: Literal["development", "test", "production"] = "development"
     log_level: str = "INFO"
     database_url: str = "postgresql+asyncpg://planit:planit@localhost:5432/planit"
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     sites_per_state: int = Field(default=3, ge=1, le=20)
     sites_max: int = Field(default=153, ge=1, le=1000)
 
-    nws_user_agent: str = "PlanIT-Control/0.1 (contact@example.com)"
+    nws_user_agent: str = "Precognition/0.1 (contact@example.com)"
     request_timeout_seconds: float = 15.0
     nasa_firms_map_key: str | None = None
     lightning_provider: Literal["fixture", "disabled"] = "disabled"

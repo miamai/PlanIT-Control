@@ -6,6 +6,9 @@ GET  /sites                         site list for the map / picker
 GET  /briefing?site_id=EIA-56407    next-day safety briefing (risk JSON + text); POST takes alerts and
                                     crew reports like /score. ?backend=template|local|gemini|auto
 GET  /score?site_id=EIA-56407       tomorrow's risk JSON (site-local "tomorrow")
+GET  /capture/checklists            the steps a guided photo report walks the crew through
+POST /capture/observe               check one step's photo(s): {"hazard": "flood", "item": "depth",
+                                    "images": ["<base64 JPEG>"], "heading_deg": 90}
 POST /score                         same, with A's live alerts and recent crew reports:
      {"site_id": "...", "date": "2026-10-17",
       "alerts": [{"type": "lightning", "action": "no-go", "message": "Strike within 10 mi"}],
@@ -22,13 +25,14 @@ import pandas as pd
 import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import briefing
+import capture
 import score
 from common import MODELS
 
-app = FastAPI(title="PlanIT hazard scoring", version="v1")
+app = FastAPI(title="Precognition hazard scoring", version="v1")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
@@ -117,3 +121,25 @@ def briefing_get(site_id: str, date: Date | None = None, mock: bool = False, bac
 @app.post("/briefing")
 def briefing_post(req: ScoreRequest, mock: bool = False, backend: str = "auto") -> dict:
     return _briefing(req, mock, backend)
+
+
+class ObserveRequest(BaseModel):
+    hazard: str | None = None  # unset while the crew is still identifying the hazard
+    item: str
+    images: list[str] = Field(min_length=1, max_length=2)
+    heading_deg: float | None = Field(default=None, ge=0, lt=360)
+
+
+@app.get("/capture/checklists")
+def capture_checklists() -> dict:
+    return capture.checklists()
+
+
+@app.post("/capture/observe")
+def capture_observe(req: ObserveRequest) -> dict:
+    try:
+        return capture.observe(req.hazard, req.item, req.images, req.heading_deg)
+    except capture.CaptureError as e:
+        raise HTTPException(422, str(e)) from e
+    except capture.VisionUnavailable as e:
+        raise HTTPException(503, "Photo checks are unavailable right now") from e

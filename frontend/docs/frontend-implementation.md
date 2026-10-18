@@ -1,8 +1,8 @@
-# PlanIT Control — Frontend Implementation
+# Precognition — Frontend Implementation
 
 This document explains the frontend that was built on top of the existing
-`shadcn-admin` (Vite + React + TanStack Router) template for the **PlanIT
-Control** platform: a real-time environmental hazard platform for utility field
+`shadcn-admin` (Vite + React + TanStack Router) template for the **Precognition**
+platform: a real-time environmental hazard platform for utility field
 crews.
 
 It covers **what changed**, **why**, and **how each piece maps to the challenge
@@ -245,10 +245,10 @@ dashboard demo components (`analytics`, `analytics-chart`, `overview`,
 `recent-sales`).
 
 **Rebranded**: `index.html` title/meta, the two auth-layout headings, sidebar
-teams/user, profile dropdown, and nav-user avatar initials now read "PlanIT
-Control" / GridWatch Energy.
+teams/user, profile dropdown, and nav-user avatar initials now read "Precognition"
+/ GridWatch Energy.
 
-**Rewritten**: `src/components/layout/data/sidebar-data.ts` now lists the PlanIT
+**Rewritten**: `src/components/layout/data/sidebar-data.ts` now lists the Precognition
 navigation (Dashboard, Sites, Alerts, Briefing, Hazard Reports, Settings).
 
 **Wired**: `AuthenticatedLayout` starts the live feed; `PlanitHeader` is the

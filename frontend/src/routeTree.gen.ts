@@ -33,6 +33,7 @@ import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedHazardsNewRouteImport } from './routes/_authenticated/hazards/new'
+import { Route as AuthenticatedHazardsCaptureRouteImport } from './routes/_authenticated/hazards/capture'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
 
@@ -165,6 +166,12 @@ const AuthenticatedHazardsNewRoute = AuthenticatedHazardsNewRouteImport.update({
   path: '/hazards/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHazardsCaptureRoute =
+  AuthenticatedHazardsCaptureRouteImport.update({
+    id: '/hazards/capture',
+    path: '/hazards/capture',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedErrorsErrorRoute =
   AuthenticatedErrorsErrorRouteImport.update({
     id: '/errors/$error',
@@ -192,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/503': typeof errors503Route
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/hazards/capture': typeof AuthenticatedHazardsCaptureRoute
   '/hazards/new': typeof AuthenticatedHazardsNewRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -218,6 +226,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/hazards/capture': typeof AuthenticatedHazardsCaptureRoute
   '/hazards/new': typeof AuthenticatedHazardsNewRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -247,6 +256,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/_authenticated/hazards/capture': typeof AuthenticatedHazardsCaptureRoute
   '/_authenticated/hazards/new': typeof AuthenticatedHazardsNewRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/503'
     | '/admin/users'
     | '/errors/$error'
+    | '/hazards/capture'
     | '/hazards/new'
     | '/settings/account'
     | '/settings/appearance'
@@ -302,6 +313,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/users'
     | '/errors/$error'
+    | '/hazards/capture'
     | '/hazards/new'
     | '/settings/account'
     | '/settings/appearance'
@@ -330,6 +342,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/admin/users'
     | '/_authenticated/errors/$error'
+    | '/_authenticated/hazards/capture'
     | '/_authenticated/hazards/new'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
@@ -527,6 +540,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHazardsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/hazards/capture': {
+      id: '/_authenticated/hazards/capture'
+      path: '/hazards/capture'
+      fullPath: '/hazards/capture'
+      preLoaderRoute: typeof AuthenticatedHazardsCaptureRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/errors/$error': {
       id: '/_authenticated/errors/$error'
       path: '/errors/$error'
@@ -572,6 +592,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
+  AuthenticatedHazardsCaptureRoute: typeof AuthenticatedHazardsCaptureRoute
   AuthenticatedHazardsNewRoute: typeof AuthenticatedHazardsNewRoute
   AuthenticatedSitesSiteIdRoute: typeof AuthenticatedSitesSiteIdRoute
   AuthenticatedAlertsIndexRoute: typeof AuthenticatedAlertsIndexRoute
@@ -585,6 +606,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
+  AuthenticatedHazardsCaptureRoute: AuthenticatedHazardsCaptureRoute,
   AuthenticatedHazardsNewRoute: AuthenticatedHazardsNewRoute,
   AuthenticatedSitesSiteIdRoute: AuthenticatedSitesSiteIdRoute,
   AuthenticatedAlertsIndexRoute: AuthenticatedAlertsIndexRoute,

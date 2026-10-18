@@ -5,6 +5,8 @@ import {
   type AlertSeverity,
   type AlertType,
   type Briefing,
+  type CaptureFeedback,
+  type CaptureSession,
   type BriefingHistoryEntry,
   type BriefingSite,
   type DomainStatus,
@@ -35,6 +37,8 @@ export type AlertDTO = Schemas['AlertRead']
 export type ObservationDTO = Schemas['ObservationRead']
 export type SiteObservationDTO = Schemas['SiteObservationRead']
 type ReportDTO = Schemas['CrewReportRead']
+type CaptureSessionDTO = Schemas['CaptureSessionRead']
+type CaptureFeedbackDTO = Schemas['CaptureFeedback']
 export type BriefingDTO = Schemas['BriefingRead']
 type BackendHazard = Schemas['HazardType']
 
@@ -592,6 +596,43 @@ export function toHazardReport(dto: ReportDTO): HazardReport {
     reportedBy: dto.reporter_subject,
     createdAt: dto.reported_at,
     status: toReportStatus(dto.verification_status),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Guided photo reports
+
+export function toCaptureSession(dto: CaptureSessionDTO): CaptureSession {
+  return {
+    id: dto.id,
+    siteId: dto.site_id,
+    type: dto.hazard_type ? alertTypeFromHazard(dto.hazard_type) : undefined,
+    status: dto.status,
+    guided: dto.guided,
+    nextStep: dto.next_step ?? undefined,
+    checklist: dto.checklist.map((step) => ({
+      item: step.item,
+      instruction: step.instruction,
+      frames: step.frames,
+      status: step.status,
+      text: step.text ?? undefined,
+    })),
+    draft: dto.draft,
+    danger: dto.danger ?? undefined,
+    reportId: dto.report_id ?? undefined,
+  }
+}
+
+export function toCaptureFeedback(dto: CaptureFeedbackDTO): CaptureFeedback {
+  return {
+    item: dto.item,
+    satisfied: dto.satisfied,
+    text: dto.text ?? undefined,
+    hint: dto.hint ?? undefined,
+    typeGuess: dto.hazard_guess
+      ? alertTypeFromHazard(dto.hazard_guess)
+      : undefined,
+    confidence: dto.confidence ?? undefined,
   }
 }
 
