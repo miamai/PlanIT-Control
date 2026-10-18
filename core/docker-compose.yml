@@ -15,14 +15,19 @@ services:
       retries: 10
     restart: unless-stopped
 
-  migrate:
+  bootstrap:
     build: .
     env_file:
       - path: .env
         required: false
     environment:
       DATABASE_URL: ${DOCKER_DATABASE_URL:?Set DOCKER_DATABASE_URL to the Tiger Cloud asyncpg URL}
-    command: ["alembic", "upgrade", "head"]
+      ML_ENABLED: ${ML_ENABLED:-true}
+      ML_BASE_URL: http://ml:8001
+    command: ["planit-bootstrap"]
+    depends_on:
+      ml:
+        condition: service_healthy
     restart: "no"
 
   api:
@@ -39,7 +44,7 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      migrate:
+      bootstrap:
         condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -61,25 +66,9 @@ services:
       GEMINI_API_KEY: ""
     command: ["planit-worker"]
     depends_on:
-      migrate:
+      bootstrap:
         condition: service_completed_successfully
     restart: unless-stopped
-
-  init-admin:
-    build: .
-    profiles: ["setup"]
-    env_file:
-      - path: .env
-        required: false
-    environment:
-      DATABASE_URL: ${DOCKER_DATABASE_URL:?Set DOCKER_DATABASE_URL to the Tiger Cloud asyncpg URL}
-      INITIAL_ADMIN_USERNAME: ${INITIAL_ADMIN_USERNAME:-}
-      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
-    command: ["planit-init-admin"]
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-    restart: "no"
 
 volumes:
   ml-cache:

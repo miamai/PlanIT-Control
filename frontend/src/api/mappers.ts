@@ -275,14 +275,10 @@ export function toSiteRisk(
   }
 }
 
-/** Core's score_source for past days scored later by `planit-backfill`. */
-const BACKFILL_SCORE_SOURCE = 'ml_backfill'
-
 export function toHazardIndexPoint(dto: RiskDTO): HazardIndexPoint {
   return {
     date: dto.prediction_date,
     score: dto.score,
-    backfilled: dto.score_source === BACKFILL_SCORE_SOURCE,
   }
 }
 

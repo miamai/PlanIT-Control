@@ -12,9 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from timezonefinder import TimezoneFinder
 
 from app.models.entities import Site
+from app.providers.base import RetryingHTTPProvider
 
 EIA_RELEASE = "August 2026"
 EIA_SOURCE_URL = "https://www.eia.gov/electricity/data/eia860m/xls/august_generator2026.xlsx"
+EIA_API_URL = "https://api.eia.gov/v2/electricity/operating-generator-capacity/data"
+EIA_API_METADATA_URL = "https://api.eia.gov/v2/electricity/operating-generator-capacity"
 CACHE_PATH = Path(__file__).resolve().parents[2] / "data" / "eia860m_august_2026_sites.csv"
 
 
@@ -127,6 +130,96 @@ def parse_cached_sites(path: Path = CACHE_PATH) -> list[PlantRecord]:
                 record.energy_sources[row["primary_energy_source"]] = 1
             records.append(record)
     return records
+
+
+def select_reference_sites(
+    records: list[PlantRecord], *, per_state: int = 3, maximum: int = 153
+) -> list[PlantRecord]:
+    """Choose a bounded, deterministic reference set from operating plants."""
+    by_state: dict[str, list[PlantRecord]] = defaultdict(list)
+    for record in records:
+        by_state[record.state].append(record)
+    selected: dict[int, PlantRecord] = {}
+    for state in sorted(by_state):
+        ranked = sorted(
+            by_state[state],
+            key=lambda item: (-sum(item.technologies.values()), item.eia_plant_id),
+        )
+        for record in ranked[:per_state]:
+            selected[record.eia_plant_id] = record
+    for record in sorted(records, key=lambda item: item.eia_plant_id):
+        if len(selected) >= maximum:
+            break
+        selected.setdefault(record.eia_plant_id, record)
+    return [selected[key] for key in sorted(selected)][:maximum]
+
+
+async def fetch_eia_api_records(
+    api_key: str,
+    *,
+    timeout_seconds: float = 60.0,
+    page_size: int = 5000,
+    transport: httpx.AsyncBaseTransport | None = None,
+) -> list[PlantRecord]:
+    """Load generator rows from EIA APIv2 and aggregate them by plant."""
+    async with httpx.AsyncClient(timeout=timeout_seconds, transport=transport) as client:
+        http = RetryingHTTPProvider(client)
+        metadata = await http.get_json(EIA_API_METADATA_URL, params={"api_key": api_key})
+        route = metadata.get("response", metadata)
+        fields = {row.get("id") for row in route.get("data", []) if isinstance(row, dict)}
+        required = {
+            "plant_id", "plant_name", "stateid", "county", "latitude", "longitude",
+            "entity_name", "technology", "energy_source_code", "nameplate_capacity_mw", "status",
+        }
+        if not required.issubset(fields):
+            raise ValueError(f"EIA API metadata is missing fields: {sorted(required - fields)}")
+        params = {
+            "api_key": api_key,
+            "data[]": sorted(required - {"status"}),
+            "facets[status][]": "OP",
+            "length": page_size,
+            "offset": 0,
+        }
+        plants: dict[int, PlantRecord] = {}
+        while True:
+            payload = await http.get_json(EIA_API_URL, params=params)
+            response = payload.get("response", payload)
+            rows = response.get("data", [])
+            for row in rows:
+                if str(row.get("status", "OP")).upper() not in {"OP", "OPERATING"}:
+                    continue
+                if not _valid_coordinates(row.get("latitude"), row.get("longitude")):
+                    continue
+                try:
+                    plant_id = int(row["plant_id"])
+                    capacity = float(row.get("nameplate_capacity_mw") or 0)
+                    latitude = float(row["latitude"])
+                    longitude = float(row["longitude"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                record = plants.setdefault(
+                    plant_id,
+                    PlantRecord(
+                        eia_plant_id=plant_id,
+                        name=str(row.get("plant_name") or "").strip(),
+                        latitude=latitude,
+                        longitude=longitude,
+                        state=str(row.get("stateid") or "").strip(),
+                        county=str(row.get("county") or "").strip() or None,
+                        operator_name=str(row.get("entity_name") or "").strip() or None,
+                    ),
+                )
+                technology = str(row.get("technology") or "").strip()
+                source = str(row.get("energy_source_code") or "").strip()
+                if technology:
+                    record.technologies[technology] += capacity
+                if source:
+                    record.energy_sources[source] += capacity
+            total = int(response.get("total", len(rows)))
+            if not rows or int(params["offset"]) + len(rows) >= total:
+                break
+            params["offset"] = int(params["offset"]) + len(rows)
+        return sorted(plants.values(), key=lambda item: item.eia_plant_id)
 
 
 async def download_eia_workbook(destination: Path) -> Path:

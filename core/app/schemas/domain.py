@@ -227,7 +227,7 @@ class RiskRead(ORMModel):
                 # Older stored ML results predate the explicit method field, but
                 # their producer is known: model features are TreeSHAP and the
                 # wildlife category is the documented rule-based exception.
-                if score.score_source in {"ml_service", "ml_backfill"}:
+                if score.score_source == "ml_service":
                     method = "rule_based" if hazard == "wildlife" else "tree_shap"
                 else:
                     continue

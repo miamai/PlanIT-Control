@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
@@ -206,7 +206,6 @@ async def sync_ml_sites(session: AsyncSession, client: MLClient) -> int:
         raise ValueError("ML site catalog size does not match service health")
     if any(row.model_version != health.model_version for row in catalog):
         raise ValueError("ML site catalog version does not match service health")
-    await session.execute(update(Site).values(ml_site_id=None, ml_model_version=None))
     count = 0
     for row in catalog:
         site = await session.scalar(select(Site).where(Site.eia_plant_id == row.eia_plant_id))

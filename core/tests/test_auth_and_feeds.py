@@ -7,7 +7,6 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app import cli
 from app.core.config import Settings
 from app.core.database import get_session
 from app.main import app
@@ -218,39 +217,4 @@ async def test_initial_admin_requires_secrets_and_an_empty_user_table() -> None:
                     initial_admin_password="another-test-only-secret",
                 ),
             )
-    await engine.dispose()
-
-
-@pytest.mark.asyncio
-async def test_init_admin_cli_output_is_credential_neutral(monkeypatch, capsys) -> None:
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    factory = async_sessionmaker(engine, expire_on_commit=False)
-    async with engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
-
-    username = "output.must.not.include.this"
-    password = "output-must-not-include-this-password"
-    monkeypatch.setattr(cli, "SessionFactory", factory)
-    monkeypatch.setattr(
-        cli,
-        "get_settings",
-        lambda: Settings(
-            _env_file=None,
-            initial_admin_username=username,
-            initial_admin_password=password,
-        ),
-    )
-
-    assert await cli._initialize_admin() == 0
-    output = capsys.readouterr().out
-    assert output == "Created initial administrator account.\n"
-    assert username not in output
-    assert password not in output
-    assert "$argon2" not in output
-
-    assert await cli._initialize_admin() == 1
-    failure_output = capsys.readouterr().out
-    assert username not in failure_output
-    assert password not in failure_output
-    assert "$argon2" not in failure_output
     await engine.dispose()

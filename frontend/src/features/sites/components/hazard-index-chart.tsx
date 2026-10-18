@@ -20,7 +20,7 @@ import {
 } from '@/lib/planit'
 import { RecommendationStatus } from '@/components/planit/risk-status'
 
-/** 14-day hazard index over the GO / CAUTION / NO-GO bands. Backfilled days are hollow. */
+/** 14-day hazard index over the GO / CAUTION / NO-GO bands. */
 export function HazardIndexChart({ points }: { points: HazardIndexPoint[] }) {
   const data = useMemo(
     () =>
@@ -30,7 +30,6 @@ export function HazardIndexChart({ points }: { points: HazardIndexPoint[] }) {
           { month: 'short', day: 'numeric' }
         ),
         score: point.score,
-        backfilled: point.backfilled ?? false,
       })),
     [points]
   )
@@ -85,7 +84,6 @@ export function HazardIndexChart({ points }: { points: HazardIndexPoint[] }) {
           content={({ active, payload, label }) => {
             if (!active || !payload?.length) return null
             const score = Number(payload[0].value)
-            const backfilled = Boolean(payload[0].payload?.backfilled)
             return (
               <div className='space-y-1 rounded-md border bg-background px-3 py-2 text-xs shadow-sm'>
                 <p className='font-medium'>{label}</p>
@@ -98,11 +96,6 @@ export function HazardIndexChart({ points }: { points: HazardIndexPoint[] }) {
                     className='text-xs'
                   />
                 </div>
-                {backfilled ? (
-                  <p className='text-muted-foreground'>
-                    Backfilled from observed weather
-                  </p>
-                ) : null}
               </div>
             )
           }}
@@ -120,21 +113,11 @@ export function HazardIndexChart({ points }: { points: HazardIndexPoint[] }) {
               cx: number
               cy: number
               index: number
-              payload: { score: number; backfilled: boolean }
+              payload: { score: number }
             }
             const color =
               RECOMMENDATION_HEX[recommendationFromScore(payload.score)]
-            return payload.backfilled ? (
-              <circle
-                key={index}
-                cx={cx}
-                cy={cy}
-                r={3}
-                className='fill-background'
-                stroke={color}
-                strokeWidth={1.5}
-              />
-            ) : (
+            return (
               <circle
                 key={index}
                 cx={cx}

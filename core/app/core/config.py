@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     refresh_reuse_grace_seconds: int = 30
     initial_admin_username: str | None = None
     initial_admin_password: SecretStr | None = None
+    eia_api_key: SecretStr | None = None
+    sites_per_state: int = Field(default=3, ge=1, le=20)
+    sites_max: int = Field(default=153, ge=1, le=1000)
 
     nws_user_agent: str = "PlanIT-Control/0.1 (contact@example.com)"
     request_timeout_seconds: float = 15.0

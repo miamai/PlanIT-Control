@@ -133,5 +133,7 @@ async def test_site_sync_adds_catalog_sites_without_deleting_existing() -> None:
         sites = list((await session.scalars(select(Site))).all())
         assert len(sites) == 2
         assert next(site for site in sites if site.eia_plant_id == 123).ml_supported
-        assert not next(site for site in sites if site.eia_plant_id == 999).ml_supported
+        retained = next(site for site in sites if site.eia_plant_id == 999)
+        assert retained.ml_supported
+        assert retained.ml_model_version == "old-v0"
     await engine.dispose()

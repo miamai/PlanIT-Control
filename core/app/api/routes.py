@@ -41,7 +41,6 @@ from app.schemas.domain import (
     RiskResult,
     SiteRead,
 )
-from app.services.backfill import BACKFILL_SCORE_SOURCE
 from app.services.decision import assess_decision
 from app.services.events import publish_event
 from app.services.hazard_severity import assess_observation
@@ -293,10 +292,9 @@ async def list_reports(
 
 
 async def _latest_risk(session: AsyncSession, site_id: uuid.UUID) -> RiskScore | None:
-    # Backfilled scores are history only; the current score is the newest forward prediction.
     return await session.scalar(
         select(RiskScore)
-        .where(RiskScore.site_id == site_id, RiskScore.score_source != BACKFILL_SCORE_SOURCE)
+        .where(RiskScore.site_id == site_id)
         .order_by(RiskScore.generated_at.desc())
         .limit(1)
     )
@@ -380,7 +378,6 @@ async def risk_rankings(_: UserPrincipal, session: DbSession) -> Envelope[list[R
     )
     ranked = (
         select(RiskScore.id, newest_first)
-        .where(RiskScore.score_source != BACKFILL_SCORE_SOURCE)
         .subquery()
     )
     latest_scores = (

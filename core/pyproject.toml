@@ -21,7 +21,7 @@ dependencies = [
   "uvicorn[standard]>=0.34,<1",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
   "aiosqlite>=0.20,<1",
   "pytest>=8.3,<9",
@@ -32,15 +32,11 @@ dev = [
 ]
 
 [project.scripts]
-planit-import-sites = "app.cli:import_sites"
-planit-seed-demo = "app.cli:seed_demo"
-planit-db-check = "app.cli:database_check"
-planit-api-smoke = "app.api_smoke:main"
-planit-init-admin = "app.cli:initialize_admin"
-planit-ml-sync-sites = "app.cli:sync_ml_catalog"
+planit-bootstrap = "app.cli:bootstrap"
+setup = "app.cli:setup"
+dev = "app.cli:dev"
 planit-ml-generate = "app.cli:generate_ml_briefing"
 planit-worker = "app.jobs.worker:main"
-planit-backfill = "app.cli:backfill"
 
 [build-system]
 requires = ["hatchling"]

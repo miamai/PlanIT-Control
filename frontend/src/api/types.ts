@@ -198,6 +198,4 @@ export interface TimelinePoint {
 export interface HazardIndexPoint {
   date: string
   score: number
-  /** Scored after the fact from observed weather, not forecast in advance. */
-  backfilled?: boolean
 }

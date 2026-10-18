@@ -18,7 +18,6 @@ The score originates in `ml/score.py`. The daily ML service builds forecast feat
 ML site and prediction date, calculates calibrated hazard probabilities, and returns the index,
 sub-scores, explanations, model version, and date. `core/app/services/briefing.py` validates the
 site/date/version before storing the result. Core never substitutes another site's prediction.
-Historical `ml_backfill` rows were produced by this same scorer and explanation mechanism.
 
 Relevant Tiger Data tables are:
 
