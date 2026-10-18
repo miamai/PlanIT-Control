@@ -34,11 +34,22 @@ class FIRMSProvider(EnvironmentalProvider, RetryingHTTPProvider):
                 east = max(site.longitude for site in group_sites) + 0.5
                 south = min(site.latitude for site in group_sites) - 0.5
                 north = max(site.latitude for site in group_sites) + 0.5
+                # A day range of 1 covers only the current UTC day, which drops the US
+                # afternoon passes at 00:00 UTC. Repeats are deduplicated on insert.
                 url = (
                     "https://firms.modaps.eosdis.nasa.gov/api/area/csv/"
-                    f"{self.map_key}/VIIRS_NOAA21_NRT/{west},{south},{east},{north}/1"
+                    f"{self.map_key}/VIIRS_NOAA21_NRT/{west},{south},{east},{north}/2"
                 )
-                response = await self.get_response(url)
+                try:
+                    response = await self.get_response(url)
+                except httpx.HTTPStatusError as exc:
+                    # The default message includes the URL, which contains the map key.
+                    raise ProviderError(
+                        f"FIRMS request failed: {exc.response.status_code}"
+                    ) from None
+                # FIRMS answers an invalid key or bad request with 200 and a plain message.
+                if not response.text.startswith("latitude,"):
+                    raise ProviderError(f"FIRMS returned no CSV: {response.text[:120].strip()}")
                 detections = list(csv.DictReader(io.StringIO(response.text)))
                 for detection in detections:
                     lat, lon = float(detection["latitude"]), float(detection["longitude"])

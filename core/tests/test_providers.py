@@ -5,6 +5,7 @@ import httpx
 import pytest
 import respx
 
+from app.providers.base import ProviderError
 from app.providers.flood import USGSWaterProvider
 from app.providers.weather import NWSWeatherProvider
 from app.providers.wildfire import FIRMSProvider
@@ -99,6 +100,27 @@ async def test_firms_bounds_requests_by_state_group() -> None:
         rows = await FIRMSProvider(client, "test-key").fetch(sites)
     assert rows == []
     assert route.call_count == 2
+    # Today and yesterday (UTC), so the US afternoon passes survive 00:00 UTC.
+    assert all(call.request.url.path.endswith("/2") for call in route.calls)
+
+
+@pytest.mark.asyncio
+@respx.mock
+@pytest.mark.parametrize(
+    ("response", "message"),
+    [
+        (httpx.Response(200, text="Invalid MAP_KEY."), "FIRMS returned no CSV: Invalid MAP_KEY."),
+        (httpx.Response(400, text="Bad request"), "FIRMS request failed: 400"),
+    ],
+)
+async def test_firms_failures_raise_without_exposing_the_key(response, message) -> None:
+    site = SimpleNamespace(id=uuid4(), latitude=30.0, longitude=-90.0, state="LA")
+    respx.route(method="GET", host="firms.modaps.eosdis.nasa.gov").mock(return_value=response)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(ProviderError) as raised:
+            await FIRMSProvider(client, "secret-map-key").fetch([site])
+    assert str(raised.value) == message
+    assert "secret-map-key" not in str(raised.value)
 
 
 @pytest.mark.asyncio
