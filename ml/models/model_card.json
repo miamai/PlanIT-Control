@@ -1,0 +1,277 @@
+{
+  "model_version": "v1",
+  "trained_at": "2026-10-18T02:21:49+00:00",
+  "n_sites": 96,
+  "test_year": 2025,
+  "hazards": {
+    "heat": {
+      "label": "Storm Events Heat/Excessive Heat (zone -> county), OSHA outdoor heat injury within 25 mi, or NWS Heat Advisory / Excessive or Extreme Heat Warning at the site",
+      "test_positive_days": 997,
+      "test_days": 34944,
+      "pr_auc": {
+        "model": [
+          0.615,
+          0.517,
+          0.717
+        ],
+        "baseline": [
+          0.178,
+          0.123,
+          0.222
+        ]
+      },
+      "roc_auc": [
+        0.98,
+        0.975,
+        0.985
+      ],
+      "brier": {
+        "model": 0.0153,
+        "baseline": 0.0253
+      },
+      "sub_score_3.5_plus_as_warning": {
+        "pod": 0.619,
+        "far": 0.393,
+        "csi": 0.442,
+        "warned_share_of_days": 0.029
+      },
+      "top_drivers": [
+        "t_min",
+        "heat_climo",
+        "hi_max",
+        "hi_max_anom",
+        "t_max"
+      ],
+      "unseen_sites_cv": {
+        "pr_auc": 0.635,
+        "roc_auc": 0.98,
+        "baseline_rate": 0.0285
+      }
+    },
+    "convective": {
+      "label": "Storm Events Thunderstorm Wind/Hail/Lightning within 25 mi, NWS Severe Thunderstorm or Tornado Warning at the site, or 3+ hours of thunder at the nearest ASOS station (40 km); trained and evaluated on sites that have a station",
+      "test_positive_days": 2193,
+      "test_days": 29120,
+      "pr_auc": {
+        "model": [
+          0.48,
+          0.44,
+          0.522
+        ],
+        "baseline": [
+          0.204,
+          0.174,
+          0.234
+        ]
+      },
+      "roc_auc": [
+        0.927,
+        0.92,
+        0.933
+      ],
+      "brier": {
+        "model": 0.0487,
+        "baseline": 0.0646
+      },
+      "sub_score_3.5_plus_as_warning": {
+        "pod": 0.465,
+        "far": 0.482,
+        "csi": 0.324,
+        "warned_share_of_days": 0.068
+      },
+      "top_drivers": [
+        "region",
+        "td_max",
+        "precip_max_hr",
+        "doy_cos",
+        "hi_max"
+      ],
+      "unseen_sites_cv": {
+        "pr_auc": 0.488,
+        "roc_auc": 0.924,
+        "baseline_rate": 0.0753
+      }
+    },
+    "flood": {
+      "label": "Storm Events Flash Flood/Coastal Flood or first 3 days of a Flood event within 25 mi, or NWS Flash Flood/Flood/Coastal Flood Warning at the site (first 3 days); later days of long floods excluded",
+      "test_positive_days": 795,
+      "test_days": 34599,
+      "pr_auc": {
+        "model": [
+          0.33,
+          0.264,
+          0.392
+        ],
+        "baseline": [
+          0.057,
+          0.042,
+          0.077
+        ]
+      },
+      "roc_auc": [
+        0.904,
+        0.887,
+        0.922
+      ],
+      "brier": {
+        "model": 0.0181,
+        "baseline": 0.0227
+      },
+      "sub_score_3.5_plus_as_warning": {
+        "pod": 0.176,
+        "far": 0.333,
+        "csi": 0.162,
+        "warned_share_of_days": 0.006
+      },
+      "top_drivers": [
+        "api",
+        "flood_climo",
+        "region",
+        "log_dist_stream_km",
+        "gauge_pct_flood"
+      ],
+      "unseen_sites_cv": {
+        "pr_auc": 0.293,
+        "roc_auc": 0.862,
+        "baseline_rate": 0.023
+      }
+    },
+    "wildfire": {
+      "label": "Storm Events Wildfire, >= 3 FIRMS VIIRS vegetation-fire detections within 25 km (static hot spots and detections within 1 km of the site removed), or NWS Red Flag Warning",
+      "test_positive_days": 1398,
+      "test_days": 34944,
+      "pr_auc": {
+        "model": [
+          0.343,
+          0.268,
+          0.405
+        ],
+        "baseline": [
+          0.215,
+          0.122,
+          0.306
+        ]
+      },
+      "roc_auc": [
+        0.876,
+        0.848,
+        0.894
+      ],
+      "brier": {
+        "model": 0.031,
+        "baseline": 0.0346
+      },
+      "sub_score_3.5_plus_as_warning": {
+        "pod": 0.25,
+        "far": 0.474,
+        "csi": 0.204,
+        "warned_share_of_days": 0.019
+      },
+      "top_drivers": [
+        "wildfire_climo",
+        "vpd_max",
+        "t_max",
+        "rh_min_afternoon",
+        "days_since_rain"
+      ],
+      "unseen_sites_cv": {
+        "pr_auc": 0.203,
+        "roc_auc": 0.807,
+        "baseline_rate": 0.04
+      }
+    }
+  },
+  "overall": {
+    "caution_or_no_go_as_warning": {
+      "pod": 0.564,
+      "far": 0.473,
+      "csi": 0.374,
+      "warned_share_of_days": 0.151
+    },
+    "no_go_as_warning": {
+      "pod": 0.183,
+      "far": 0.259,
+      "csi": 0.172,
+      "warned_share_of_days": 0.035
+    },
+    "recommendation_mix": {
+      "go": 0.849,
+      "caution": 0.116,
+      "no-go": 0.035
+    }
+  },
+  "damaging_events": {
+    "n_event_site_days": 1272,
+    "share_caution_or_no_go": 0.701,
+    "share_no_go": 0.28,
+    "by_hazard": {
+      "convective": 0.697,
+      "flood": 0.75,
+      "heat": 0.818,
+      "wildfire": 0.607
+    }
+  },
+  "hourly_thunder": {
+    "model": {
+      "pr_auc": 0.1888,
+      "roc_auc": 0.9283,
+      "brier": 0.0131
+    },
+    "baseline_site_month_hour": {
+      "pr_auc": 0.0689,
+      "roc_auc": 0.77,
+      "brier": 0.01436
+    },
+    "at_threshold": {
+      "threshold": 0.13,
+      "hit_rate": 0.399,
+      "precision": 0.218,
+      "hours_flagged": 0.0275
+    }
+  },
+  "briefing_bakeoff": [
+    {
+      "model": "mlx-community/Qwen3-4B-Instruct-2507-4bit",
+      "load_seconds": 4.8,
+      "peak_gpu_memory_gb": 2.91,
+      "n": 62,
+      "pass_first_try": 0.968,
+      "pass_after_retry": 1.0,
+      "template_fallback_rate": 0.0,
+      "seconds_per_briefing_median": 6.35,
+      "tokens_per_second": 20.4,
+      "words_median": 89,
+      "pass_by_decision": {
+        "CAUTION": 1.0,
+        "GO": 1.0,
+        "NO-GO": 1.0
+      },
+      "pass_with_alert": 1.0,
+      "first_try_problem_types": {
+        "number 66": 2
+      }
+    },
+    {
+      "model": "mlx-community/Qwen3.5-4B-MLX-4bit",
+      "load_seconds": 3.2,
+      "peak_gpu_memory_gb": 3.26,
+      "n": 62,
+      "pass_first_try": 0.968,
+      "pass_after_retry": 1.0,
+      "template_fallback_rate": 0.0,
+      "seconds_per_briefing_median": 6.58,
+      "tokens_per_second": 20.3,
+      "words_median": 101,
+      "pass_by_decision": {
+        "CAUTION": 1.0,
+        "GO": 1.0,
+        "NO-GO": 1.0
+      },
+      "pass_with_alert": 1.0,
+      "first_try_problem_types": {
+        "number 7.7": 1,
+        "number 9.1": 1
+      }
+    }
+  ]
+}

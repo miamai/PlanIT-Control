@@ -1,6 +1,5 @@
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
-import { AxiosError } from 'axios'
 import {
   QueryCache,
   QueryClient,
@@ -8,6 +7,7 @@ import {
 } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { ApiError } from '@/api/client'
 import { useAuthStore } from '@/stores/auth-store'
 import { handleServerError } from '@/lib/handle-server-error'
 import { DirectionProvider } from './context/direction-provider'
@@ -29,8 +29,7 @@ const queryClient = new QueryClient({
         if (failureCount > 3 && import.meta.env.PROD) return false
 
         return !(
-          error instanceof AxiosError &&
-          [401, 403].includes(error.response?.status ?? 0)
+          error instanceof ApiError && [401, 403, 404].includes(error.status)
         )
       },
       refetchOnWindowFocus: import.meta.env.PROD,
@@ -39,33 +38,27 @@ const queryClient = new QueryClient({
     mutations: {
       onError: (error) => {
         handleServerError(error)
-
-        if (error instanceof AxiosError) {
-          if (error.response?.status === 304) {
-            toast.error('Content not modified!')
-          }
-        }
       },
     },
   },
   queryCache: new QueryCache({
     onError: (error) => {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 401) {
+      if (error instanceof ApiError) {
+        if (error.status === 401) {
           toast.error('Session expired!')
           useAuthStore.getState().auth.reset()
           const redirect = `${router.history.location.href}`
           router.navigate({ to: '/sign-in', search: { redirect } })
         }
-        if (error.response?.status === 500) {
+        if (error.status === 500) {
           toast.error('Internal Server Error!')
           // Only navigate to error page in production to avoid disrupting HMR in development
           if (import.meta.env.PROD) {
             router.navigate({ to: '/500' })
           }
         }
-        if (error.response?.status === 403) {
-          // router.navigate("/forbidden", { replace: true });
+        if (error.status === 403) {
+          toast.error('Your role does not have access to this data.')
         }
       }
     },

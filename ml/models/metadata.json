@@ -1,0 +1,376 @@
+{
+  "model_version": "v1",
+  "trained_at": "2026-10-18T02:21:49+00:00",
+  "splits": {
+    "train": [
+      2019,
+      2020,
+      2021,
+      2022,
+      2023
+    ],
+    "calibrate": 2024,
+    "test": 2025
+  },
+  "n_sites": 96,
+  "lightgbm_params": {
+    "objective": "binary",
+    "metric": "average_precision",
+    "learning_rate": 0.03,
+    "num_leaves": 15,
+    "min_data_in_leaf": 80,
+    "feature_fraction": 0.8,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 1,
+    "lambda_l2": 5.0,
+    "verbose": -1,
+    "seed": 7
+  },
+  "hazards": {
+    "heat": {
+      "features": [
+        "hi_max",
+        "hi_hours_103_work",
+        "t_min",
+        "t_max",
+        "hot_streak",
+        "hi_max_anom",
+        "t_max_anom",
+        "rh_mean",
+        "heat_climo"
+      ],
+      "categorical": [],
+      "best_iteration": 171,
+      "scale_pos_weight": 31.97,
+      "positives": {
+        "train_2019_2023": 5317,
+        "calib_2024": 1419,
+        "test_2025": 997
+      },
+      "rows": {
+        "train": 175296,
+        "calib": 35136,
+        "test": 34944
+      },
+      "label": "Storm Events Heat/Excessive Heat (zone -> county), OSHA outdoor heat injury within 25 mi, or NWS Heat Advisory / Excessive or Extreme Heat Warning at the site",
+      "base_rate_test": 0.02853,
+      "test_2025": {
+        "model_calibrated": {
+          "pr_auc": 0.6147,
+          "roc_auc": 0.9804,
+          "brier": 0.01534
+        },
+        "model_uncalibrated": {
+          "pr_auc": 0.6333,
+          "roc_auc": 0.9807,
+          "brier": 0.04742
+        },
+        "baseline_site_month": {
+          "pr_auc": 0.1775,
+          "roc_auc": 0.8992,
+          "brier": 0.0253
+        }
+      },
+      "beats_baseline": true,
+      "shap_mean_abs": {
+        "t_min": 0.8002,
+        "heat_climo": 0.633,
+        "hi_max": 0.508,
+        "hi_max_anom": 0.4825,
+        "t_max": 0.3257,
+        "t_max_anom": 0.246,
+        "rh_mean": 0.1711,
+        "hot_streak": 0.0402,
+        "hi_hours_103_work": 0.0339
+      },
+      "reliability_plot": "heat_reliability.png"
+    },
+    "convective": {
+      "features": [
+        "precip_max_hr",
+        "heavy_rain_hours",
+        "precip_afternoon",
+        "precip_day",
+        "gust_max",
+        "gust_factor_max",
+        "temp_drop_1h_max",
+        "td_max",
+        "hi_max",
+        "t_max",
+        "doy_sin",
+        "doy_cos",
+        "region"
+      ],
+      "categorical": [
+        "region"
+      ],
+      "best_iteration": 519,
+      "scale_pos_weight": 13.59,
+      "positives": {
+        "train_2019_2023": 10013,
+        "calib_2024": 1909,
+        "test_2025": 2193
+      },
+      "rows": {
+        "train": 146080,
+        "calib": 29280,
+        "test": 29120
+      },
+      "label": "Storm Events Thunderstorm Wind/Hail/Lightning within 25 mi, NWS Severe Thunderstorm or Tornado Warning at the site, or 3+ hours of thunder at the nearest ASOS station (40 km); trained and evaluated on sites that have a station",
+      "base_rate_test": 0.07531,
+      "test_2025": {
+        "model_calibrated": {
+          "pr_auc": 0.48,
+          "roc_auc": 0.9266,
+          "brier": 0.04872
+        },
+        "model_uncalibrated": {
+          "pr_auc": 0.4996,
+          "roc_auc": 0.9273,
+          "brier": 0.11076
+        },
+        "baseline_site_month": {
+          "pr_auc": 0.2037,
+          "roc_auc": 0.7741,
+          "brier": 0.06457
+        }
+      },
+      "beats_baseline": true,
+      "shap_mean_abs": {
+        "region": 0.7185,
+        "td_max": 0.6591,
+        "precip_max_hr": 0.6303,
+        "doy_cos": 0.4431,
+        "hi_max": 0.3968,
+        "precip_day": 0.3721,
+        "gust_factor_max": 0.3062,
+        "t_max": 0.2737,
+        "precip_afternoon": 0.2567,
+        "temp_drop_1h_max": 0.1691,
+        "doy_sin": 0.1246,
+        "gust_max": 0.0892,
+        "heavy_rain_hours": 0.0699
+      },
+      "reliability_plot": "convective_reliability.png"
+    },
+    "flood": {
+      "features": [
+        "precip_day",
+        "rain_72h",
+        "rain_7d",
+        "rain_14d",
+        "api",
+        "precip_max_hr",
+        "precip_day_lag1",
+        "precip_day_lag2",
+        "sm0_mean",
+        "sm28_mean",
+        "sm0_change_7d",
+        "gauge_pct_flood",
+        "gauge_rise_3d",
+        "has_gauge",
+        "tide_max_above_mhhw",
+        "has_tide",
+        "fema_sfha",
+        "fema_coastal",
+        "log_dist_stream_km",
+        "region",
+        "flood_climo"
+      ],
+      "categorical": [
+        "region"
+      ],
+      "best_iteration": 1210,
+      "scale_pos_weight": 33.46,
+      "positives": {
+        "train_2019_2023": 4970,
+        "calib_2024": 990,
+        "test_2025": 795
+      },
+      "rows": {
+        "train": 171256,
+        "calib": 34557,
+        "test": 34599
+      },
+      "label": "Storm Events Flash Flood/Coastal Flood or first 3 days of a Flood event within 25 mi, or NWS Flash Flood/Flood/Coastal Flood Warning at the site (first 3 days); later days of long floods excluded",
+      "base_rate_test": 0.02298,
+      "test_2025": {
+        "model_calibrated": {
+          "pr_auc": 0.3301,
+          "roc_auc": 0.9037,
+          "brier": 0.01811
+        },
+        "model_uncalibrated": {
+          "pr_auc": 0.3497,
+          "roc_auc": 0.9048,
+          "brier": 0.08436
+        },
+        "baseline_site_month": {
+          "pr_auc": 0.0575,
+          "roc_auc": 0.7457,
+          "brier": 0.02275
+        }
+      },
+      "beats_baseline": true,
+      "shap_mean_abs": {
+        "api": 0.5916,
+        "flood_climo": 0.5455,
+        "region": 0.4156,
+        "log_dist_stream_km": 0.2815,
+        "gauge_pct_flood": 0.2425,
+        "precip_max_hr": 0.2256,
+        "rain_72h": 0.2022,
+        "sm28_mean": 0.1896,
+        "tide_max_above_mhhw": 0.1776,
+        "precip_day": 0.1757,
+        "sm0_change_7d": 0.1747,
+        "gauge_rise_3d": 0.1502,
+        "rain_7d": 0.1448,
+        "rain_14d": 0.1366,
+        "sm0_mean": 0.122,
+        "precip_day_lag1": 0.0714,
+        "precip_day_lag2": 0.0595,
+        "fema_sfha": 0.0187,
+        "has_tide": 0.0036,
+        "has_gauge": 0.0021,
+        "fema_coastal": 0.0
+      },
+      "reliability_plot": "flood_reliability.png"
+    },
+    "wildfire": {
+      "features": [
+        "rh_min_afternoon",
+        "vpd_max",
+        "wind_max",
+        "gust_max",
+        "days_since_rain",
+        "rain_30d_deficit",
+        "ffwi_max",
+        "t_max",
+        "doy_sin",
+        "doy_cos",
+        "region",
+        "wildfire_climo"
+      ],
+      "categorical": [
+        "region"
+      ],
+      "best_iteration": 1175,
+      "scale_pos_weight": 25.71,
+      "positives": {
+        "train_2019_2023": 6562,
+        "calib_2024": 1343,
+        "test_2025": 1398
+      },
+      "rows": {
+        "train": 175296,
+        "calib": 35136,
+        "test": 34944
+      },
+      "label": "Storm Events Wildfire, >= 3 FIRMS VIIRS vegetation-fire detections within 25 km (static hot spots and detections within 1 km of the site removed), or NWS Red Flag Warning",
+      "base_rate_test": 0.04001,
+      "test_2025": {
+        "model_calibrated": {
+          "pr_auc": 0.3434,
+          "roc_auc": 0.8756,
+          "brier": 0.03095
+        },
+        "model_uncalibrated": {
+          "pr_auc": 0.3656,
+          "roc_auc": 0.8765,
+          "brier": 0.12077
+        },
+        "baseline_site_month": {
+          "pr_auc": 0.2155,
+          "roc_auc": 0.8209,
+          "brier": 0.03459
+        }
+      },
+      "beats_baseline": true,
+      "shap_mean_abs": {
+        "wildfire_climo": 0.9204,
+        "vpd_max": 0.5642,
+        "t_max": 0.4743,
+        "rh_min_afternoon": 0.4006,
+        "days_since_rain": 0.3738,
+        "wind_max": 0.3053,
+        "region": 0.296,
+        "doy_cos": 0.2765,
+        "rain_30d_deficit": 0.2171,
+        "gust_max": 0.2121,
+        "ffwi_max": 0.1228,
+        "doy_sin": 0.1093
+      },
+      "reliability_plot": "wildfire_reliability.png"
+    }
+  },
+  "hourly_thunder": {
+    "features": [
+      "precip",
+      "precip_lag1",
+      "precip_lead1",
+      "precip_3h",
+      "gust",
+      "gust_factor",
+      "temp",
+      "dewpoint",
+      "rh",
+      "vpd",
+      "temp_change_1h",
+      "srad",
+      "soil0",
+      "hour_sin",
+      "hour_cos",
+      "doy_sin",
+      "doy_cos",
+      "region",
+      "day_precip_max_hr",
+      "day_precip_total",
+      "day_td_max",
+      "day_t_max",
+      "day_gust_max"
+    ],
+    "best_iteration": 645,
+    "scale_pos_weight": 73.3,
+    "sites": 80,
+    "rows": {
+      "train": 3505920,
+      "calib": 702720,
+      "test": 700317
+    },
+    "thunder_hour_rate_test": 0.015,
+    "test_2025": {
+      "model": {
+        "pr_auc": 0.1888,
+        "roc_auc": 0.9283,
+        "brier": 0.0131
+      },
+      "baseline_site_month_hour": {
+        "pr_auc": 0.0689,
+        "roc_auc": 0.77,
+        "brier": 0.01436
+      },
+      "at_threshold": {
+        "threshold": 0.13,
+        "hit_rate": 0.399,
+        "precision": 0.218,
+        "hours_flagged": 0.0275
+      }
+    },
+    "feature_importance_gain": {
+      "precip_3h": 29471822.5,
+      "doy_cos": 7579982.7,
+      "day_precip_max_hr": 6009085.0,
+      "day_t_max": 5613119.1,
+      "temp": 2296243.0,
+      "region": 1801650.6,
+      "day_td_max": 1629790.4,
+      "doy_sin": 1534735.2,
+      "soil0": 1452610.0,
+      "dewpoint": 1362501.0,
+      "day_gust_max": 1197187.3,
+      "hour_sin": 1086005.0
+    },
+    "label": "Thunder (TS/VCTS) reported at the site's ASOS station during the UTC hour"
+  }
+}

@@ -1,0 +1,41 @@
+[project]
+name = "planit-ml"
+version = "0.1.0"
+description = "Hazard models behind the Precognition 0-10 hazard index"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "requests-cache>=1.2",
+    "lightgbm>=4.5",
+    "scikit-learn>=1.5",
+    "shap>=0.46",
+    "timezonefinder>=6.5",
+    "dataretrieval>=1.0",
+    "openpyxl>=3.1",
+    "matplotlib>=3.9",
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "mlx-lm>=0.32 ; platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3,<9",
+    "ruff>=0.9,<1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.uv]
+package = false

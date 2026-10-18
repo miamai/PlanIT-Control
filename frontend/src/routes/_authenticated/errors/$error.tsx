@@ -33,7 +33,9 @@ function RouteComponent() {
         <Search className='me-auto' />
         <ThemeSwitch />
         <ConfigDrawer />
-        <ProfileDropdown />
+        <div className='md:hidden'>
+          <ProfileDropdown />
+        </div>
       </Header>
       <div className='flex-1 [&>div]:h-full'>
         <ErrorComponent />

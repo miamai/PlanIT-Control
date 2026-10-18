@@ -1,0 +1,154 @@
+eia_plant_id,name,latitude,longitude,state,county,operator_name,plant_type,primary_energy_source
+1,Sand Point,55.339722,-160.4972,AK,Aleutians East,"Sand Point Generating, LLC",Petroleum Liquids,DFO
+62,Annex Creek,58.3176,-134.101,AK,Juneau,Alaska Electric Light & Power Co.,Conventional Hydroelectric,WAT
+63,Gold Creek,58.3107,-134.4174,AK,Juneau,Alaska Electric Light & Power Co.,Petroleum Liquids,DFO
+2,Bankhead Dam,33.458665,-87.35682,AL,Tuscaloosa,Alabama Power Co,Conventional Hydroelectric,WAT
+3,Barry,31.0069,-88.0103,AL,Mobile,Alabama Power Co,Natural Gas Fired Combined Cycle,NG
+4,Walter Bouldin Dam,32.583889,-86.28306,AL,Elmore,Alabama Power Co,Conventional Hydroelectric,WAT
+166,Carpenter,34.4425,-93.0262,AR,Garland,Entergy Arkansas LLC,Conventional Hydroelectric,WAT
+170,Lake Catherine,34.4341,-92.9049,AR,Hot Spring,Entergy Arkansas LLC,Natural Gas Steam Turbine,NG
+172,Osceola (AR),35.705381,-89.9689,AR,Mississippi,City of Osceola - (AR),Petroleum Liquids,DFO
+100,South Consolidated,33.466477,-111.7811,AZ,Maricopa,Salt River Project,Conventional Hydroelectric,WAT
+114,Douglas,31.364122,-109.5538,AZ,Cochise,Arizona Public Service Co,Petroleum Liquids,DFO
+116,Ocotillo,33.4225,-111.9122,AZ,Maricopa,Arizona Public Service Co,Natural Gas Fired Combustion Turbine,NG
+34,Rollins,39.134259,-120.9533,CA,Placer,Nevada Irrigation District,Conventional Hydroelectric,WAT
+72,Venice Hydro,34.01135,-118.4168,CA,Los Angeles,Metropolitan Water District of S CA,Conventional Hydroelectric,WAT
+104,J S Eastwood,37.147926,-119.2567,CA,Fresno,Southern California Edison Co,Hydroelectric Pumped Storage,WAT
+464,Alamosa,37.4594,-105.8947,CO,Alamosa,Public Service Co of Colorado,Natural Gas Fired Combustion Turbine,NG
+466,Boulder Canyon Hydro,40.004725,-105.3325,CO,Boulder,"Boulder, City of - (CO)",Conventional Hydroelectric,WAT
+467,Cabin Creek,39.6551,-105.7088,CO,Clear Creek,Public Service Co of Colorado,Hydroelectric Pumped Storage,WAT
+539,Rocky River (CT),41.5826,-73.4349,CT,Litchfield,FirstLight Power Resources Services LLC,Hydroelectric Pumped Storage,WAT
+540,Branford,41.2925,-72.7942,CT,New Haven,Connecticut Jet Power LLC,Petroleum Liquids,KER
+541,Bulls Bridge,41.659046,-73.49198,CT,Litchfield,FirstLight Power Resources Services LLC,Conventional Hydroelectric,WAT
+57788,US GSA Heating and Transmission,38.885709,-77.02837,DC,District of Columbia,US GSA Heating and Transmission,Natural Gas Fired Combustion Turbine,NG
+59012,Walt Bailey Bioenergy Facility,38.820556,-77.01833,DC,District of Columbia,DC Water,Other Waste Biomass,OBG
+62374,JBAB - Washington DC,38.852655,-77.00929,DC,District of Columbia,"JBAB Solar I, LLC.",Solar Photovoltaic,SUN
+591,Christiana,39.7302,-75.5371,DE,New Castle,Calpine Mid-Atlantic Generation LLC,Petroleum Liquids,DFO
+592,Delaware City 10,39.600408,-75.62681,DE,New Castle,Calpine Mid-Atlantic Generation LLC,Petroleum Liquids,DFO
+593,Edge Moor,39.73886,-75.50384,DE,New Castle,Calpine Mid-Atlantic Generation LLC,Natural Gas Steam Turbine,NG
+136,Seminole (FL),29.733056,-81.63278,FL,Putnam,Seminole Electric Cooperative Inc,Natural Gas Fired Combined Cycle,NG
+564,Stanton Energy Center,28.4822,-81.1678,FL,Orange,Orlando Utilities Comm,Conventional Steam Coal,BIT
+609,Cape Canaveral,28.4698,-80.7644,FL,Brevard,Florida Power & Light Co,Natural Gas Fired Combined Cycle,NG
+649,Vogtle,33.1427,-81.7625,GA,Burke,Georgia Power Co,Nuclear,NUC
+703,Bowen,34.1256,-84.9222,GA,Bartow,Georgia Power Co,Conventional Steam Coal,BIT
+704,Burton Dam,34.7939,-83.5402,GA,Rabun,Georgia Power Co,Conventional Hydroelectric,WAT
+765,Kahe,21.356395,-158.1289,HI,Honolulu,Hawaiian Electric Co Inc,Petroleum Liquids,RFO
+766,Waiau,21.388997,-157.9615,HI,Honolulu,Hawaiian Electric Co Inc,Petroleum Liquids,RFO
+768,Waimea,20.0252,-155.6955,HI,Hawaii,Hawaii Electric Light Co Inc,Petroleum Liquids,DFO
+1067,Iowa Hydro LLC,42.069987,-90.69766,IA,Jackson,Zero6 Energy Hydro,Conventional Hydroelectric,WAT
+1068,Marshalltown,42.0474,-92.85944,IA,Marshall,Interstate Power and Light Co,Natural Gas Fired Combustion Turbine,NG
+1073,Prairie Creek,41.944039,-91.63917,IA,Linn,Interstate Power and Light Co,Natural Gas Steam Turbine,NG
+790,Gem State,43.420221,-112.1019,ID,Bonneville,City of Idaho Falls - (ID),Conventional Hydroelectric,WAT
+809,American Falls,42.7778,-112.8764,ID,Power,Idaho Power Co,Conventional Hydroelectric,WAT
+810,Bliss (ID),42.913786,-115.071,ID,Gooding,Idaho Power Co,Conventional Hydroelectric,WAT
+204,Clinton Power Station,40.1719,-88.8339,IL,DeWitt,Constellation Nuclear,Nuclear,NUC
+869,Dresden Generating Station,41.39,-88.27,IL,Grundy,Constellation Nuclear,Nuclear,NUC
+876,Kincaid Generation LLC,39.590556,-89.49639,IL,Christian,Dynegy Kincaid Generation,Conventional Steam Coal,SUB
+983,Clifty Creek,38.7378,-85.4206,IN,Jefferson,Indiana-Kentucky Electric Corp,Conventional Steam Coal,BIT
+986,Elkhart,41.6928,-85.965,IN,Elkhart,Indiana Michigan Power Co,Conventional Hydroelectric,WAT
+989,Twin Branch,41.665,-86.1322,IN,St Joseph,Indiana Michigan Power Co,Conventional Hydroelectric,WAT
+108,Holcomb,37.9308,-100.9725,KS,Finney,Sunflower Electric Power Corp,Conventional Steam Coal,SUB
+210,Wolf Creek Generating Station,38.23926,-95.68978,KS,Coffey,Wolf Creek Nuclear Optg Corp,Nuclear,NUC
+1224,Bird City,39.7581,-101.5319,KS,Cheyenne,Midwest Energy Inc - (KS),Petroleum Liquids,DFO
+54,J K Smith,37.8833,-84.1017,KY,Clark,"East Kentucky Power Coop, Inc",Natural Gas Fired Combustion Turbine,NG
+1353,Big Sandy,38.1707,-82.6176,KY,Lawrence,Kentucky Power Co,Natural Gas Steam Turbine,NG
+1354,Dix Dam,37.7864,-84.7028,KY,Mercer,Kentucky Utilities Co,Conventional Hydroelectric,WAT
+1391,Louisiana 1,30.4922,-91.1864,LA,East Baton Rouge,Entergy Louisiana LLC,Natural Gas Fired Combustion Turbine,NG
+1392,Louisiana 2,30.4922,-91.1864,LA,East Baton Rouge,Entergy Louisiana LLC,Natural Gas Steam Turbine,NG
+1393,R S Nelson,30.2844,-93.2911,LA,Calcasieu,Entergy Louisiana LLC,Conventional Steam Coal,SUB
+547,Northfield Mountain,42.610683,-72.47164,MA,Franklin,"FirstLight Power Resources, Inc. - MA",Hydroelectric Pumped Storage,WAT
+1586,Exelon Framingham LLC,42.2672,-71.3983,MA,Norfolk,"Constellation Power, Inc",Petroleum Liquids,DFO
+1592,Exelon Medway LLC,42.140028,-71.44644,MA,Norfolk,"Constellation Power, Inc",Petroleum Liquids,DFO
+602,Brandon Shores,39.182073,-76.53715,MD,Anne Arundel,Brandon Shores LLC,Conventional Steam Coal,BIT
+1554,Herbert A Wagner,39.1781,-76.5268,MD,Anne Arundel,H.A. Wagner LLC,Petroleum Liquids,DFO
+1556,Perryman,39.442836,-76.22176,MD,Harford,"Constellation Power Source Generation, LLC",Natural Gas Fired Combustion Turbine,NG
+805,Charles E Monty,44.099461,-70.22085,ME,Androscoggin,Brookfield White Pine Hydro LLC,Conventional Hydroelectric,WAT
+1469,Ellsworth Hydro Station,44.5442,-68.4306,ME,Hancock,"Brookfield Black Bear Hydro, LLC",Conventional Hydroelectric,WAT
+1475,Milford Hydro Station,44.942064,-68.64504,ME,Penobscot,"Brookfield Black Bear Hydro, LLC",Conventional Hydroelectric,WAT
+1693,Alcona,44.561961,-83.80451,MI,Alcona,Consumers Energy Co - (MI),Conventional Hydroelectric,WAT
+1694,Allegan Dam,42.563803,-85.95398,MI,Allegan,Consumers Energy Co - (MI),Conventional Hydroelectric,WAT
+1698,C W Tippy,44.259135,-85.93957,MI,Manistee,Consumers Energy Co - (MI),Conventional Hydroelectric,WAT
+30,Madelia,44.0501,-94.4178,MN,WATONWAN,City of Madelia - (MN),Petroleum Liquids,DFO
+378,Prairie River,47.287206,-93.49827,MN,Itasca,"ALLETE, Inc.",Conventional Hydroelectric,WAT
+1891,Syl Laskin,47.5306,-92.1619,MN,St Louis,"ALLETE, Inc.",Natural Gas Steam Turbine,NG
+698,Trenton North,40.0786,-93.635,MO,Grundy,Trenton Municipal Utilities - (MO),Petroleum Liquids,DFO
+2079,Hawthorn,39.1306,-94.4778,MO,Jackson,Evergy Metro,Conventional Steam Coal,SUB
+2081,Northeast (MO),39.1228,-94.5606,MO,Jackson,Evergy Metro,Petroleum Liquids,DFO
+2047,Chevron Oil,30.34,-88.4919,MS,Jackson,Mississippi Power Co,Natural Gas Fired Combustion Turbine,NG
+2048,Sweatt,32.2925,-88.7461,MS,Lauderdale,Mississippi Power Co,Natural Gas Fired Combustion Turbine,NG
+2049,Jack Watson,30.4392,-89.0286,MS,Harrison,Mississippi Power Co,Natural Gas Steam Turbine,NG
+2176,Glendive GT,47.0539,-104.74,MT,Dawson,Montana-Dakota Utilities Co,Natural Gas Fired Combustion Turbine,NG
+2177,Miles City GT,46.4112,-105.7953,MT,Custer,Montana-Dakota Utilities Co,Natural Gas Fired Combustion Turbine,NG
+2181,Black Eagle,47.521331,-111.2614,MT,Cascade,NorthWestern Energy (MT Hydro),Conventional Hydroelectric,WAT
+1016,Butler-Warner Generation Plant,35.0986,-78.8294,NC,Cumberland,Fayetteville Public Works Commission,Natural Gas Fired Combined Cycle,NG
+2706,Asheville,35.4731,-82.5417,NC,Buncombe,Duke Energy Progress - (NC),Natural Gas Fired Combined Cycle,NG
+2707,Blewett,34.9833,-79.8775,NC,Anson,Duke Energy Progress - (NC),Petroleum Liquids,DFO
+2790,R M Heskett,46.8669,-100.8836,ND,Morton,Montana-Dakota Utilities Co,Natural Gas Fired Combustion Turbine,NG
+2801,Jamestown,46.905665,-98.66218,ND,Stutsman,Otter Tail Power Co,Petroleum Liquids,DFO
+2811,Grafton,48.430028,-97.40333,ND,Walsh,City of Grafton - (ND),Petroleum Liquids,DFO
+59,Platte,40.854765,-98.34822,NE,Hall,City of Grand Island - (NE),Conventional Steam Coal,SUB
+60,Whelan Energy Center,40.580872,-98.31244,NE,Adams,City of Hastings - (NE),Conventional Steam Coal,SUB
+785,Kingsley,41.2114,-101.6681,NE,Keith,Central Nebraska Pub P&I Dist,Conventional Hydroelectric,WAT
+2349,Comerford,44.325053,-72.00098,NH,Grafton,"Great River Hydro, LLC",Conventional Hydroelectric,WAT
+2351,S C Moore,44.3356,-71.8742,NH,Grafton,"Great River Hydro, LLC",Conventional Hydroelectric,WAT
+2354,Amoskeag,43.00223,-71.47208,NH,Hillsborough,"Central Rivers Power NH, LLC",Conventional Hydroelectric,WAT
+2390,Sayreville,40.476525,-74.35234,NJ,Middlesex,"Sayreville Power, LLC",Natural Gas Fired Combustion Turbine,NG
+2393,Gilbert,40.565833,-75.16389,NJ,Hunterdon,"Gilbert Power, LLC",Natural Gas Fired Combined Cycle,NG
+2398,Bergen Generating Station,40.8375,-74.0244,NJ,Bergen,"Parkway Generation Operating, LLC",Natural Gas Fired Combined Cycle,NG
+584,Navajo Dam,36.8061,-107.6131,NM,San Juan,City of Farmington - (NM),Conventional Hydroelectric,WAT
+2442,Four Corners,36.69,-108.4814,NM,San Juan,Arizona Public Service Co,Conventional Steam Coal,BIT
+2444,Rio Grande,31.8047,-106.5472,NM,Dona Ana,El Paso Electric Co,Natural Gas Steam Turbine,NG
+154,Hoover Dam (NV),36.01551,-114.738,NV,Clark,U S Bureau of Reclamation,Conventional Hydroelectric,WAT
+2322,Clark (NVE),36.0875,-115.0507,NV,Clark,Nevada Power Co,Natural Gas Fired Combustion Turbine,NG
+2324,Reid Gardner,36.657347,-114.6333,NV,Clark,Nevada Power Co,Batteries,MWH
+88,Ashokan,41.949,-74.2063,NY,Ulster,New York Power Authority,Conventional Hydroelectric,WAT
+579,High Falls,41.828814,-74.13188,NY,ULSTER,Central Hudson Gas & Elec Corp,Conventional Hydroelectric,WAT
+625,Upper Mechanicville,42.9126,-73.6805,NY,Saratoga,New York State Elec & Gas Corp,Conventional Hydroelectric,WAT
+2828,Cardinal,40.2522,-80.6486,OH,Jefferson,Cardinal Operating Company,Conventional Steam Coal,BIT
+2830,Walter C Beckjord,38.9917,-84.2981,OH,Clermont,Duke Energy Ohio Inc,Batteries,MWH
+2831,Dick's Creek,39.465,-84.3778,OH,Butler,Luminant Dick's Creek,Natural Gas Fired Combustion Turbine,NG
+165,GREC,36.190278,-95.2894,OK,Mayes,Grand River Dam Authority,Natural Gas Fired Combined Cycle,NG
+2951,Horseshoe Lake,35.50866,-97.17969,OK,Oklahoma,Oklahoma Gas & Electric Co,Natural Gas Steam Turbine,NG
+2952,Muskogee,35.76135,-95.28732,OK,Muskogee,Oklahoma Gas & Electric Co,Natural Gas Steam Turbine,NG
+3013,Hells Canyon,45.2439,-116.7008,OR,Wallowa,Idaho Power Co,Conventional Hydroelectric,WAT
+3014,Oxbow (OR),44.971643,-116.835,OR,Baker,Idaho Power Co,Conventional Hydroelectric,WAT
+3020,Clearwater 1,43.251244,-122.3379,OR,Douglas,PacifiCorp,Conventional Hydroelectric,WAT
+3096,Brunot Island,40.464851,-80.04376,PA,Allegheny,"Brunot Island Power, LLC",Natural Gas Fired Combined Cycle,NG
+3109,Hamilton (PA),39.908732,-76.98845,PA,Adams,"Hamilton Power, LLC",Petroleum Liquids,DFO
+3110,Hunterstown,39.8662,-77.1648,PA,Adams,"Hunterstown Power, LLC",Natural Gas Fired Combustion Turbine,NG
+3236,Manchester Street,41.8167,-71.4042,RI,Providence,"Manchester Street, LLC.",Natural Gas Fired Combined Cycle,NG
+6567,Block Island,41.175556,-71.5711,RI,Washington,Block Island Utility District,Petroleum Liquids,DFO
+50177,Blackstone/Tupperware,42.014467,-71.5444,RI,Providence,Blackstone Hydro Inc.,Conventional Hydroelectric,WAT
+130,Cross,33.371506,-80.11324,SC,Berkeley,South Carolina Public Service Authority,Conventional Steam Coal,BIT
+3250,Darlington County,34.4185,-80.1657,SC,Darlington,Duke Energy Progress - (NC),Natural Gas Fired Combustion Turbine,NG
+3251,H B Robinson,34.4017,-80.1589,SC,Darlington,Duke Energy Progress - (NC),Nuclear,NUC
+3325,Ben French,44.087235,-103.261,SD,Pennington,"Black Hills Power, Inc.",Natural Gas Fired Combustion Turbine,NG
+3338,Aberdeen CT,45.429884,-98.49396,SD,Brown,NorthWestern Energy - (SD),Natural Gas Fired Combustion Turbine,NG
+3341,Clark (SD),44.876484,-97.7321,SD,Clark,NorthWestern Energy - (SD),Petroleum Liquids,DFO
+3393,Allen,35.074087,-90.14868,TN,Shelby,Tennessee Valley Authority,Natural Gas Fired Combined Cycle,NG
+3394,Apalachia,35.167712,-84.2956,TN,Polk,Tennessee Valley Authority,Conventional Hydroelectric,WAT
+3395,Boone Dam,36.4403,-82.4381,TN,Sullivan,Tennessee Valley Authority,Conventional Hydroelectric,WAT
+9,Copper,31.7569,-106.375,TX,El Paso,El Paso Electric Co,Natural Gas Fired Combustion Turbine,NG
+298,Limestone,31.4219,-96.2525,TX,Limestone,NRG Texas Power LLC,Conventional Steam Coal,SUB
+791,Canyon,29.87056,-98.19473,TX,Comal,Guadalupe Blanco River Authority,Conventional Hydroelectric,WAT
+159,Lake Creek Dam,40.493631,-111.3125,UT,Wasatch,Heber Light & Power Company,Conventional Hydroelectric,WAT
+299,Blundell,38.4889,-112.8533,UT,Beaver,PacifiCorp,Geothermal,GEO
+925,Hydro Plant No 3,39.205623,-111.3344,UT,Sanpete,City of Ephraim - (UT),Conventional Hydroelectric,WAT
+3772,Buck Hydro,36.808229,-80.93871,VA,Carroll,Appalachian Power Co,Conventional Hydroelectric,WAT
+3773,Byllesby 2,36.7858,-80.9333,VA,Carroll,Appalachian Power Co,Conventional Hydroelectric,WAT
+3774,Claytor,37.075,-80.5847,VA,Pulaski,Appalachian Power Co,Conventional Hydroelectric,WAT
+589,J C McNeil,44.4917,-73.20806,VT,Chittenden,City of Burlington Electric - (VT),Wood/Wood Waste Biomass,WDS
+678,W K Sanders,44.625282,-72.53086,VT,Lamoille,Village of Morrisville - (VT),Conventional Hydroelectric,WAT
+788,East Barnet,44.326335,-72.03589,VT,Caledonia,Green Mountain Power Corp,Conventional Hydroelectric,WAT
+99,Frederickson,47.079722,-122.365,WA,Pierce,Puget Sound Energy Inc,Natural Gas Fired Combustion Turbine,NG
+371,Columbia Generating Station,46.4711,-119.3339,WA,Benton,Energy Northwest- Columbia,Nuclear,NUC
+550,Kettle Falls Generating Station,48.620336,-118.1111,WA,Stevens,Avista Corp,Wood/Wood Waste Biomass,WDS
+1756,Saxon Falls,46.5392,-90.3742,WI,Iron,Northern States Power Co - Minnesota,Conventional Hydroelectric,WAT
+1775,Brule,45.9472,-88.2189,WI,Florence,Wisconsin Electric Power Co,Conventional Hydroelectric,WAT
+3971,Biron,44.4306,-89.7808,WI,Wood,Consolidated Water Power Co,Conventional Hydroelectric,WAT
+3935,John E Amos,38.4731,-81.8233,WV,Putnam,Appalachian Power Co,Conventional Steam Coal,BIT
+3943,FirstEnergy Fort Martin Power Station,39.710833,-79.9275,WV,Monongalia,Monongahela Power Co,Conventional Steam Coal,BIT
+3944,FirstEnergy Harrison Power Station,39.384167,-80.3325,WV,Harrison,Monongahela Power Co,Conventional Steam Coal,BIT
+505,Boysen,43.417872,-108.1775,WY,Fremont,U S Bureau of Reclamation,Conventional Hydroelectric,WAT
+674,Pilot Butte,43.219017,-108.7877,WY,Fremont,U S Bureau of Reclamation,Conventional Hydroelectric,WAT
+2196,Old Faithful,44.4533,-110.8347,WY,Teton,NorthWestern Energy (MT wind/thermal),Petroleum Liquids,DFO

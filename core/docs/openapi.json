@@ -1,0 +1,4216 @@
+{
+  "components": {
+    "schemas": {
+      "AlertRead": {
+        "properties": {
+          "action_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Code"
+          },
+          "details": {
+            "additionalProperties": true,
+            "title": "Details",
+            "type": "object"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "hazard_type": {
+            "$ref": "#/components/schemas/HazardType"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "recommended_action": {
+            "title": "Recommended Action",
+            "type": "string"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "source_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Reference"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AlertStatus"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "triggered_at": {
+            "format": "date-time",
+            "title": "Triggered At",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "site_id",
+          "hazard_type",
+          "severity",
+          "status",
+          "action_code",
+          "title",
+          "message",
+          "recommended_action",
+          "triggered_at",
+          "updated_at",
+          "resolved_at",
+          "expires_at",
+          "source_reference",
+          "details"
+        ],
+        "title": "AlertRead",
+        "type": "object"
+      },
+      "AlertStatus": {
+        "enum": [
+          "ACTIVE",
+          "ACKNOWLEDGED",
+          "ALL_CLEAR_ELIGIBLE",
+          "RESOLVED"
+        ],
+        "title": "AlertStatus",
+        "type": "string"
+      },
+      "AlertUpdate": {
+        "properties": {
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AlertStatus"
+          }
+        },
+        "required": [
+          "status",
+          "reason"
+        ],
+        "title": "AlertUpdate",
+        "type": "object"
+      },
+      "BriefingRead": {
+        "properties": {
+          "briefing_date": {
+            "format": "date",
+            "title": "Briefing Date",
+            "type": "string"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "hazard_details": {
+            "additionalProperties": true,
+            "title": "Hazard Details",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "site_id",
+          "briefing_date",
+          "generated_at",
+          "summary",
+          "hazard_details"
+        ],
+        "title": "BriefingRead",
+        "type": "object"
+      },
+      "CaptureChecklistItemRead": {
+        "properties": {
+          "frames": {
+            "maximum": 2.0,
+            "minimum": 1.0,
+            "title": "Frames",
+            "type": "integer"
+          },
+          "instruction": {
+            "title": "Instruction",
+            "type": "string"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "done",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "required": [
+          "item",
+          "instruction",
+          "frames",
+          "status"
+        ],
+        "title": "CaptureChecklistItemRead",
+        "type": "object"
+      },
+      "CaptureDangerRead": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "instruction": {
+            "title": "Instruction",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "instruction",
+          "summary"
+        ],
+        "title": "CaptureDangerRead",
+        "type": "object"
+      },
+      "CaptureFeedback": {
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "hazard_guess": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HazardType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          },
+          "satisfied": {
+            "title": "Satisfied",
+            "type": "boolean"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "required": [
+          "item",
+          "satisfied",
+          "text",
+          "hint",
+          "hazard_guess",
+          "confidence"
+        ],
+        "title": "CaptureFeedback",
+        "type": "object"
+      },
+      "CaptureFrameCreate": {
+        "properties": {
+          "heading_deg": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 360.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heading Deg"
+          },
+          "images": {
+            "items": {
+              "maxLength": 2800000,
+              "minLength": 16,
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Images",
+            "type": "array"
+          },
+          "item": {
+            "pattern": "^[a-z_]{1,32}$",
+            "title": "Item",
+            "type": "string"
+          },
+          "latitude": {
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude",
+            "type": "number"
+          }
+        },
+        "required": [
+          "item",
+          "images",
+          "latitude",
+          "longitude"
+        ],
+        "title": "CaptureFrameCreate",
+        "type": "object"
+      },
+      "CaptureFrameResult": {
+        "properties": {
+          "feedback": {
+            "$ref": "#/components/schemas/CaptureFeedback"
+          },
+          "session": {
+            "$ref": "#/components/schemas/CaptureSessionRead"
+          }
+        },
+        "required": [
+          "session",
+          "feedback"
+        ],
+        "title": "CaptureFrameResult",
+        "type": "object"
+      },
+      "CaptureHazardChoice": {
+        "properties": {
+          "hazard_type": {
+            "$ref": "#/components/schemas/HazardType"
+          }
+        },
+        "required": [
+          "hazard_type"
+        ],
+        "title": "CaptureHazardChoice",
+        "type": "object"
+      },
+      "CaptureSessionRead": {
+        "properties": {
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/CaptureChecklistItemRead"
+            },
+            "title": "Checklist",
+            "type": "array"
+          },
+          "danger": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptureDangerRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "draft": {
+            "title": "Draft",
+            "type": "string"
+          },
+          "guided": {
+            "description": "Whether the hazard has a guided checklist",
+            "title": "Guided",
+            "type": "boolean"
+          },
+          "hazard_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HazardType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptureStepRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "report_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Id"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "stopped",
+              "submitted"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "site_id",
+          "hazard_type",
+          "status",
+          "guided",
+          "next_step",
+          "checklist",
+          "draft",
+          "danger",
+          "report_id"
+        ],
+        "title": "CaptureSessionRead",
+        "type": "object"
+      },
+      "CaptureSkip": {
+        "properties": {
+          "item": {
+            "pattern": "^[a-z_]{1,32}$",
+            "title": "Item",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "title": "CaptureSkip",
+        "type": "object"
+      },
+      "CaptureStart": {
+        "properties": {
+          "latitude": {
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude",
+            "type": "number"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "site_id",
+          "latitude",
+          "longitude"
+        ],
+        "title": "CaptureStart",
+        "type": "object"
+      },
+      "CaptureStepRead": {
+        "properties": {
+          "frames": {
+            "maximum": 2.0,
+            "minimum": 1.0,
+            "title": "Frames",
+            "type": "integer"
+          },
+          "instruction": {
+            "title": "Instruction",
+            "type": "string"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "instruction",
+          "frames"
+        ],
+        "title": "CaptureStepRead",
+        "type": "object"
+      },
+      "CaptureSubmit": {
+        "properties": {
+          "description": {
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Description",
+            "type": "string"
+          }
+        },
+        "required": [
+          "description"
+        ],
+        "title": "CaptureSubmit",
+        "type": "object"
+      },
+      "CrewReportCreate": {
+        "properties": {
+          "description": {
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Description",
+            "type": "string"
+          },
+          "hazard_type": {
+            "$ref": "#/components/schemas/HazardType"
+          },
+          "image_metadata": {
+            "additionalProperties": true,
+            "title": "Image Metadata",
+            "type": "object"
+          },
+          "image_reference": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Reference"
+          },
+          "latitude": {
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude",
+            "type": "number"
+          },
+          "observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed At"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "site_id",
+          "hazard_type",
+          "description",
+          "latitude",
+          "longitude"
+        ],
+        "title": "CrewReportCreate",
+        "type": "object"
+      },
+      "CrewReportRead": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "hazard_type": {
+            "$ref": "#/components/schemas/HazardType"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "image_metadata": {
+            "additionalProperties": true,
+            "title": "Image Metadata",
+            "type": "object"
+          },
+          "image_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Reference"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "reported_at": {
+            "format": "date-time",
+            "title": "Reported At",
+            "type": "string"
+          },
+          "reporter_subject": {
+            "title": "Reporter Subject",
+            "type": "string"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "verification_status": {
+            "title": "Verification Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "site_id",
+          "hazard_type",
+          "description",
+          "latitude",
+          "longitude",
+          "image_reference",
+          "image_metadata",
+          "reported_at",
+          "reporter_subject",
+          "verification_status"
+        ],
+        "title": "CrewReportRead",
+        "type": "object"
+      },
+      "CrewReportUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Description",
+            "type": "string"
+          }
+        },
+        "required": [
+          "description"
+        ],
+        "title": "CrewReportUpdate",
+        "type": "object"
+      },
+      "Envelope_AlertRead_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AlertRead"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[AlertRead]",
+        "type": "object"
+      },
+      "Envelope_CaptureFrameResult_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CaptureFrameResult"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[CaptureFrameResult]",
+        "type": "object"
+      },
+      "Envelope_CaptureSessionRead_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CaptureSessionRead"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[CaptureSessionRead]",
+        "type": "object"
+      },
+      "Envelope_CrewReportRead_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CrewReportRead"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[CrewReportRead]",
+        "type": "object"
+      },
+      "Envelope_RiskRead_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RiskRead"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[RiskRead]",
+        "type": "object"
+      },
+      "Envelope_RiskResult_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RiskResult"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[RiskResult]",
+        "type": "object"
+      },
+      "Envelope_SiteRead_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SiteRead"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[SiteRead]",
+        "type": "object"
+      },
+      "Envelope_UserRead_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UserRead"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[UserRead]",
+        "type": "object"
+      },
+      "Envelope_list_AlertRead__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AlertRead"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[list[AlertRead]]",
+        "type": "object"
+      },
+      "Envelope_list_BriefingRead__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/BriefingRead"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[list[BriefingRead]]",
+        "type": "object"
+      },
+      "Envelope_list_CrewReportRead__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CrewReportRead"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[list[CrewReportRead]]",
+        "type": "object"
+      },
+      "Envelope_list_ObservationRead__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ObservationRead"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[list[ObservationRead]]",
+        "type": "object"
+      },
+      "Envelope_list_RiskRanking__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/RiskRanking"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[list[RiskRanking]]",
+        "type": "object"
+      },
+      "Envelope_list_RiskRead__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/RiskRead"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[list[RiskRead]]",
+        "type": "object"
+      },
+      "Envelope_list_SiteObservationRead__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/SiteObservationRead"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[list[SiteObservationRead]]",
+        "type": "object"
+      },
+      "Envelope_list_SiteRead__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/SiteRead"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[list[SiteRead]]",
+        "type": "object"
+      },
+      "Envelope_list_UserRead__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/UserRead"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedMeta"
+              },
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Envelope[list[UserRead]]",
+        "type": "object"
+      },
+      "FeedMeta": {
+        "properties": {
+          "data_mode": {
+            "title": "Data Mode",
+            "type": "string"
+          },
+          "last_run_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run Status"
+          },
+          "last_successful_ingestion": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Successful Ingestion"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "states": {
+            "items": {
+              "type": "string"
+            },
+            "title": "States",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "limit",
+          "offset",
+          "total",
+          "states",
+          "data_mode"
+        ],
+        "title": "FeedMeta",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HazardType": {
+        "enum": [
+          "weather",
+          "heat",
+          "lightning",
+          "flood",
+          "wildfire",
+          "soil",
+          "wildlife"
+        ],
+        "title": "HazardType",
+        "type": "string"
+      },
+      "LoginRequest": {
+        "properties": {
+          "password": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "ObservationRead": {
+        "properties": {
+          "hazard_type": {
+            "$ref": "#/components/schemas/HazardType"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "ingested_at": {
+            "format": "date-time",
+            "title": "Ingested At",
+            "type": "string"
+          },
+          "is_estimated": {
+            "title": "Is Estimated",
+            "type": "boolean"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "metric_name": {
+            "title": "Metric Name",
+            "type": "string"
+          },
+          "numeric_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numeric Value"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "quality_status": {
+            "$ref": "#/components/schemas/QualityStatus"
+          },
+          "severity": {
+            "default": "UNKNOWN",
+            "enum": [
+              "LOW",
+              "MODERATE",
+              "HIGH",
+              "CRITICAL",
+              "UNKNOWN"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "severity_basis": {
+            "default": "No severity assessment was provided",
+            "title": "Severity Basis",
+            "type": "string"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "source_event_id": {
+            "title": "Source Event Id",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          }
+        },
+        "required": [
+          "id",
+          "site_id",
+          "hazard_type",
+          "source",
+          "source_event_id",
+          "observed_at",
+          "valid_until",
+          "ingested_at",
+          "metric_name",
+          "numeric_value",
+          "unit",
+          "latitude",
+          "longitude",
+          "quality_status",
+          "is_estimated",
+          "metadata"
+        ],
+        "title": "ObservationRead",
+        "type": "object"
+      },
+      "PageMeta": {
+        "properties": {
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "limit",
+          "offset",
+          "total"
+        ],
+        "title": "PageMeta",
+        "type": "object"
+      },
+      "PasswordChange": {
+        "properties": {
+          "current_password": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "maxLength": 256,
+            "minLength": 8,
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordChange",
+        "type": "object"
+      },
+      "QualityStatus": {
+        "enum": [
+          "verified",
+          "provisional",
+          "stale",
+          "estimated",
+          "synthetic"
+        ],
+        "title": "QualityStatus",
+        "type": "string"
+      },
+      "RiskDriverRead": {
+        "properties": {
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "explanation_method": {
+            "enum": [
+              "tree_shap",
+              "rule_based"
+            ],
+            "title": "Explanation Method",
+            "type": "string"
+          },
+          "hazard": {
+            "title": "Hazard",
+            "type": "string"
+          },
+          "impact": {
+            "exclusiveMinimum": 0.0,
+            "title": "Impact",
+            "type": "number"
+          },
+          "severity": {
+            "enum": [
+              "LOW",
+              "MODERATE",
+              "HIGH",
+              "CRITICAL",
+              "UNKNOWN"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "hazard",
+          "severity",
+          "impact",
+          "explanation",
+          "explanation_method"
+        ],
+        "title": "RiskDriverRead",
+        "type": "object"
+      },
+      "RiskPredictionCreate": {
+        "properties": {
+          "contributing_factors": {
+            "additionalProperties": true,
+            "title": "Contributing Factors",
+            "type": "object"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "model_version": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model Version",
+            "type": "string"
+          },
+          "prediction_date": {
+            "format": "date",
+            "title": "Prediction Date",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "number"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "valid_for_seconds": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 604800.0,
+            "title": "Valid For Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "site_id",
+          "score",
+          "generated_at",
+          "prediction_date",
+          "valid_for_seconds",
+          "model_version"
+        ],
+        "title": "RiskPredictionCreate",
+        "type": "object"
+      },
+      "RiskRanking": {
+        "properties": {
+          "decision": {
+            "enum": [
+              "GO",
+              "CAUTION",
+              "NO_GO",
+              "REVIEW_REQUIRED"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "decision_basis": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Decision Basis",
+            "type": "array"
+          },
+          "operational_authorization": {
+            "const": "NOT_GRANTED",
+            "default": "NOT_GRANTED",
+            "title": "Operational Authorization",
+            "type": "string"
+          },
+          "risk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RiskRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "site": {
+            "$ref": "#/components/schemas/SiteRead"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "site",
+          "risk",
+          "status",
+          "decision",
+          "decision_basis"
+        ],
+        "title": "RiskRanking",
+        "type": "object"
+      },
+      "RiskRead": {
+        "properties": {
+          "contributing_factors": {
+            "additionalProperties": true,
+            "title": "Contributing Factors",
+            "type": "object"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "prediction_date": {
+            "format": "date",
+            "title": "Prediction Date",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "score_source": {
+            "title": "Score Source",
+            "type": "string"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "top_drivers": {
+            "items": {
+              "$ref": "#/components/schemas/RiskDriverRead"
+            },
+            "title": "Top Drivers",
+            "type": "array"
+          },
+          "valid_for_seconds": {
+            "title": "Valid For Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "site_id",
+          "score",
+          "generated_at",
+          "prediction_date",
+          "valid_for_seconds",
+          "model_version",
+          "score_source",
+          "contributing_factors"
+        ],
+        "title": "RiskRead",
+        "type": "object"
+      },
+      "RiskResult": {
+        "properties": {
+          "decision": {
+            "enum": [
+              "GO",
+              "CAUTION",
+              "NO_GO",
+              "REVIEW_REQUIRED"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "decision_basis": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Decision Basis",
+            "type": "array"
+          },
+          "operational_authorization": {
+            "const": "NOT_GRANTED",
+            "default": "NOT_GRANTED",
+            "title": "Operational Authorization",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RiskRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "site_id",
+          "status",
+          "score",
+          "decision",
+          "decision_basis"
+        ],
+        "title": "RiskResult",
+        "type": "object"
+      },
+      "Severity": {
+        "enum": [
+          "LOW",
+          "MODERATE",
+          "HIGH",
+          "CRITICAL"
+        ],
+        "title": "Severity",
+        "type": "string"
+      },
+      "SiteObservationRead": {
+        "properties": {
+          "observation": {
+            "$ref": "#/components/schemas/ObservationRead"
+          },
+          "site": {
+            "$ref": "#/components/schemas/SiteRead"
+          }
+        },
+        "required": [
+          "site",
+          "observation"
+        ],
+        "title": "SiteObservationRead",
+        "type": "object"
+      },
+      "SiteRead": {
+        "properties": {
+          "county": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "County"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "eia_plant_id": {
+            "title": "Eia Plant Id",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_reference_location": {
+            "title": "Is Reference Location",
+            "type": "boolean"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "ml_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ml Model Version"
+          },
+          "ml_site_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ml Site Id"
+          },
+          "ml_supported": {
+            "title": "Ml Supported",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "operator_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Name"
+          },
+          "plant_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plant Type"
+          },
+          "primary_energy_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Energy Source"
+          },
+          "source_release": {
+            "title": "Source Release",
+            "type": "string"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "eia_plant_id",
+          "name",
+          "latitude",
+          "longitude",
+          "state",
+          "county",
+          "plant_type",
+          "primary_energy_source",
+          "operator_name",
+          "timezone",
+          "source_release",
+          "source_url",
+          "is_reference_location",
+          "created_at",
+          "updated_at",
+          "ml_supported",
+          "ml_site_id",
+          "ml_model_version"
+        ],
+        "title": "SiteRead",
+        "type": "object"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "token_type": {
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserRead"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_in",
+          "user"
+        ],
+        "title": "TokenResponse",
+        "type": "object"
+      },
+      "UserCreate": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "password": {
+            "maxLength": 256,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "username": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password",
+          "role"
+        ],
+        "title": "UserCreate",
+        "type": "object"
+      },
+      "UserRead": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "deleted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deleted At"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "status": {
+            "$ref": "#/components/schemas/UserStatus"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "display_name",
+          "role",
+          "status",
+          "created_at",
+          "updated_at",
+          "deleted_at"
+        ],
+        "title": "UserRead",
+        "type": "object"
+      },
+      "UserRole": {
+        "enum": [
+          "user",
+          "admin"
+        ],
+        "title": "UserRole",
+        "type": "string"
+      },
+      "UserStatus": {
+        "enum": [
+          "active",
+          "disabled"
+        ],
+        "title": "UserStatus",
+        "type": "string"
+      },
+      "UserUpdate": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "minLength": 8,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRole"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "UserUpdate",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Environmental hazard monitoring API. EIA plants are reference locations, not verified active job sites.",
+    "title": "Precognition Core",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/admin/users": {
+      "get": {
+        "operationId": "list_users_api_admin_users_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "role",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/UserRole"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/UserStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_deleted",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Deleted",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_UserRead__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Users",
+        "tags": [
+          "admin-users"
+        ]
+      },
+      "post": {
+        "operationId": "create_user_api_admin_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_UserRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create User",
+        "tags": [
+          "admin-users"
+        ]
+      }
+    },
+    "/api/admin/users/{user_id}": {
+      "delete": {
+        "operationId": "delete_user_api_admin_users__user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete User",
+        "tags": [
+          "admin-users"
+        ]
+      },
+      "get": {
+        "operationId": "get_user_api_admin_users__user_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_UserRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get User",
+        "tags": [
+          "admin-users"
+        ]
+      },
+      "patch": {
+        "operationId": "update_user_api_admin_users__user_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_UserRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update User",
+        "tags": [
+          "admin-users"
+        ]
+      }
+    },
+    "/api/alerts": {
+      "get": {
+        "operationId": "all_alerts_api_alerts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "site_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Site Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "hazard_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/HazardType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Hazard Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "severity",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Severity"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AlertStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_AlertRead__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "All Alerts",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/api/alerts/{alert_id}": {
+      "patch": {
+        "operationId": "update_alert_api_alerts__alert_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "alert_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Alert Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_AlertRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Alert",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "logout_api_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/me/password": {
+      "patch": {
+        "operationId": "change_password_api_auth_me_password_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Change Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "refresh_api_auth_refresh_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Refresh",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/briefings": {
+      "get": {
+        "operationId": "fleet_briefings_api_briefings_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "briefing_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Briefing Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 500,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_BriefingRead__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Fleet Briefings",
+        "tags": [
+          "briefings"
+        ]
+      }
+    },
+    "/api/captures": {
+      "post": {
+        "operationId": "start_capture_api_captures_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CaptureSessionRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Capture",
+        "tags": [
+          "captures"
+        ]
+      }
+    },
+    "/api/captures/{capture_id}/frames": {
+      "post": {
+        "operationId": "check_frame_api_captures__capture_id__frames_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureFrameCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CaptureFrameResult_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Check Frame",
+        "tags": [
+          "captures"
+        ]
+      }
+    },
+    "/api/captures/{capture_id}/frames/{frame_id}": {
+      "get": {
+        "operationId": "frame_image_api_captures__capture_id__frames__frame_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Capture Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "frame_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Frame Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {},
+              "image/png": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Frame Image",
+        "tags": [
+          "captures"
+        ]
+      }
+    },
+    "/api/captures/{capture_id}/hazard": {
+      "post": {
+        "operationId": "choose_hazard_api_captures__capture_id__hazard_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureHazardChoice"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CaptureSessionRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Choose Hazard",
+        "tags": [
+          "captures"
+        ]
+      }
+    },
+    "/api/captures/{capture_id}/skip": {
+      "post": {
+        "operationId": "skip_step_api_captures__capture_id__skip_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureSkip"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CaptureSessionRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Skip Step",
+        "tags": [
+          "captures"
+        ]
+      }
+    },
+    "/api/captures/{capture_id}/submit": {
+      "post": {
+        "operationId": "submit_capture_api_captures__capture_id__submit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Capture Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureSubmit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CrewReportRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Submit Capture",
+        "tags": [
+          "captures"
+        ]
+      }
+    },
+    "/api/reports": {
+      "get": {
+        "operationId": "list_reports_api_reports_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "site_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Site Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_CrewReportRead__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Reports",
+        "tags": [
+          "reports"
+        ]
+      },
+      "post": {
+        "operationId": "create_report_api_reports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrewReportCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CrewReportRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Report",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/reports/{report_id}": {
+      "delete": {
+        "operationId": "delete_report_api_reports__report_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Report Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Report",
+        "tags": [
+          "reports"
+        ]
+      },
+      "patch": {
+        "operationId": "update_report_api_reports__report_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Report Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrewReportUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CrewReportRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Report",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/risk/features": {
+      "get": {
+        "operationId": "risk_features_api_risk_features_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": true,
+            "schema": {
+              "format": "date-time",
+              "title": "Start",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": true,
+            "schema": {
+              "format": "date-time",
+              "title": "End",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Risk Features Api Risk Features Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Risk Features",
+        "tags": [
+          "risk"
+        ]
+      }
+    },
+    "/api/risk/predictions": {
+      "post": {
+        "operationId": "store_risk_prediction_api_risk_predictions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskPredictionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_RiskRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Store Risk Prediction",
+        "tags": [
+          "risk"
+        ]
+      }
+    },
+    "/api/risk/rankings": {
+      "get": {
+        "operationId": "risk_rankings_api_risk_rankings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_RiskRanking__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Risk Rankings",
+        "tags": [
+          "risk"
+        ]
+      }
+    },
+    "/api/sites": {
+      "get": {
+        "operationId": "list_sites_api_sites_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "county",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "County"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_SiteRead__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Sites",
+        "tags": [
+          "sites"
+        ]
+      }
+    },
+    "/api/sites/lightning": {
+      "get": {
+        "operationId": "lightning_feed_api_sites_lightning_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_SiteObservationRead__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stored lightning observations across US sites",
+        "tags": [
+          "hazard-feeds"
+        ]
+      }
+    },
+    "/api/sites/{site_id}": {
+      "get": {
+        "operationId": "get_site_api_sites__site_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Site Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_SiteRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Site",
+        "tags": [
+          "sites"
+        ]
+      }
+    },
+    "/api/sites/{site_id}/hazards": {
+      "get": {
+        "operationId": "site_hazards_api_sites__site_id__hazards_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "hazard_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/HazardType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Hazard Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_ObservationRead__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Site Hazards",
+        "tags": [
+          "hazards"
+        ]
+      }
+    },
+    "/api/sites/{site_id}/risk": {
+      "get": {
+        "operationId": "site_risk_api_sites__site_id__risk_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Site Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_RiskResult_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Site Risk",
+        "tags": [
+          "risk"
+        ]
+      }
+    },
+    "/api/sites/{site_id}/risk/history": {
+      "get": {
+        "operationId": "site_risk_history_api_sites__site_id__risk_history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 14,
+              "maximum": 90,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_RiskRead__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Site Risk History",
+        "tags": [
+          "risk"
+        ]
+      }
+    },
+    "/api/stream": {
+      "get": {
+        "operationId": "stream_events_api_stream_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Last-Event-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last-Event-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Events",
+        "tags": [
+          "events"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Health Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "system"
+        ]
+      }
+    }
+  }
+}

@@ -1,76 +1,71 @@
-import { clearCookies } from '@/test-utils/cookies'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { type AuthUser } from './auth-store'
 
 async function importAuthStore() {
-  const { useAuthStore } = await import('./auth-store')
-  return useAuthStore
+  return import('./auth-store')
 }
 
-const sampleUser = {
-  accountNo: 'ACC-1',
-  email: 'user@example.com',
-  role: ['user'],
-  exp: 1_700_000_000,
+const sampleUser: AuthUser = {
+  id: '00000000-0000-0000-0000-000000000001',
+  username: 'dana',
+  display_name: 'Dana Reyes',
+  role: 'user',
+  status: 'active',
+  created_at: '2026-10-17T00:00:00Z',
+  updated_at: '2026-10-17T00:00:00Z',
+  deleted_at: null,
 }
 
 describe('useAuthStore', () => {
   beforeEach(() => {
-    clearCookies()
     vi.resetModules()
   })
 
-  it('starts with an empty access token when nothing is persisted', async () => {
-    const useAuthStore = await importAuthStore()
+  it('starts signed out', async () => {
+    const { useAuthStore } = await importAuthStore()
 
     expect(useAuthStore.getState().auth.accessToken).toBe('')
     expect(useAuthStore.getState().auth.user).toBeNull()
   })
 
-  it('persists access token so a new store instance reads it back', async () => {
-    const useAuthStore = await importAuthStore()
-    useAuthStore.getState().auth.setAccessToken('session-token')
+  it('keeps the session in memory only, never in browser storage', async () => {
+    const { useAuthStore } = await importAuthStore()
+    useAuthStore.getState().auth.setSession('session-token', 900, sampleUser)
 
-    vi.resetModules()
-    const useAuthStoreAfterReload = await importAuthStore()
-
-    expect(useAuthStoreAfterReload.getState().auth.accessToken).toBe(
-      'session-token'
-    )
+    expect(document.cookie).not.toContain('session-token')
+    expect(JSON.stringify({ ...localStorage })).not.toContain('session-token')
+    expect(JSON.stringify({ ...sessionStorage })).not.toContain('session-token')
   })
 
-  it('clears persisted access token when resetAccessToken is used', async () => {
-    const useAuthStore = await importAuthStore()
-    useAuthStore.getState().auth.setAccessToken('to-clear')
-    useAuthStore.getState().auth.resetAccessToken()
+  it('setSession stores the token, user and expiry', async () => {
+    const { useAuthStore } = await importAuthStore()
+    const before = Date.now()
 
-    vi.resetModules()
-    const useAuthStoreAfterReload = await importAuthStore()
+    useAuthStore.getState().auth.setSession('session-token', 900, sampleUser)
 
-    expect(useAuthStoreAfterReload.getState().auth.accessToken).toBe('')
+    const { auth } = useAuthStore.getState()
+    expect(auth.accessToken).toBe('session-token')
+    expect(auth.user).toEqual(sampleUser)
+    expect(auth.expiresAt).toBeGreaterThanOrEqual(before + 900_000)
   })
 
-  it('updates the signed-in user via setUser', async () => {
-    const useAuthStore = await importAuthStore()
-
-    useAuthStore.getState().auth.setUser({ ...sampleUser })
-
-    expect(useAuthStore.getState().auth.user).toEqual(sampleUser)
-  })
-
-  it('reset clears user and access token and drops persistence', async () => {
-    const useAuthStore = await importAuthStore()
-    useAuthStore.getState().auth.setAccessToken('will-be-cleared')
-    useAuthStore.getState().auth.setUser({ ...sampleUser })
+  it('reset clears the session', async () => {
+    const { useAuthStore } = await importAuthStore()
+    useAuthStore.getState().auth.setSession('will-be-cleared', 900, sampleUser)
 
     useAuthStore.getState().auth.reset()
 
     expect(useAuthStore.getState().auth.user).toBeNull()
     expect(useAuthStore.getState().auth.accessToken).toBe('')
+    expect(useAuthStore.getState().auth.expiresAt).toBe(0)
+  })
 
-    vi.resetModules()
-    const useAuthStoreAfterReload = await importAuthStore()
+  it('ranks roles admin > user', async () => {
+    const { hasRole } = await importAuthStore()
 
-    expect(useAuthStoreAfterReload.getState().auth.user).toBeNull()
-    expect(useAuthStoreAfterReload.getState().auth.accessToken).toBe('')
+    expect(hasRole(sampleUser, 'user')).toBe(true)
+    expect(hasRole({ ...sampleUser, role: 'admin' }, 'admin')).toBe(true)
+    expect(hasRole(sampleUser, 'admin')).toBe(false)
+    expect(hasRole(null, 'user')).toBe(false)
   })
 })

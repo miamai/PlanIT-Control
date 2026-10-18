@@ -1,0 +1,74 @@
+services:
+  ml:
+    build: ../ml
+    env_file:
+      - path: ../ml/.env
+        required: false
+    volumes:
+      - ml-cache:/app/data/raw
+    expose:
+      - "8001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  bootstrap:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DOCKER_DATABASE_URL:?Set DOCKER_DATABASE_URL to the Tiger Cloud asyncpg URL}
+      ML_ENABLED: ${ML_ENABLED:-true}
+      ML_BASE_URL: http://ml:8001
+    command: ["planit-bootstrap"]
+    depends_on:
+      ml:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DOCKER_DATABASE_URL:?Set DOCKER_DATABASE_URL to the Tiger Cloud asyncpg URL}
+      ML_ENABLED: ${ML_ENABLED:-true}
+      ML_BASE_URL: http://ml:8001
+      GEMINI_API_KEY: ""
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+    ports:
+      - "8000:8000"
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  worker:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DOCKER_DATABASE_URL:?Set DOCKER_DATABASE_URL to the Tiger Cloud asyncpg URL}
+      ML_ENABLED: ${ML_ENABLED:-true}
+      ML_BASE_URL: http://ml:8001
+      ML_BRIEFING_BACKEND: ${ML_BRIEFING_BACKEND:-gemini}
+      GEMINI_API_KEY: ""
+    command: ["planit-worker"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  ml-cache:

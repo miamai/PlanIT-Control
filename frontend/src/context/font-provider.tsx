@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { fonts } from '@/config/fonts'
+import { fonts, FONT_CLASS } from '@/config/fonts'
 import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 
 type Font = (typeof fonts)[number]
@@ -22,12 +22,12 @@ export function FontProvider({ children }: { children: React.ReactNode }) {
   })
 
   useEffect(() => {
-    const applyFont = (font: string) => {
+    const applyFont = (font: Font) => {
       const root = document.documentElement
       root.classList.forEach((cls) => {
         if (cls.startsWith('font-')) root.classList.remove(cls)
       })
-      root.classList.add(`font-${font}`)
+      root.classList.add(FONT_CLASS[font])
     }
 
     applyFont(font)
