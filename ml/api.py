@@ -19,6 +19,7 @@ Add ?mock=true (or run before models exist) to get a placeholder in the same sha
 
 from __future__ import annotations
 
+import logging
 from datetime import date as Date
 
 import pandas as pd
@@ -34,6 +35,8 @@ from common import MODELS
 
 app = FastAPI(title="Precognition hazard scoring", version="v1")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+# uvicorn's own logger, so warnings land in the server output next to the access log.
+log = logging.getLogger("uvicorn.error")
 
 
 def model_status() -> dict:
@@ -142,4 +145,6 @@ def capture_observe(req: ObserveRequest) -> dict:
     except capture.CaptureError as e:
         raise HTTPException(422, str(e)) from e
     except capture.VisionUnavailable as e:
+        # The crew only sees the generic message; the reason (billing, quota, network) is for us.
+        log.warning("Photo check %s/%s unavailable: %s", req.hazard or "-", req.item, e)
         raise HTTPException(503, "Photo checks are unavailable right now") from e

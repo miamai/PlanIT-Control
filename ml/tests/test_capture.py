@@ -1,7 +1,9 @@
 import base64
 import json
+import logging
 
 import pytest
+import requests
 from fastapi.testclient import TestClient
 
 import api
@@ -132,3 +134,19 @@ def test_api_maps_errors_to_status_codes(monkeypatch: pytest.MonkeyPatch) -> Non
     assert bad.status_code == 422
     unavailable = client.post("/capture/observe", json={"item": "identify", "images": [JPEG]})
     assert unavailable.status_code == 503
+
+
+def test_gemini_failure_reason_is_logged_but_not_shown(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setenv("GEMINI_API_KEY", "secret-test-key")
+    response = requests.Response()
+    response.status_code = 402
+    response._content = json.dumps({"error": {"message": "Your prepayment credits are depleted."}}).encode()
+    monkeypatch.setattr(capture.requests, "post", lambda *args, **kwargs: response)
+    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+        reply = TestClient(api.app).post("/capture/observe", json={"item": "identify", "images": [JPEG]})
+    assert reply.status_code == 503
+    assert reply.json()["detail"] == "Photo checks are unavailable right now"
+    assert "Gemini returned HTTP 402: Your prepayment credits are depleted." in caplog.text
+    assert "secret-test-key" not in caplog.text

@@ -258,11 +258,23 @@ def gemini_vision(system: str, prompt: str, images: list[str], max_tokens: int =
                                        "responseMimeType": "application/json"}},
             timeout=30,
         )
-        r.raise_for_status()
+    except requests.RequestException as e:
+        raise VisionUnavailable(f"Gemini request failed ({type(e).__name__})") from e
+    if not r.ok:
+        raise VisionUnavailable(f"Gemini returned HTTP {r.status_code}: {_gemini_error(r)}")
+    try:
         parts = r.json()["candidates"][0]["content"]["parts"]
-    except (requests.RequestException, KeyError, IndexError) as e:
-        raise VisionUnavailable(f"{type(e).__name__}") from e
+    except (ValueError, KeyError, IndexError) as e:
+        raise VisionUnavailable(f"Gemini reply had no answer ({type(e).__name__})") from e
     return "".join(p.get("text", "") for p in parts if not p.get("thought"))
+
+
+def _gemini_error(r: requests.Response) -> str:
+    """Gemini's own error message (billing, quota, model name), which never echoes the key."""
+    try:
+        return str(r.json()["error"]["message"]).strip()
+    except (ValueError, KeyError, TypeError):
+        return r.text.strip()[:200] or r.reason
 
 
 def parse_reply(item: Item, text: str) -> Common:
