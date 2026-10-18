@@ -68,6 +68,7 @@ export interface ReasonContribution {
 
 /** The 0-10 hazard index plus the explanation and go/no-go call. */
 export interface SiteRisk {
+  scoreSource?: string
   siteId: string
   status: RiskStatus
   /** Null when the site has no score (unsupported or missing). */
@@ -99,6 +100,10 @@ export type AlertSeverity = 'info' | 'warning' | 'critical'
 export type AlertStatus = 'active' | 'all-clear' | 'resolved'
 
 export interface Alert {
+  /** Existing backend action_code, passed through without inferring restrictions. */
+  actionCode?: string | null
+  sourceReference?: string | null
+  isDemo?: boolean
   id: string
   siteId: string
   type: AlertType
@@ -158,6 +163,11 @@ export interface BriefingSite {
   summary: string
   actions: string[]
   generator: 'gemini' | 'template'
+  scoreKind: 'model' | 'demo' | 'unverified' | 'missing'
+  reasons: string[]
+  riskStatus?: RiskStatus
+  warnings: string[]
+  modelVersion?: string
 }
 
 /** The fleet view of the next-day safety briefings stored for one shift date. */

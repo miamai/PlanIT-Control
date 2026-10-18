@@ -362,5 +362,7 @@ export function useFleetBriefing() {
     history,
     isLoading: rowsQuery.isLoading || rankings.isLoading,
     isEmpty: rowsQuery.isSuccess && !briefing,
+    isError: rowsQuery.isError || rankings.isError,
+    refresh: () => Promise.all([rowsQuery.refetch(), rankings.refetch()]),
   }
 }

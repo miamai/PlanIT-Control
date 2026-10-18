@@ -368,6 +368,54 @@ describe('briefings', () => {
       { shiftDate: '2026-10-17', sites: 1, fallback: 1, withAlerts: 1 },
     ])
   })
+
+  it('labels explicit demo and ML sources without claiming model validation', () => {
+    for (const [source, kind] of [
+      ['demo', 'demo'],
+      ['ml_service', 'model'],
+      ['model', 'unverified'],
+      ['unknown', 'unverified'],
+    ] as const) {
+      const risks = new Map([
+        [
+          SITE_ID,
+          toSiteRisk(SITE_ID, 'available', risk({ score_source: source })),
+        ],
+      ])
+      expect(buildFleetBriefing(rows, risks, [])?.sites[0].scoreKind).toBe(kind)
+    }
+  })
+
+  it('preserves risk reasons and backend work windows for the matching forecast date', () => {
+    const risks = new Map([[SITE_ID, toSiteRisk(SITE_ID, 'available', risk())]])
+    const entry = buildFleetBriefing(rows, risks, [])!.sites[0]
+    expect(entry.reasons).toEqual(['Heat index peaks at 108°F', 'Unstable air'])
+    expect(entry.actions).toEqual([
+      'Avoid 13:00 to 17:00 (heat)',
+      'Work window 06:00 to 11:00',
+    ])
+    expect(entry.riskStatus).toBe('available')
+  })
+
+  it('uses an explicit synthetic notice even without a dated score', () => {
+    const briefing = buildFleetBriefing(
+      [{ ...rows[0], hazard_details: { synthetic_notice: true } }],
+      new Map(),
+      []
+    )!
+    expect(briefing.sites[0].scoreKind).toBe('demo')
+    expect(briefing.sites[0].score).toBeNull()
+  })
+
+  it('passes through backend action codes without inferring a restriction from lightning', () => {
+    expect(
+      toAlert(alert({ hazard_type: 'lightning', action_code: null })).actionCode
+    ).toBeNull()
+    expect(
+      toAlert(alert({ hazard_type: 'flood', action_code: 'STOP_WORK' }))
+        .actionCode
+    ).toBe('STOP_WORK')
+  })
 })
 
 describe('toHazardIndexPoint', () => {
