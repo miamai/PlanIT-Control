@@ -108,7 +108,9 @@ class NWSWeatherProvider(EnvironmentalProvider, RetryingHTTPProvider):
         station_features = station_list.get("features", [])
         return station_features[0]["id"] if station_features else None
 
-    def _station_observations(self, site: Site, station_url: str, props: dict) -> list[NormalizedObservation]:
+    def _station_observations(
+        self, site: Site, station_url: str, props: dict
+    ) -> list[NormalizedObservation]:
         observations: list[NormalizedObservation] = []
         observed_at = datetime.fromisoformat(props["timestamp"])
         event_id = f"{station_url}:{props['timestamp']}"

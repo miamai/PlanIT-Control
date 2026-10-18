@@ -40,7 +40,8 @@ async def _admin(settings: Settings) -> None:
         if settings.environment == "production" and (
             settings.initial_admin_username in {None, "admin", "administrator"}
             or settings.initial_admin_password is None
-            or settings.initial_admin_password.get_secret_value() in {"admin", "password", "change-me"}
+            or settings.initial_admin_password.get_secret_value()
+            in {"admin", "password", "change-me"}
         ):
             raise ValueError("Production admin credentials must not use placeholders")
         await initialize_admin(session, settings)
@@ -56,7 +57,8 @@ async def _sites(settings: Settings, refresh: bool) -> None:
         try:
             if settings.eia_api_key:
                 records = await fetch_eia_api_records(
-                    settings.eia_api_key.get_secret_value(), timeout_seconds=settings.request_timeout_seconds * 4
+                    settings.eia_api_key.get_secret_value(),
+                    timeout_seconds=settings.request_timeout_seconds * 4,
                 )
                 source = "eia_api"
             else:
@@ -69,7 +71,9 @@ async def _sites(settings: Settings, refresh: bool) -> None:
         selected = select_reference_sites(
             records, per_state=settings.sites_per_state, maximum=settings.sites_max
         )
-        kwargs = {"source_release": "EIA API", "source_url": EIA_API_URL} if source == "eia_api" else {}
+        kwargs = (
+            {"source_release": "EIA API", "source_url": EIA_API_URL} if source == "eia_api" else {}
+        )
         await import_plants(session, selected, **kwargs)
         log.info("bootstrap_sites_source", source=source, count=len(selected))
 
@@ -85,7 +89,9 @@ async def _ml_sync(settings: Settings) -> None:
         except Exception as exc:  # noqa: BLE001 - retry until timeout
             if asyncio.get_running_loop().time() >= deadline:
                 if settings.environment == "production":
-                    raise RuntimeError("ML service did not become healthy within 120 seconds") from exc
+                    raise RuntimeError(
+                        "ML service did not become healthy within 120 seconds"
+                    ) from exc
                 log.warning("bootstrap_ml_unavailable", error=type(exc).__name__)
                 return
             await asyncio.sleep(delay)
@@ -117,7 +123,9 @@ async def run_bootstrap(*, only: str | None = None, refresh_sites: bool = False)
         raise ValueError(f"Unknown bootstrap step: {only}")
     async with SessionFactory() as lock_session:
         if lock_session.bind and lock_session.bind.dialect.name == "postgresql":
-            await lock_session.execute(text("SELECT pg_advisory_lock(:key)"), {"key": BOOTSTRAP_LOCK})
+            await lock_session.execute(
+                text("SELECT pg_advisory_lock(:key)"), {"key": BOOTSTRAP_LOCK}
+            )
         try:
             for name, step in steps:
                 if only and name != only:
@@ -127,4 +135,6 @@ async def run_bootstrap(*, only: str | None = None, refresh_sites: bool = False)
                 log.info("bootstrap_step_done", step=name)
         finally:
             if lock_session.bind and lock_session.bind.dialect.name == "postgresql":
-                await lock_session.execute(text("SELECT pg_advisory_unlock(:key)"), {"key": BOOTSTRAP_LOCK})
+                await lock_session.execute(
+                    text("SELECT pg_advisory_unlock(:key)"), {"key": BOOTSTRAP_LOCK}
+                )

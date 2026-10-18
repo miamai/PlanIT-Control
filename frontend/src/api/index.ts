@@ -1,5 +1,5 @@
 import { ALL_CLEAR_MINUTES } from '@/lib/planit'
-import { api, ApiError, unwrap, unwrapData } from './client'
+import { api, ApiError, unwrap, unwrapData, unwrapEmpty } from './client'
 import {
   type BriefingDTO,
   type ObservationDTO,
@@ -83,8 +83,7 @@ export async function listSites(): Promise<Site[]> {
     const total = (page.meta as { total?: number } | null | undefined)?.total
     if (
       page.data.length < limit ||
-      total === undefined ||
-      sites.length >= total
+      (total !== undefined && sites.length >= total)
     )
       break
   }
@@ -319,4 +318,43 @@ export async function listBriefingRows(
       break
   }
   return rows
+}
+
+/** Administrative review, using the server's audited alert transition API. */
+export async function updateAlertStatus(input: {
+  alertId: string
+  status: 'ACKNOWLEDGED' | 'RESOLVED'
+  reason: string
+}): Promise<Alert> {
+  return toAlert(
+    await unwrapData(
+      api.PATCH('/api/alerts/{alert_id}', {
+        params: { path: { alert_id: input.alertId } },
+        body: { status: input.status, reason: input.reason },
+      })
+    )
+  )
+}
+
+/** Admins may correct report text; original hazard, pin and timestamp are retained. */
+export async function updateHazardReport(input: {
+  reportId: string
+  note: string
+}): Promise<HazardReport> {
+  return toHazardReport(
+    await unwrapData(
+      api.PATCH('/api/reports/{report_id}', {
+        params: { path: { report_id: input.reportId } },
+        body: { description: input.note },
+      })
+    )
+  )
+}
+
+export async function deleteHazardReport(reportId: string): Promise<void> {
+  await unwrapEmpty(
+    api.DELETE('/api/reports/{report_id}', {
+      params: { path: { report_id: reportId } },
+    })
+  )
 }

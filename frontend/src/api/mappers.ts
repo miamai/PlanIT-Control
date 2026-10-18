@@ -305,6 +305,10 @@ export function toAlert(dto: AlertDTO): Alert {
   const details = asRecord(dto.details)
   const type = alertTypeFromHazard(dto.hazard_type)
   const alert: Alert = {
+    acknowledged: dto.status === 'ACKNOWLEDGED',
+    isDemo: details.synthetic_notice === true,
+    actionCode: dto.action_code,
+    sourceReference: dto.source_reference,
     id: dto.id,
     siteId: dto.site_id,
     type,
@@ -675,8 +679,18 @@ export function buildFleetBriefing(
 
   const sites: BriefingSite[] = current
     .map((row) => {
+      const details = asRecord(row.hazard_details)
       const risk = risks.get(row.site_id)
       const scored = risk?.predictionDate === shiftDate ? risk : undefined
+      const demo =
+        details.synthetic_notice === true || scored?.scoreSource === 'demo'
+      const scoreKind: BriefingSite['scoreKind'] = demo
+        ? 'demo'
+        : scored?.score === undefined || scored.score === null
+          ? 'missing'
+          : scored.scoreSource === 'ml_service'
+            ? 'model'
+            : 'unverified'
       return {
         siteId: row.site_id,
         score: scored?.score ?? null,
@@ -685,6 +699,15 @@ export function buildFleetBriefing(
         summary: row.summary,
         actions: scored?.workPlan ?? [],
         generator: generatorOf(row),
+        scoreKind,
+        reasons: scored?.reasons.map((reason) => reason.label) ?? [],
+        riskStatus: scored?.status,
+        warnings: Array.isArray(details.warnings)
+          ? details.warnings.filter(
+              (warning): warning is string => typeof warning === 'string'
+            )
+          : [],
+        modelVersion: scored?.modelVersion,
       }
     })
     .sort((a, b) => compareScores(a.score, b.score))

@@ -96,9 +96,16 @@ export function connectPlanitStream(options: {
         )
       } catch (error) {
         if (controller.signal.aborted) return
-        if (error instanceof StreamUnauthorized && !(await refreshSession())) {
-          options.onStatus?.('offline')
-          return
+        if (error instanceof StreamUnauthorized) {
+          try {
+            if (!(await refreshSession())) {
+              options.onStatus?.('offline')
+              return
+            }
+          } catch {
+            // A refresh outage does not invalidate the cookie. Keep backing off
+            // and reconnect when the service returns.
+          }
         }
       }
       if (controller.signal.aborted) return

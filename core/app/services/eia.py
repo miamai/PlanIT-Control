@@ -168,8 +168,17 @@ async def fetch_eia_api_records(
         route = metadata.get("response", metadata)
         fields = {row.get("id") for row in route.get("data", []) if isinstance(row, dict)}
         required = {
-            "plant_id", "plant_name", "stateid", "county", "latitude", "longitude",
-            "entity_name", "technology", "energy_source_code", "nameplate_capacity_mw", "status",
+            "plant_id",
+            "plant_name",
+            "stateid",
+            "county",
+            "latitude",
+            "longitude",
+            "entity_name",
+            "technology",
+            "energy_source_code",
+            "nameplate_capacity_mw",
+            "status",
         }
         if not required.issubset(fields):
             raise ValueError(f"EIA API metadata is missing fields: {sorted(required - fields)}")

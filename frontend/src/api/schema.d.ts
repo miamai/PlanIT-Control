@@ -58,6 +58,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/alerts/{alert_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Alert */
+        patch: operations["update_alert_api_alerts__alert_id__patch"];
+        trace?: never;
+    };
     "/api/auth/login": {
         parameters: {
             query?: never;
@@ -90,6 +107,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/auth/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change Password */
+        patch: operations["change_password_api_auth_me_password_patch"];
         trace?: never;
     };
     "/api/auth/refresh": {
@@ -244,6 +278,24 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Report */
+        delete: operations["delete_report_api_reports__report_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Report */
+        patch: operations["update_report_api_reports__report_id__patch"];
         trace?: never;
     };
     "/api/risk/features": {
@@ -486,6 +538,12 @@ export interface components {
          * @enum {string}
          */
         AlertStatus: "ACTIVE" | "ACKNOWLEDGED" | "ALL_CLEAR_ELIGIBLE" | "RESOLVED";
+        /** AlertUpdate */
+        AlertUpdate: {
+            /** Reason */
+            reason: string;
+            status: components["schemas"]["AlertStatus"];
+        };
         /** BriefingRead */
         BriefingRead: {
             /**
@@ -696,6 +754,19 @@ export interface components {
             site_id: string;
             /** Verification Status */
             verification_status: string;
+        };
+        /** CrewReportUpdate */
+        CrewReportUpdate: {
+            /** Description */
+            description: string;
+        };
+        /** Envelope[AlertRead] */
+        Envelope_AlertRead_: {
+            data: components["schemas"]["AlertRead"];
+            /** Meta */
+            meta?: components["schemas"]["FeedMeta"] | components["schemas"]["PageMeta"] | {
+                [key: string]: unknown;
+            } | null;
         };
         /** Envelope[CaptureFrameResult] */
         Envelope_CaptureFrameResult_: {
@@ -934,6 +1005,13 @@ export interface components {
             offset: number;
             /** Total */
             total: number;
+        };
+        /** PasswordChange */
+        PasswordChange: {
+            /** Current Password */
+            current_password: string;
+            /** New Password */
+            new_password: string;
         };
         /**
          * QualityStatus
@@ -1419,6 +1497,41 @@ export interface operations {
             };
         };
     };
+    update_alert_api_alerts__alert_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_AlertRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     login_api_auth_login_post: {
         parameters: {
             query?: never;
@@ -1467,6 +1580,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    change_password_api_auth_me_password_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
@@ -1778,6 +1924,70 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_CrewReportRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_report_api_reports__report_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_report_api_reports__report_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrewReportUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

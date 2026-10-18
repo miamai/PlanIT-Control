@@ -23,6 +23,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Main } from '@/components/layout/main'
+import { AlertControls } from '@/components/planit/alert-controls'
 import { AlertsFeed } from '@/components/planit/alerts-feed'
 import { LightningCountdown } from '@/components/planit/lightning-countdown'
 import { PageHeading } from '@/components/planit/page-heading'
@@ -63,13 +64,24 @@ const THRESHOLDS = [
 ] as const
 
 export function Alerts() {
-  const { alerts: active, isLoading } = useActiveAlerts()
+  const { alerts: active, isLoading, isError, refresh } = useActiveAlerts()
   const [type, setType] = useState<string>(ALL)
   const [showAll, setShowAll] = useState(false)
 
-  const stopWork = active.filter((a) => a.type === 'lightning' && a.allClearAt)
+  const stopWork = active.filter(
+    (a) =>
+      a.type === 'lightning' && a.actionCode === 'STOP_WORK' && a.allClearAt
+  )
   const alerts = useMemo(
-    () => active.filter((a) => !(a.type === 'lightning' && a.allClearAt)),
+    () =>
+      active.filter(
+        (a) =>
+          !(
+            a.type === 'lightning' &&
+            a.actionCode === 'STOP_WORK' &&
+            a.allClearAt
+          )
+      ),
     [active]
   )
 
@@ -138,6 +150,7 @@ export function Alerts() {
                         }
                       />
                     ) : null}
+                    <AlertControls alert={alert} />
                   </CardContent>
                 </Card>
               ))}
@@ -192,7 +205,18 @@ export function Alerts() {
                 </div>
               </Tabs>
 
-              {isLoading ? (
+              {isError ? (
+                <div role='alert' className='space-y-2 text-sm'>
+                  <p>Could not load current alerts.</p>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={() => void refresh()}
+                  >
+                    Try again
+                  </Button>
+                </div>
+              ) : isLoading ? (
                 <div className='space-y-3'>
                   <Skeleton className='h-20 w-full' />
                   <Skeleton className='h-20 w-full' />

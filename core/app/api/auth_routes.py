@@ -18,6 +18,7 @@ from app.schemas.domain import (
     Envelope,
     LoginRequest,
     PageMeta,
+    PasswordChange,
     TokenResponse,
     UserCreate,
     UserRead,
@@ -114,6 +115,31 @@ async def logout(
     response.delete_cookie(settings.refresh_cookie_name, path="/api/auth")
     response.status_code = 204
     return response
+
+
+@router.patch("/api/auth/me/password", response_model=TokenResponse, tags=["auth"])
+async def change_password(
+    body: PasswordChange,
+    principal: AuthenticatedPrincipal,
+    response: Response,
+    session: DbSession,
+    settings: Settings = Depends(get_settings),
+) -> TokenResponse:
+    user = await session.get(UserAccount, principal.user_id, with_for_update=True)
+    if not user or not verify_password(body.current_password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+    if verify_password(body.new_password, user.password_hash):
+        raise HTTPException(
+            status_code=422, detail="New password must differ from current password"
+        )
+    user.password_hash = hash_password(body.new_password)
+    user.updated_at = datetime.now(UTC)
+    await revoke_user_sessions(session, user.id, expire=True)
+    access, refresh_token, expires_in, _ = await issue_token_pair(session, user, settings)
+    await session.commit()
+    await session.refresh(user)
+    _set_refresh_cookie(response, refresh_token, settings)
+    return _token_response(user, access, expires_in)
 
 
 @router.get("/api/admin/users", response_model=Envelope[list[UserRead]], tags=["admin-users"])

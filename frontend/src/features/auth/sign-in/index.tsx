@@ -9,9 +9,7 @@ export function SignIn() {
         <div className='flex items-center gap-3'>
           <Logo className='size-12' alt='' />
           <div>
-            <p className='text-lg font-semibold tracking-tight'>
-              Precognition
-            </p>
+            <p className='text-lg font-semibold tracking-tight'>Precognition</p>
             <p className='mt-1 text-xs text-white/55'>
               Field operations intelligence
             </p>

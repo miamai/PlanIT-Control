@@ -56,14 +56,66 @@ def test_workbook_parser_uses_real_headers_and_deduplicates(tmp_path: Path) -> N
 
 @pytest.mark.asyncio
 async def test_api_loader_paginates_and_deduplicates_generators() -> None:
-    fields = [{"id": field} for field in {
-        "plant_id", "plant_name", "stateid", "county", "latitude", "longitude",
-        "entity_name", "technology", "energy_source_code", "nameplate_capacity_mw", "status",
-    }]
+    fields = [
+        {"id": field}
+        for field in {
+            "plant_id",
+            "plant_name",
+            "stateid",
+            "county",
+            "latitude",
+            "longitude",
+            "entity_name",
+            "technology",
+            "energy_source_code",
+            "nameplate_capacity_mw",
+            "status",
+        }
+    ]
     pages = [
-        [{"plant_id": "10", "plant_name": "Plant", "stateid": "TX", "county": "Test", "latitude": "30", "longitude": "-97", "entity_name": "Op", "technology": "Solar", "energy_source_code": "SUN", "nameplate_capacity_mw": "5", "status": "OP"},
-         {"plant_id": "10", "plant_name": "Plant", "stateid": "TX", "county": "Test", "latitude": "30", "longitude": "-97", "entity_name": "Op", "technology": "Wind", "energy_source_code": "WND", "nameplate_capacity_mw": "10", "status": "OP"}],
-        [{"plant_id": "11", "plant_name": "Other", "stateid": "TX", "county": "Test", "latitude": "31", "longitude": "-98", "entity_name": "Op", "technology": "Gas", "energy_source_code": "NG", "nameplate_capacity_mw": "1", "status": "IP"}],
+        [
+            {
+                "plant_id": "10",
+                "plant_name": "Plant",
+                "stateid": "TX",
+                "county": "Test",
+                "latitude": "30",
+                "longitude": "-97",
+                "entity_name": "Op",
+                "technology": "Solar",
+                "energy_source_code": "SUN",
+                "nameplate_capacity_mw": "5",
+                "status": "OP",
+            },
+            {
+                "plant_id": "10",
+                "plant_name": "Plant",
+                "stateid": "TX",
+                "county": "Test",
+                "latitude": "30",
+                "longitude": "-97",
+                "entity_name": "Op",
+                "technology": "Wind",
+                "energy_source_code": "WND",
+                "nameplate_capacity_mw": "10",
+                "status": "OP",
+            },
+        ],
+        [
+            {
+                "plant_id": "11",
+                "plant_name": "Other",
+                "stateid": "TX",
+                "county": "Test",
+                "latitude": "31",
+                "longitude": "-98",
+                "entity_name": "Op",
+                "technology": "Gas",
+                "energy_source_code": "NG",
+                "nameplate_capacity_mw": "1",
+                "status": "IP",
+            }
+        ],
     ]
 
     def handler(request: httpx.Request) -> httpx.Response:

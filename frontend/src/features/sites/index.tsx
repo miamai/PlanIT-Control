@@ -93,27 +93,29 @@ export function Sites() {
 
         <div className='mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
           <div className='flex flex-wrap gap-2'>
-            {(
-              ['NO-GO', 'CAUTION', 'GO', 'REVIEW REQUIRED'] as const
-            ).map((call) => (
-              <button
-                key={call}
-                type='button'
-                aria-pressed={recommendation === call}
-                onClick={() =>
-                  setRecommendation(recommendation === call ? ALL : call)
-                }
-                className={cn(
-                  'inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors',
-                  recommendation === call
-                    ? 'border-foreground/40 bg-accent'
-                    : 'hover:bg-accent'
-                )}
-              >
-                <RecommendationStatus recommendation={call} />
-                <span className='font-medium tabular-nums'>{counts[call]}</span>
-              </button>
-            ))}
+            {(['NO-GO', 'CAUTION', 'GO', 'REVIEW REQUIRED'] as const).map(
+              (call) => (
+                <button
+                  key={call}
+                  type='button'
+                  aria-pressed={recommendation === call}
+                  onClick={() =>
+                    setRecommendation(recommendation === call ? ALL : call)
+                  }
+                  className={cn(
+                    'inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors',
+                    recommendation === call
+                      ? 'border-foreground/40 bg-accent'
+                      : 'hover:bg-accent'
+                  )}
+                >
+                  <RecommendationStatus recommendation={call} />
+                  <span className='font-medium tabular-nums'>
+                    {counts[call]}
+                  </span>
+                </button>
+              )
+            )}
             <button
               type='button'
               aria-pressed={recommendation === UNSCORED}

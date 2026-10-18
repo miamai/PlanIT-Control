@@ -105,6 +105,11 @@ export type AlertSeverity = 'info' | 'warning' | 'critical'
 export type AlertStatus = 'active' | 'all-clear' | 'resolved'
 
 export interface Alert {
+  acknowledged?: boolean
+  /** Existing backend action_code, passed through without inferring restrictions. */
+  actionCode?: string | null
+  sourceReference?: string | null
+  isDemo?: boolean
   id: string
   siteId: string
   type: AlertType
@@ -205,6 +210,11 @@ export interface BriefingSite {
   summary: string
   actions: string[]
   generator: 'gemini' | 'template'
+  scoreKind: 'model' | 'demo' | 'unverified' | 'missing'
+  reasons: string[]
+  riskStatus?: RiskStatus
+  warnings: string[]
+  modelVersion?: string
 }
 
 /** The fleet view of the next-day safety briefings stored for one shift date. */

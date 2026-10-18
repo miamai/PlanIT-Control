@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { type LatLngBounds, divIcon, latLngBounds } from 'leaflet'
+import { divIcon } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import {
   Circle,
@@ -24,6 +24,7 @@ import {
 } from '@/lib/planit'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/context/theme-provider'
+import { CONTIGUOUS_US_BOUNDS, nationalMapPadding } from './map-viewport'
 import { RiskLegend } from './risk-status'
 
 export interface SiteMarker {
@@ -85,15 +86,20 @@ function MapFocus({ site }: { site?: { lat: number; lon: number } }) {
   return null
 }
 
-/** Fit once when sites arrive; subsequent updates preserve the user's view. */
-function FitBounds({ bounds }: { bounds?: LatLngBounds }) {
+/** Initialize once; data and layout updates preserve the user's view. */
+function FitBounds({ selected }: { selected: boolean }) {
   const map = useMap()
   const initialized = useRef(false)
   useEffect(() => {
-    if (!bounds || initialized.current) return
+    if (initialized.current) return
     initialized.current = true
-    map.fitBounds(bounds, { padding: [12, 12], animate: false })
-  }, [map, bounds])
+    if (!selected) {
+      map.fitBounds(CONTIGUOUS_US_BOUNDS, {
+        padding: nationalMapPadding(map.getSize().x),
+        animate: false,
+      })
+    }
+  }, [map, selected])
 
   useEffect(() => {
     // Update tile coverage after layout changes, preserving center and zoom.
@@ -170,11 +176,6 @@ export function SiteMap({
     return map
   }, [markers, rankLabels, siteStyle])
 
-  const bounds = useMemo(() => {
-    if (selected || markers.length < 2) return undefined
-    return latLngBounds(markers.map((m) => [m.site.lat, m.site.lon]))
-  }, [markers, selected])
-
   const lightningSites = markers.filter((m) => m.activeLightning)
   const extraLegend =
     strikes.length > 0 ||
@@ -185,7 +186,7 @@ export function SiteMap({
   return (
     <div
       className={cn(
-        'relative isolate overflow-hidden rounded-lg border bg-muted/30',
+        'relative isolate w-full overflow-hidden rounded-lg border bg-muted/30',
         height,
         className
       )}
@@ -193,9 +194,9 @@ export function SiteMap({
       <MapContainer
         center={selected ? [selected.lat, selected.lon] : US_CENTER}
         zoom={selected ? 10 : 4}
-        bounds={bounds}
-        boundsOptions={{ padding: [12, 12] }}
-        minZoom={3}
+        minZoom={2}
+        zoomSnap={0.1}
+        zoomDelta={0.5}
         scrollWheelZoom={false}
         dragging={interactive}
         zoomControl={interactive}
@@ -361,7 +362,7 @@ export function SiteMap({
         ))}
 
         <MapFocus site={selected} />
-        <FitBounds bounds={bounds} />
+        <FitBounds selected={!!selected} />
       </MapContainer>
 
       {showLegend ? (

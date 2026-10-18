@@ -5,7 +5,7 @@ export function SettingsAccount() {
   return (
     <ContentSection
       title='Account'
-      desc='View your session details and manage sign-out.'
+      desc='Manage your password and signed-in session.'
     >
       <AccountForm />
     </ContentSection>

@@ -33,8 +33,10 @@ export class ApiError extends Error {
   }
 }
 
-function isAuthPath(url: string): boolean {
-  return new URL(url).pathname.startsWith('/api/auth/')
+function isPublicAuthPath(url: string): boolean {
+  return ['/api/auth/login', '/api/auth/refresh'].includes(
+    new URL(url).pathname
+  )
 }
 
 let refreshing: Promise<TokenResponse | null> | null = null
@@ -49,31 +51,65 @@ const REFRESH_LOCK = 'planit-auth-refresh'
  * refresh stored. Web Locks need a secure context (HTTPS or localhost);
  * elsewhere the backend's reuse grace window still covers overlapping tabs.
  */
+export function withSessionLock<T>(operation: () => Promise<T>): Promise<T> {
+  return 'locks' in navigator
+    ? navigator.locks.request(REFRESH_LOCK, operation)
+    : operation()
+}
+
 export function refreshSession(): Promise<TokenResponse | null> {
-  refreshing ??= (async () => {
-    try {
-      return 'locks' in navigator
-        ? await navigator.locks.request(REFRESH_LOCK, postRefresh)
-        : await postRefresh()
-    } catch {
-      return null
-    } finally {
-      refreshing = null
+  refreshing ??= withSessionLock(async () => {
+    // Retry one transient failure, without interpreting an outage as logout.
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await postRefresh()
+      } catch (error) {
+        if (attempt > 0) throw error
+        await new Promise((resolve) => setTimeout(resolve, 250))
+      }
     }
-  })()
+  }).finally(() => {
+    refreshing = null
+  })
   return refreshing
 }
 
 async function postRefresh(): Promise<TokenResponse | null> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-    method: 'POST',
-    credentials: 'include',
-  })
-  if (!response.ok) {
+  let response: Response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+  } catch {
+    throw new ApiError(
+      503,
+      'Session refresh unavailable',
+      'Check your connection and retry. Your session has not been cleared.'
+    )
+  }
+  if (response.status === 401 || response.status === 403) {
     useAuthStore.getState().auth.reset()
     return null
   }
-  const session = (await response.json()) as TokenResponse
+  if (!response.ok)
+    throw new ApiError(
+      503,
+      'Session refresh unavailable',
+      'The service is temporarily unavailable. Please retry.'
+    )
+  let session: TokenResponse
+  try {
+    session = (await response.json()) as TokenResponse
+    if (!session.access_token || !session.user?.id || !(session.expires_in > 0))
+      throw new Error('Invalid session')
+  } catch {
+    throw new ApiError(
+      503,
+      'Invalid session refresh response',
+      'Please retry when the service is available.'
+    )
+  }
   useAuthStore
     .getState()
     .auth.setSession(session.access_token, session.expires_in, session.user)
@@ -84,9 +120,13 @@ const retryable = new Map<string, Request>()
 
 const authMiddleware: Middleware = {
   async onRequest({ request, id }) {
-    if (isAuthPath(request.url)) return request
+    if (isPublicAuthPath(request.url)) return request
     const { accessToken, expiresAt } = useAuthStore.getState().auth
-    if (accessToken && expiresAt - Date.now() < REFRESH_LEEWAY_MS) {
+    if (
+      new URL(request.url).pathname !== '/api/auth/me/password' &&
+      accessToken &&
+      expiresAt - Date.now() < REFRESH_LEEWAY_MS
+    ) {
       await refreshSession()
     }
     const token = useAuthStore.getState().auth.accessToken
@@ -97,10 +137,24 @@ const authMiddleware: Middleware = {
   async onResponse({ response, id }) {
     const retry = retryable.get(id)
     retryable.delete(id)
-    if (response.status !== 401 || !retry) return response
-    const session = await refreshSession()
-    if (!session) return response
-    retry.headers.set('Authorization', `Bearer ${session.access_token}`)
+    if (
+      response.status !== 401 ||
+      !retry ||
+      new URL(retry.url).pathname === '/api/auth/me/password'
+    )
+      return response
+    // Another concurrent request may already have renewed the access token.
+    const current = useAuthStore.getState().auth.accessToken
+    let token =
+      current && retry.headers.get('Authorization') !== `Bearer ${current}`
+        ? current
+        : undefined
+    if (!token) {
+      const session = await refreshSession()
+      if (!session) return response
+      token = session.access_token
+    }
+    retry.headers.set('Authorization', `Bearer ${token}`)
     return fetch(retry)
   },
   onError({ id }) {

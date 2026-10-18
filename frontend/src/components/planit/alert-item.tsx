@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react'
 import { type Alert, type Site } from '@/api/types'
 import { ALERT_TYPE_ICON, relativeTime } from '@/lib/planit'
 import { cn } from '@/lib/utils'
+import { AlertControls } from './alert-controls'
 import { LightningCountdown } from './lightning-countdown'
 import { AlertSeverityStatus } from './risk-status'
 
@@ -28,7 +29,15 @@ export function AlertItem({
       <div className='@container/alert min-w-0 flex-1 space-y-2'>
         <div className='flex flex-wrap items-start justify-between gap-x-3 gap-y-1 @max-[360px]/alert:flex-col'>
           <p className='min-w-0 flex-1 text-sm leading-5 font-semibold break-words'>
-            {alert.title}
+            <Link
+              to='/sites/$siteId'
+              params={{ siteId: alert.siteId }}
+              hash='alerts'
+              className='rounded-sm text-base underline decoration-muted-foreground/40 underline-offset-4 hover:decoration-foreground focus-visible:outline-2 focus-visible:outline-ring'
+            >
+              {alert.title}
+              <span className='sr-only'> — view site alert details</span>
+            </Link>
           </p>
           <time
             dateTime={alert.createdAt}
@@ -85,6 +94,7 @@ export function AlertItem({
             </p>
           </details>
         )}
+        <AlertControls alert={alert} />
       </div>
     </div>
   )

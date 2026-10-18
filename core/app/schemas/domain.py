@@ -121,6 +121,11 @@ class TokenResponse(BaseModel):
     user: UserRead
 
 
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=256)
+    new_password: str = Field(min_length=8, max_length=256)
+
+
 class UserCreate(BaseModel):
     username: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_.-]+$")
     password: str = Field(min_length=8, max_length=256)
@@ -168,6 +173,20 @@ class CrewReportCreate(BaseModel):
     def timestamp_must_include_timezone(cls, value: datetime | None) -> datetime | None:
         if value is not None and value.tzinfo is None:
             raise ValueError("observed_at must include a timezone")
+        return value
+
+
+class CrewReportUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    description: str = Field(min_length=3, max_length=2000)
+
+    @field_validator("description")
+    @classmethod
+    def nonblank_description(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) < 3:
+            raise ValueError("description must contain at least three non-whitespace characters")
         return value
 
 
@@ -397,3 +416,8 @@ class LightningStrikeInput(BaseModel):
         if value.tzinfo is None:
             raise ValueError("occurred_at must include a timezone")
         return value
+
+
+class AlertUpdate(BaseModel):
+    status: AlertStatus
+    reason: str = Field(min_length=3, max_length=1000)

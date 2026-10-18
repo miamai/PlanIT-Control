@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useProfile } from '@/hooks/use-profile'
 import { Button } from '@/components/ui/button'
 import { SignOutDialog } from '@/components/sign-out-dialog'
+import { PasswordForm } from './password-form'
 
 export function AccountForm() {
   const profile = useProfile()
@@ -25,9 +26,10 @@ export function AccountForm() {
         ))}
       </dl>
       <p className='text-sm leading-relaxed text-muted-foreground'>
-        Accounts and roles are managed by a Precognition administrator. The interface
-        is currently available in English only.
+        Accounts and roles are managed by a Precognition administrator. The
+        interface is currently available in English only.
       </p>
+      <PasswordForm />
       <Button variant='outline' onClick={() => setSignOutOpen(true)}>
         Sign out
       </Button>

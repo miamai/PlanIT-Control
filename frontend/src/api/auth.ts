@@ -1,5 +1,12 @@
 import { useAuthStore } from '@/stores/auth-store'
-import { api, refreshSession, unwrap, type TokenResponse } from './client'
+import {
+  api,
+  refreshSession,
+  unwrap,
+  withSessionLock,
+  ApiError,
+  type TokenResponse,
+} from './client'
 
 /** Sign in with the backend's local username/password auth. */
 export async function login(
@@ -31,4 +38,23 @@ export async function logout(): Promise<void> {
   } finally {
     useAuthStore.getState().auth.reset()
   }
+}
+
+/** Password changes rotate the refresh cookie and revoke older sessions. */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<TokenResponse> {
+  if (!(await refreshSession())) throw new ApiError(401, 'Please sign in again')
+  return withSessionLock(async () => {
+    const session = await unwrap(
+      api.PATCH('/api/auth/me/password', {
+        body: { current_password: currentPassword, new_password: newPassword },
+      })
+    )
+    useAuthStore
+      .getState()
+      .auth.setSession(session.access_token, session.expires_in, session.user)
+    return session
+  })
 }

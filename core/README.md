@@ -110,3 +110,47 @@ TEST_DATABASE_URL=postgresql+asyncpg://planit:planit@localhost:5432/planit_test 
 - If the schema check reports TimescaleDB available, review and run `scripts/enable_timescale.sql` (converts only `hazard_observations`)
 - Rollback: redeploy the previous image tag
   - Prefer forward DB fixes; take a Tiger backup before any `alembic downgrade`
+
+### Administrative alert and report actions
+
+The current two-role policy is unchanged: `user` may submit reports, while
+`admin` may list all reports and manage them. Users cannot edit/delete even their
+own reports. All alert updates also require `admin`.
+
+- `PATCH /api/alerts/{alert_id}` accepts `status` (`ACKNOWLEDGED` or `RESOLVED`
+  for the UI) and a review `reason` (3–1000 characters). It records an alert
+  transition with the administrator's identity. For lightning `STOP_WORK`,
+  resolution requires server status `ALL_CLEAR_ELIGIBLE` and an elapsed current
+  countdown. A newer strike can make a previously displayed sign-off stale;
+  handle HTTP 409 by refreshing, without showing success. Eligibility itself
+  is controlled by the server, never set by the client.
+- `PATCH /api/reports/{report_id}` accepts only `description` (3–2000 characters
+  after trimming), returns the updated report envelope, and preserves original
+  type, pin, reporter and timestamp. Shared wildlife observation descriptions
+  and their alert source metadata are synchronized.
+- `DELETE /api/reports/{report_id}` returns 204 with no body. It removes the
+  report and its exact derived `crew_report` wildlife observations, resolves
+  only alerts sourced from those observations, and retains alert transition
+  history with the deleting administrator's identity. Other sources and reports
+  are unaffected. The UI asks for explicit confirmation before deletion.
+
+Unknown reports return 404; unauthorized roles return 403. No database schema
+migration or ML scoring change is required. Refresh reports, site observations,
+alerts and briefings after successful mutations; report events also use the
+existing event stream.
+
+
+### Password changes and session recovery
+
+`PATCH /api/auth/me/password` is available to both authenticated roles. It accepts
+`current_password` and `new_password` (8–256 characters), rejects an incorrect
+current password with 401 and a reused new password with 422, and returns a fresh
+`TokenResponse` plus a rotated HttpOnly refresh cookie on success. Old refresh
+sessions are both revoked and expired, so a waking older device cannot revoke the
+new session via replay detection. There is no schema migration or token lifetime
+extension.
+
+The UI preserves session state on transient refresh/network failures, retries one
+refresh attempt, and distinguishes these failures from a refresh 401/403. Password
+mutations use the same browser lock as refresh rotation; an incorrect current
+password does not trigger a silent retry of the password update.

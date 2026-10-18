@@ -241,7 +241,9 @@ async def generate_due_briefings(
             continue
         prediction_date = local_now.date() + timedelta(days=1)
         lock_key = site.eia_plant_id * 100000 + prediction_date.toordinal() % 100000
-        if not await session.scalar(text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": lock_key}):
+        if not await session.scalar(
+            text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": lock_key}
+        ):
             continue
         existing = await session.scalar(
             select(SafetyBriefing).where(

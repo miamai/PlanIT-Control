@@ -14,6 +14,7 @@ from app.models.entities import (
     QualityStatus,
     Site,
 )
+from app.services.events import publish_event
 from app.services.rules import evaluate_observation
 from app.utils.geo import haversine_miles
 
@@ -98,4 +99,5 @@ async def store_crew_report(
                 session.add(observation)
                 await session.flush()
                 await evaluate_observation(session, observation)
+    publish_event(session, "report.created", {"report_id": str(report.id)}, report.site_id)
     return report

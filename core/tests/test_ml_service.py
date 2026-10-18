@@ -105,10 +105,23 @@ async def test_site_sync_adds_catalog_sites_without_deleting_existing() -> None:
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/health":
-            return httpx.Response(200, json={"ok": True, "models_ready": True, "model_version": "v1", "site_count": 1})
+            return httpx.Response(
+                200, json={"ok": True, "models_ready": True, "model_version": "v1", "site_count": 1}
+            )
         return httpx.Response(
             200,
-            json=[{"site_id": "EIA-123", "name": "Catalog Plant", "state": "LA", "county": "Test", "lat": 30, "lon": -90, "timezone": "America/Chicago", "model_version": "v1"}],
+            json=[
+                {
+                    "site_id": "EIA-123",
+                    "name": "Catalog Plant",
+                    "state": "LA",
+                    "county": "Test",
+                    "lat": 30,
+                    "lon": -90,
+                    "timezone": "America/Chicago",
+                    "model_version": "v1",
+                }
+            ],
         )
 
     client = MLClient(Settings(ml_base_url="http://ml"), transport=httpx.MockTransport(handler))

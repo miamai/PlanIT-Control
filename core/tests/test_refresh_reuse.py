@@ -120,6 +120,7 @@ async def test_rotated_token_replayed_after_grace_revokes_every_session(stack) -
     assert (await _refresh(client, replacement)).status_code == 401
     assert (await _refresh(client, other_device)).status_code == 401
 
+
 @pytest.mark.asyncio
 async def test_logged_out_token_replayed_revokes_every_session(stack) -> None:
     client, _ = stack
