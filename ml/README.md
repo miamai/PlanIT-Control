@@ -84,12 +84,12 @@ chance of thunder from a second, **hourly** model. Hours in the high heat band, 
 thunder threshold, are marked "avoid". The rest are grouped into work windows of 2+ hours, e.g. "work
 6 AM to 11 AM; heat index 103°F or higher from 12 PM to 4 PM; thunder likely from 2 PM to 5 PM".
 
-The hourly thunder model (`pipeline/17_hourly_thunder.py`) is a LightGBM classifier on 2.6M site-hours
-(43 sites with a thunder station). The label is thunder reported at the station during that hour; the
+The hourly thunder model (`pipeline/17_hourly_thunder.py`) is a LightGBM classifier on 4.9M site-hours
+(80 sites with a thunder station). The label is thunder reported at the station during that hour; the
 inputs are hourly rain (with neighbouring hours), gusts, temperature, dew point, humidity, solar
 radiation, soil moisture, time of day, season and region, plus the day's peak rain rate, heat and
-dew point. 2025 test year: **PR-AUC 0.17 vs 0.07** for the site × month × hour-of-day baseline,
-ROC-AUC 0.92. The "avoid" threshold (0.13, best F1 on 2024) flags 2.8% of hours and catches 38% of
+dew point. 2025 test year: **PR-AUC 0.19 vs 0.07** for the site × month × hour-of-day baseline,
+ROC-AUC 0.93. The "avoid" threshold (0.13, best F1 on 2024) flags 2.8% of hours and catches 40% of
 thunder hours. Skill is modest because the weather archive has no storm-energy (CAPE) data; real-time
 lightning stop-work stays with the alert engine.
 
@@ -159,9 +159,10 @@ these rules, so the briefing should still be read as an explanation of the score
 coverage explicitly and never substitutes a nearby site. The plan's four hazard regions grew from 50 to 145 sites (Gulf/FL 35, Mississippi 25,
 CA/AZ 35, Plains 35), plus three regions for wider coverage: Southeast 25, Ohio Valley 20, Mountain West 25.
 The original 50 sites are unchanged. The weather pull is capped at 8,500 Open-Meteo calls per UTC day
-(the free tier is 10k, shared with live `/score`), so the 150 new sites take about three days to download.
-`07_build_table.py` uses every site whose seven years are complete, so re-running `07` and `08` picks up
-new sites as they land.
+(the free tier is 10k, shared with live `/score`), so all 150 new sites take about three days to download.
+For the hackathon one extra day was used: **96 sites have complete weather** (13–14 per region) and are what
+the models train on and the API serves. `07_build_table.py` uses every site whose seven years are complete,
+so re-running `02`, `07` and `08` later picks up the rest.
 
 **Each label = observed near the site OR an NWS warning covering it.**
 
@@ -238,38 +239,49 @@ crew report adds 50%, decaying with a 3-day time constant. This is a heuristic, 
 
 ## Results (2025 test year, never seen in training or calibration)
 
-Current models: the **50 sites whose weather is complete** (the other 150 are still downloading; re-run
-`07_build_table.py` and `08_train.py` when they land). 50 sites × 2,556 days = 127,800 rows; convective
-uses the 43 of them with a thunder station. Train 2019–2023, calibrate 2024, test 2025. Baseline = "how
-often this happens at this site in this month" (2019–2023). Full numbers in `models/metadata.json`.
+**96 sites** with complete weather × 2,556 days = 245,376 rows; convective uses the 80 of them with a
+thunder station. Train 2019–2023, calibrate 2024, test 2025. Baseline = "how often this happens at this
+site in this month" (2019–2023). Full numbers in `models/metadata.json`; the full model card, with
+confidence intervals and forecast-style grading, is `models/MODEL_CARD.md` (`pipeline/18_model_card.py`).
 
 | Hazard | Positive days (train / test) | PR-AUC model | PR-AUC baseline | ROC-AUC model | ROC-AUC baseline | Brier model | Brier baseline | Test base rate | Top SHAP drivers |
 |---|---|---|---|---|---|---|---|---|---|
-| heat | 3,644 / 541 | **0.574** | 0.176 | **0.974** | 0.895 | **0.0170** | 0.0268 | 3.0% | heat_climo, t_min, hi_max, hi_max_anom |
-| convective | 5,605 / 1,200 | **0.449** | 0.207 | **0.923** | 0.782 | **0.0507** | 0.0654 | 7.7% | region, precip_max_hr, doy_cos, td_max |
-| flood | 2,941 / 382 | **0.261** | 0.053 | **0.905** | 0.746 | **0.0177** | 0.0215 | 2.1% | flood_climo, api, region, log_dist_stream_km |
-| wildfire | 3,699 / 731 | **0.280** | 0.127 | **0.837** | 0.768 | **0.0330** | 0.0370 | 4.0% | wildfire_climo, vpd_max, t_max, rh_min_afternoon |
+| heat | 5,317 / 997 | **0.615** | 0.177 | **0.980** | 0.899 | **0.0153** | 0.0253 | 2.9% | t_min, heat_climo, hi_max, hi_max_anom |
+| convective | 10,013 / 2,193 | **0.480** | 0.204 | **0.927** | 0.774 | **0.0487** | 0.0646 | 7.5% | region, td_max, precip_max_hr, doy_cos |
+| flood | 4,970 / 795 | **0.330** | 0.058 | **0.904** | 0.746 | **0.0181** | 0.0227 | 2.3% | api, flood_climo, region, log_dist_stream_km |
+| wildfire | 6,562 / 1,398 | **0.343** | 0.215 | **0.876** | 0.821 | **0.0309** | 0.0346 | 4.0% | wildfire_climo, vpd_max, t_max, rh_min_afternoon |
 
-All four beat the baseline on every metric (PR-AUC 2.2–4.9× the baseline). v1 (Storm Events-only
-labels) scored 0.23 / 0.19 / 0.19 / 0.21; the numbers aren't directly comparable because the labels
-changed (see "Sites and labels"). Convective's top driver is `region`, a regional thunder-frequency
-prior (Florida really is the thunder capital), followed by rain rate, season and dew point.
+All four beat the baseline on every metric (PR-AUC 1.6–5.7× the baseline), and on PR-AUC even the
+low end of the model's 95% confidence interval (whole sites resampled) is above the baseline's
+estimate. Going from 50 to 96 sites raised every hazard (heat 0.57 → 0.61, convective 0.45 → 0.48,
+flood 0.26 → 0.33, wildfire 0.28 → 0.34). v1 (Storm Events-only labels) scored 0.23 / 0.19 / 0.19 /
+0.21; not directly comparable because the labels changed (see "Sites and labels"). Convective's top
+driver is `region`, a regional thunder-frequency prior (Florida really is the thunder capital), followed
+by dew point, rain rate and season.
 
-Reliability plots (`models/{hazard}_reliability.png`): all four track the diagonal. With the denser
-labels, heat is no longer overconfident at the top end. 2025 recommendation mix across the 50 sites:
-go 83%, caution 13%, no-go 4%.
+**New locations.** Cross-validation that holds out whole sites, giving each held-out site only its
+region's average history: PR-AUC heat 0.64, convective 0.49, flood 0.29, wildfire 0.20 (ROC-AUC
+0.81–0.98), so the models carry over to sites they never saw.
+
+**Graded like a forecast** (2025, "warning" = caution or no-go): 56% of hazard days warned, 47% of
+warnings with no recorded hazard (CSI 0.37); 15% of days warned. Of the 1,272 damaging Storm Events
+within 25 miles of a site, **70% got caution or no-go that day** (28% no-go). Per-hazard numbers are in
+the model card.
+
+Reliability plots (`models/{hazard}_reliability.png`): all four track the diagonal. 2025
+recommendation mix across the 96 sites: go 85%, caution 12%, no-go 3.5%.
 
 ### Backtest
 
 `models/backtest_1288021.png`: **July 5 2025 flash flood**, Williamson County TX ($25M), whose track
 ends within 25 miles of Hal C Weaver Power Plant (Austin). Thunderstorms keep the index at caution
 (4–6) through the stormy stretch; it goes **no-go on July 3–5** as about 4 in of rain falls on July 2–4,
-peaking at 9.5 on the day (flood 9.1; 5.0 in of rain, the gauge at 172% of flood stage), then drops
+peaking at 9.9 on the day (flood 9.7; 5.0 in of rain, the gauge at 172% of flood stage), then drops
 back to caution.
 
 `models/backtest_1249939.png`: the largest 2025 event near a site (Rio Grande Valley flash flood,
 Mar 27, $105M). The reanalysis has only 1.2 in of rain that day, an order of magnitude below what fell,
-so flood stays low (1.2). The thunder signal still lifts the index to **caution (6.2)** on the day.
+so flood stays low (0.4). The thunder signal still lifts the index to **caution (5.7)** on the day.
 Extreme local rain is a grid-scale limit for live forecasts too.
 
 Backtests use reanalysis weather for each day, i.e. a "perfect forecast" test of whether the models
@@ -279,7 +291,8 @@ react to the right conditions, not of forecast skill.
 
 - Labels are days something was *recorded* (a report, an injury, a warning, thunder at a station),
   not every hazardous day.
-- 47 of 200 sites have a usable river gauge and 19 have tide data; elsewhere those features are blank.
+- Of the 96 trained sites, 24 have a usable river gauge and 10 have tide data; elsewhere those features
+  are blank.
 - Wildlife is a heuristic. Say so.
 - The weather pull shares the Open-Meteo free tier with live `/score`; it stops at 8,500 calls per
   UTC day to leave room for the demo.
